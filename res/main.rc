@@ -1,0 +1,24 @@
+﻿/**
+ * Copyright:   2022, XT Tech. Co., Ltd.
+ * File name:   main.rc
+ * Description: 资源描述文件
+ * Author:      张海涛
+ * Version:     0.0.0.1
+ * Code:        UTF-8(BOM)
+ * Date:        2022-02-08
+ * History:     2022-02-08 创建此文件。
+ */
+
+#include <windows.h>
+#include "resource.h"
+
+IDI_GREEN ICON "icon.ico"
+
+IDC_MENU MENU
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "Show(&S)" IDM_SHOW
+        MENUITEM "Exit(&E)" IDM_EXIT
+    END
+END
