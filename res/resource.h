@@ -15,4 +15,5 @@
 #define IDM_EXIT                    2011
 #define IDC_EDIT                    3000
 #define IDC_LIST                    3010
+#define IDC_TORR                    3011
 #define IDC_BTN_DOWNLOAD            3020

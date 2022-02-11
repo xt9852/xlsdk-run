@@ -12,7 +12,7 @@
 #include <windows.h>
 #include "resource.h"
 
-IDI_GREEN ICON "icon.ico"
+IDI_GREEN ICON "main.ico"
 
 IDC_MENU MENU
 BEGIN
