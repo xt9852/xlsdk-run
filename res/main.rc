@@ -12,6 +12,8 @@
 #include <windows.h>
 #include "resource.h"
 
+IDR_PINYIN PINYIN "pinyin.dat"
+
 IDI_GREEN ICON "main.ico"
 
 IDC_MENU MENU

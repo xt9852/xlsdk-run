@@ -10,6 +10,7 @@
  */
 
 #define IDI_GREEN                   1000
+#define IDR_PINYIN                  1001
 #define IDC_MENU                    2000
 #define IDM_SHOW                    2010
 #define IDM_EXIT                    2011

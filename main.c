@@ -2,7 +2,7 @@
  * Copyright:   2022, XT Tech. Co., Ltd.
  * File name:   main.c
  * Description: 主模块实现
- * Author:      张海涛
+ * Author:      xt
  * Version:     0.0.0.1
  * Code:        UTF-8(无BOM)
  * Date:        2022-02-08
@@ -15,926 +15,120 @@
 #include <Windows.h>
 #include <CommCtrl.h>
 #include "resource.h"
+#include "sdk.h"
+#include "pinyin.h"
+#include "torrent.h"
 
-#define SIZEOF(x)               sizeof(x)/sizeof(x[0])
-#define SP(...)                 _stprintf_s(info, SIZEOF(info), __VA_ARGS__)
+#define SIZEOF(x)   sizeof(x)/sizeof(x[0])
+#define SP(...)     _stprintf_s(info, SIZEOF(info), __VA_ARGS__)
 
-typedef struct _arg_head {
-    DWORD   len;
-    char    data[1];
-}arg_head,*p_arg_head;
-
-typedef struct _data_head {
-    DWORD       len;
-    DWORD       func_id;
-union {
-    arg_head    arg1;
-    DWORD       data[1];
-    };
-
-}data_head,*p_data_head;
-
-
-NOTIFYICONDATA g_nid            = {0};  // 任务栏图标数据结构
-UINT   WM_MY_NOTIFY             = 0;    // 注册系统消息
-
-HMENU  g_menu                   = NULL; // 系统托盘使用
-HWND   g_edit                   = NULL; // WM_SIZE中使用
-HWND   g_butt                   = NULL;
-HWND   g_list                   = NULL;
-HWND   g_torr                   = NULL;
-
-char   g_pth[512]               = "";
-char   g_arg[128]               = "BDAF7A63-568C-43ab-9406-D145CF03B08C:";
-char  *g_tail                   = g_arg + 37;
-
-UCHAR *g_recv                   = NULL; // 共享内存1M,对方接收的数据,我方发送的
-UCHAR *g_send                   = NULL; // 共享内存1M,我方发送的数据,需要对方处理
-
-UCHAR *g_recv_tmp               = NULL;
-UCHAR *g_send_tmp               = NULL;
-
-HANDLE g_proxyAliveMutex        = NULL;
-HANDLE g_serverStartUpEvent     = NULL;
-
-HANDLE g_recvShareMemory        = NULL; // 共享内存1M,我方发送的数据,需要对方处理
-HANDLE g_recvBufferFullEvent    = NULL; // 信号,表示有数据,对方可以处理啦
-HANDLE g_recvBufferEmptyEvent   = NULL; // 信号,表示对方处理完成,我方可以再次发送
-
-HANDLE g_sendShareMemory        = NULL; // 共享内存1M,对方发送的数据,需要我方处理
-HANDLE g_sendBufferFullEvent    = NULL; // 信号,表示有数据,我方可以处理啦
-HANDLE g_sendBufferEmptyEvent   = NULL; // 信号,表示我方可以处理完成,对方可以再次发送
-
-BOOL   g_init                   = FALSE;
-
-enum
+enum    // 任务列表控件列ID
 {
-    /* 1*/ XL_Init = 1,
-    /* 2*/ XL_UnInit,
-    /* 3*/ XL_SetDownloadSpeedLimit,
-    /* 4*/ XL_SetUploadSpeedLimit,
-    /* 5*/ XL_SetProxy,
-    /* 6*/ XL_SetUserAgent,
-    /* 7*/ XL_CreateP2spTask,
-    /* 8*/ XL_SetTaskStrategy,
-    /* 9*/ XL_StartTask,
-    /* A*/ XL_StopTask,
-    /* B*/ XL_DeleteTask,
-    /* C*/ XL_QueryTaskInfo,
-    /* D*/ XL_AddServer,
-    /* E*/ XL_DiscardServer,
-    /* F*/ XL_CreateEmuleTask,
-    /*10*/ XL_CreateBTTask,
-    /*11*/ XL_BTStartUpload,
-    /*12*/ XL_BTStopUpload,
-    /*13*/ XT_Func_NULL_1,
-    /*14*/ XL_AddPeer,
-    /*15*/ XL_DiscardPeer,
-    /*16*/ XL_QueryTaskIndex,
-    /*17*/ XL_QueryTaskFlow,
-    /*18*/ XL_QueryGlobalStat,
-    /*19*/ XL_EnableDcdn,
-    /*1A*/ XL_DisableDcdn,
-    /*1B*/ XL_SetUserInfo,
-    /*1C*/ XL_SetOriginConnectCount,
-    /*1D*/ XL_QueryBTSubFileInfo,
-    /*1E*/ XT_Func_NULL_2,
-    /*1F*/ XL_SetDownloadStrategy,
-    /*20*/ XL_CreateMagnetTask,
-    /*21*/ XL_SetGlobalExtInfo,
-    /*22*/ XL_SetTaskExtInfo,
-    /*23*/ XL_SetP2spTaskIndex,
-    /*24*/ XL_SetEmuleTaskIndex,
-    /*25*/ XL_SetBTSubTaskIndex,
-    /*26*/ XL_QueryPlayInfo,
-    /*27*/ XL_SetAccelerateCertification,
-    /*28*/ XL_RenameP2spTaskFile,
-    /*29*/ XL_SetTaskExtStat,
-    /*2A*/ XL_EnableFreeDcdn,
-    /*2B*/ XL_DisableFreeDcdn,
-    /*2C*/ XL_QueryFreeDcdnAccelerate,
-    /*2D*/ XL_SetCacheSize,
-    /*2E*/ XL_SetFreeDcdnDownloadSpeedLimit,
-    /*2F*/ XL_EnableDcdnWithToken,
-    /*30*/ XL_EnableDcdnWithSession,
-    /*31*/ XL_SetP2SPTaskIdxURL,
-    /*32*/ XL_GetFilePlayInfo,
-    /*33*/ XL_SetTaskPriorityLevel,
-    /*34*/ XL_BatchAddPeer,
-    /*35*/ XL_BatchDiscardPeer,
-    /*36*/ XL_GetUnRecvdRangeArray,
-    /*37*/ XL_EnableDcdnWithVipCert,
-    /*38*/ XL_UpdateDcdnWithVipCert,
-    /*39*/ XL_DisableDcdnWithVipCert,
-    /*3A*/ XL_GetPeerId,
-    /*3B*/ XL_BatchAddBTTracker,
-    /*3C*/ XL_SetTaskUserAgent,
-    /*3D*/ XL_GetSumOfRemotePeerBeBenefited,
-    /*3E*/ XL_IsFileSizeSetterWorking,
-    /*3F*/ XL_LaunchFileAssistant,
-    /*40*/ XL_GetTaskProfileLog,
-    /*41*/ XL_SetGlobalConnectionLimit,
-    /*42*/ XL_AddHttpHeaderField,
-    /*43*/ XL_GetSubNetUploader,
-    /*44*/ XL_IsDownloadTaskCFGFileExit,
-    /*45*/ XL_UpdateNetDiscVODCachePath,
-    /*46*/ XL_SetupNetDiskFetchTaskFlag,
-    /*47*/ XL_UpdateTaskVideoByteRatio
+    LIST_TASK,
+    LIST_FILE,
+    LIST_SIZE,
+    LIST_SPEE,
+    LIST_PROG,
+    LIST_TIME
 };
 
-enum
+enum    // 种子列表控件列ID
 {
-    ED2K = 1,
-    FILEHASH,
-    NAME,
-    PATH,
-    LENGTH,
-    PIECES,
-    PATH_LIST,
+    TORR_SIZE,
+    TORR_FILE
 };
 
-typedef struct _file_info
-{
-    TCHAR            *name;
+typedef struct _task_info {
 
-    unsigned __int64  len;
+    unsigned __int64    down;               // 已经下载的数量
 
-}file_info, *p_file_info;
+    unsigned int        time;               // 用时秒数
 
-typedef struct _info_head
-{
-    TCHAR *name;     // 指向名称列表
+}task_info, *p_task_info;
 
-    int   last;     // 上一个字符串是什么
 
-    int   count;
+HWND                    g_edit;
+HWND                    g_down;
+HWND                    g_list;
+HWND                    g_torr;
+HMENU                   g_menu;
 
-    file_info file[512];
+task_info               g_task[128]     = {0};      // 当前正在下载的任务信息
 
-}info_head, *p_info_head;
+NOTIFYICONDATA          g_nid           = {0};      // 任务栏图标数据结构
 
-int bencode_dict(const char *s, unsigned int len, p_info_head info);
+UINT                    WM_MY_NOTIFY    = 0;        // 注册系统消息
 
-/**
- * \brief   打开文件取得文件数据
- * \param   [in]  const char    *filename   文件名
- * \param   [out] char          **data      数据
- * \param   [out] unsigned int  *len        数据长
- * \return  0-成功，其它失败
- */
-int get_file_data(const char *filename, char **data, unsigned int *len)
-{
-    FILE *fp = NULL;
-    fopen_s(&fp, filename, "rb");
-
-    if (NULL == fp)
-    {
-        printf("open %s error %d", filename, GetLastError());
-        return -1;
-    }
-
-    fseek(fp, 0, SEEK_END);
-
-    *len = ftell(fp);
-    fseek(fp, 0, SEEK_SET);
-
-    *data = malloc(*len);
-    fread(*data, 1, *len, fp);
-
-    fclose(fp);
-    return 0;
-}
+extern unsigned char    *g_pinyin;
 
 /**
- * \brief   将utf8转成unicode
- * \param   [in]        const char      *src        源串
- * \param   [in]        unsigned int     src_len    源串长
- * \param   [out]       short           *dst        目标串
- * \param   [in/out]    unsigned int    *dst_len    目标串最大长,目标串长
- * \return  0-成功，其它失败
+ * \brief   得到格式化后的信息
+ * \param   [in]    unsigned __int64     data   数据
+ * \param   [in]    TCHAR               *unit   单位
+ * \param   [out]   TCHAR               *info   信息
+ * \return  无
  */
-int utf8_unicode(const char *src, unsigned int src_len, short *dst, unsigned int *dst_len)
+void format_data(unsigned __int64 data, TCHAR *unit, TCHAR *info)
 {
-    if (NULL == src || NULL == dst)
+    double g = data / 1024.0 / 1024.0 / 1024.0;
+    double m = data / 1024.0 / 1024.0;
+    double k = data / 1024.0;
+
+    if (g > 1.0)
     {
-        return -1;
+        _stprintf_s(info, 16, _T("%.2fGB%s"), g, unit);
     }
-
-    // 转成unicode后的长度
-    unsigned int len = MultiByteToWideChar(CP_UTF8, 0, src, src_len, NULL, 0);
-
-    if (len >= *dst_len)
+    else if (m > 1.0)
     {
-        printf("dst_len too small %d>%d\n", len, *dst_len);
-        return -2;
+        _stprintf_s(info, 16, _T("%.2fMB%s"), m, unit);
     }
-
-    // 转成unicode
-	MultiByteToWideChar(CP_UTF8, 0, src, src_len, dst, *dst_len);
-
-    dst[len] = L'\0';
-
-    *dst_len = len;
-	return 0;
-}
-
-/**
- * \brief   解析bencode编码的字符串，格式：<字符串长度>字符串
- * \param   [in]     const char    *s       数据
- * \param   [in]     unsigned int   len     数据长
- * \param   [in/out] p_info_head    info    信息
- * \return  0-成功，其它失败
- */
-int bencode_str(const char *s, unsigned int len, p_info_head info)
-{
-    unsigned int str_len = 0;
-
-    for (unsigned int i = 0; i < len; i++)
+    else if (k > 1.0)
     {
-        if (s[i] >= '0' && s[i] <= '9')
-        {
-            str_len = str_len * 10 + s[i] - '0';
-        }
-        else if (s[i] == ':')
-        {
-            i++; // 绕过冒号:
-
-            // 不处理这三种数据
-            if ((info->last == ED2K) ||
-                (info->last == FILEHASH) ||
-                (info->last == PIECES))
-            {
-                info->last = 0;
-                return i + str_len;
-            }
-
-            TCHAR        tmp[1024];
-            unsigned int tmp_size = 1024;
-
-            utf8_unicode(&s[i], str_len, tmp, &tmp_size);
-
-            if (info->last == PATH_LIST)
-            {
-                info->name += _stprintf_s(info->name, 1024, L"%s\\", tmp);
-            }
-            else if (0 == lstrcmp(tmp, L"ed2k"))
-            {
-                info->last = ED2K;
-            }
-            else if (0 == lstrcmp(tmp, L"filehash"))
-            {
-                info->last = FILEHASH;
-            }
-            else if (0 == lstrcmp(tmp, L"name"))
-            {
-                info->last = NAME;
-            }
-            else  if(0 == lstrcmp(tmp, L"path"))
-            {
-                info->last = PATH;
-            }
-            else if (0 == lstrcmp(tmp, L"length"))
-            {
-                info->last = LENGTH;
-            }
-            else if (0 == lstrcmp(tmp, L"pieces"))
-            {
-                info->last = PIECES;
-            }
-
-            return i + str_len;
-        }
-        else
-        {
-            printf("string char error\n");
-            return -100;
-        }
-    }
-
-    printf("string error\n");
-    return -101;
-}
-
-/**
- * \brief   解析bencode编码的整数，格式：i<整数>e
- * \param   [in]     const char    *s       数据
- * \param   [in]     unsigned int   len     数据长
- * \param   [in/out] p_info_head    info    信息
- * \return  0-成功，其它失败
- */
-int bencode_int(const char *s, unsigned int len, p_info_head info)
-{
-    if (s[0] != 'i')
-    {
-        printf("int flage error\n");
-        return -200;
-    }
-
-    unsigned int     i   = 1;
-    unsigned __int64 num = 0;
-
-    for (; i < len; i++)
-    {
-        if (s[i] >= '0' && s[i] <= '9')
-        {
-            num = num * 10 + s[i] - '0';
-        }
-        else if (s[i] == 'e')
-        {
-            if (info->last == LENGTH) // 上一个字符中是"length"
-            {
-                info->file[info->count].len  = num;
-                info->file[info->count].name = info->name;
-            }
-
-            return i + 1;
-        }
-        else
-        {
-            printf("int num error\n");
-            return -201;
-        }
-    }
-
-    printf("int error\n");
-    return -202;
-}
-
-/**
- * \brief   解析bencode编码的列表，格式：l<bencoding编码类型>e
- * \param   [in]     const char    *s       数据
- * \param   [in]     unsigned int   len     数据长
- * \param   [in/out] p_info_head    info    信息
- * \return  0-成功，其它失败
- */
-int bencode_list(const char *s, unsigned int len, p_info_head info)
-{
-    if (s[0] != 'l')
-    {
-        printf("list flage error\n");
-        return -300;
-    }
-
-    if (info->last == PATH)
-    {
-        info->last = PATH_LIST;
-    }
-
-    int ret;
-
-    for (unsigned int i = 1; i < len; )
-    {
-        if (s[i] == 'e')
-        {
-            if (info->last == PATH_LIST)
-            {
-                info->last = 0;
-                info->count++;
-                *(info->name - 1) = '\0'; // 结尾多了个'\\'
-            }
-
-            return i + 1;
-        }
-        else if (s[i] == 'd')
-        {
-            ret = bencode_dict(&s[i], len, info);
-        }
-        else if (s[i] == 'l')
-        {
-            ret = bencode_list(&s[i], len, info);
-        }
-        else if (s[i] == 'i')
-        {
-            ret = bencode_int(&s[i], len, info);
-        }
-        else
-        {
-            ret = bencode_str(&s[i], len, info);
-        }
-
-        if (ret <= 0)
-        {
-            printf("list sub item len error\n");
-            return -301;
-        }
-
-        i += ret;
-    }
-
-    printf("list error\n");
-    return -302;
-}
-
-/**
- * \brief   解析bencode编码的字典，格式：d<bencoding字符串><bencoding编码类型>e
- * \param   [in]     const char    *s       数据
- * \param   [in]     unsigned int   len     数据长
- * \param   [in/out] p_info_head    info    信息
- * \return  0-成功，其它失败
- */
-int bencode_dict(const char *s, unsigned int len, p_info_head info)
-{
-    if (s[0] != 'd')
-    {
-        printf("dict flage error\n");
-        return -400;
-    }
-
-    int ret = bencode_str(&s[1], len, info);
-
-    if (ret <= 0)
-    {
-        printf("dict key len error\n");
-        return -401;
-    }
-
-    for (unsigned int i = 1 + ret; i < len; )
-    {
-        if (s[i] == 'e')
-        {
-            return i + 1;
-        }
-        else if (s[i] == 'd')
-        {
-            ret = bencode_dict(&s[i], len, info);
-        }
-        else if (s[i] == 'l')
-        {
-            ret = bencode_list(&s[i], len, info);
-        }
-        else if (s[i] == 'i')
-        {
-            ret = bencode_int(&s[i], len, info);
-        }
-        else
-        {
-            ret = bencode_str(&s[i], len, info);
-        }
-
-        if (ret <= 0)
-        {
-            printf("dict item len error\n");
-            return -402;
-        }
-
-        i += ret;
-    }
-
-    printf("dict error\n");
-    return -403;
-}
-
-int call_func()
-{
-    WaitForSingleObject(g_recvBufferEmptyEvent, INFINITE);
-
-    p_data_head p = (p_data_head)g_recv_tmp;
-    memcpy(g_recv, g_recv_tmp, p->len + 4);
-
-    ResetEvent(g_recvBufferEmptyEvent);
-    SetEvent(g_recvBufferFullEvent);
-
-    WaitForSingleObject(g_sendBufferFullEvent, INFINITE);
-
-    p = (p_data_head)g_send;
-    memcpy(g_send_tmp, g_send, p->len + 4);
-
-    ResetEvent(g_sendBufferFullEvent);
-    SetEvent(g_sendBufferEmptyEvent);
-
-    DWORD *head = (DWORD*)g_send_tmp;
-
-    if (0 != head[2])
-    {
-        return 1;
-    }
-
-    return 0;
-}
-
-int create_process()
-{
-    g_tail += sprintf_s(g_tail, 10, "%d", GetCurrentProcessId());
-
-    char *arg = GetCommandLineA();      // 参数前后带有""
-    char *tail = strrchr(arg, '\\');
-
-    strncpy_s(g_pth, sizeof(g_pth), arg, tail - arg + 1);
-    strcat_s(g_pth, sizeof(g_pth), "DownloadSDKServer.exe\" ");
-    strcat_s(g_pth, sizeof(g_pth), g_arg);
-
-    STARTUPINFOA si = {0};
-    PROCESS_INFORMATION pi = {0};
-    BOOL ret = CreateProcessA(NULL, g_pth, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi);
-
-    if (!ret)
-    {
-        return -1;
-    }
-
-    g_tail += sprintf_s(g_tail, 10, ":%d", pi.dwProcessId);
-    return 0;
-}
-
-int create_mutex()
-{
-    strcpy_s(g_tail, 100, "|ProxyAliveMutex");
-    g_proxyAliveMutex = CreateMutexA(NULL, TRUE, g_arg);
-
-    if (NULL == g_proxyAliveMutex)
-    {
-        return -1;
-    }
-
-    strcpy_s(g_tail, 100, "|ServerStartUpEvent");
-    g_serverStartUpEvent = CreateEventA(NULL, TRUE, FALSE, g_arg);
-
-    if (NULL == g_serverStartUpEvent)
-    {
-        return -2;
-    }
-
-    return 0;
-}
-
-int open_sharememory()
-{
-    strcpy_s(g_tail, 100, "|RecvShareMemory");
-    CloseHandle(g_recvShareMemory);
-    g_recvShareMemory = OpenFileMappingA(FILE_MAP_ALL_ACCESS, FALSE, g_arg);
-
-    if (NULL == g_recvShareMemory)
-    {
-        return -1;
-    }
-
-    g_recv = (UCHAR*)MapViewOfFile(g_recvShareMemory, FILE_MAP_ALL_ACCESS, 0, 0, 0x100000);
-
-    if (NULL == g_recv)
-    {
-        return -2;
-    }
-
-    strcpy_s(g_tail, 100, "|RecvBufferFullEvent");
-    CloseHandle(g_recvBufferFullEvent);
-    g_recvBufferFullEvent = OpenEventA(EVENT_ALL_ACCESS, FALSE, g_arg);
-
-    if (NULL == g_recvBufferFullEvent)
-    {
-        return -3;
-    }
-
-    strcpy_s(g_tail, 100, "|RecvBufferEmptyEvent");
-    CloseHandle(g_recvBufferEmptyEvent);
-    g_recvBufferEmptyEvent = OpenEventA(EVENT_ALL_ACCESS, FALSE, g_arg);
-
-    if (NULL == g_recvBufferEmptyEvent)
-    {
-        return -4;
-    }
-
-    strcpy_s(g_tail, 100, "|SendShareMemory");
-    CloseHandle(g_sendShareMemory);
-    g_sendShareMemory = OpenFileMappingA(FILE_MAP_ALL_ACCESS, FALSE, g_arg);
-
-    if (NULL == g_sendShareMemory)
-    {
-        return -5;
-    }
-
-    g_send = (UCHAR*)MapViewOfFile(g_sendShareMemory, FILE_MAP_ALL_ACCESS, 0, 0, 0x100000);
-
-    if (NULL == g_send)
-    {
-        return -6;
-    }
-
-    strcpy_s(g_tail, 100, "|SendBufferFullEvent");
-    CloseHandle(g_sendBufferFullEvent);
-    g_sendBufferFullEvent = OpenEventA(EVENT_ALL_ACCESS, FALSE, g_arg);
-
-    if (NULL == g_sendBufferFullEvent)
-    {
-        return -7;
-    }
-
-    strcpy_s(g_tail, 100, "|SendBufferEmptyEvent");
-    CloseHandle(g_sendBufferEmptyEvent);
-    g_sendBufferEmptyEvent = OpenEventA(EVENT_ALL_ACCESS, FALSE, g_arg);
-
-    if (NULL == g_sendBufferEmptyEvent)
-    {
-        return -8;
-    }
-
-    return 0;
-}
-
-int init_sys()
-{
-    // 等待,由DownloadSDKServer.exe触发
-    WaitForSingleObject(g_serverStartUpEvent, INFINITE);
-
-    // 设置后DownloadSDKServer.exe的第二线程退出
-    strcpy_s(g_tail, 100, "|AccetpReturnEvent");
-    HANDLE accetpReturnEvent = OpenEventA(EVENT_ALL_ACCESS, FALSE, g_arg);
-    SetEvent(accetpReturnEvent);
-    CloseHandle(accetpReturnEvent);
-
-    // 打开共享内存
-    int ret = open_sharememory();
-
-    if (0 != ret)
-    {
-        return -1;
-    }
-
-    // 等待对方接收数据,由DownloadSDKServer.exe触发
-    WaitForSingleObject(g_recvBufferEmptyEvent, INFINITE);
-
-    // 写入数据1固定的
-    g_recv[0] = 1;
-
-    ResetEvent(g_recvBufferEmptyEvent);
-    SetEvent(g_recvBufferFullEvent);
-
-    // 等待对方发送数据,由DownloadSDKServer.exe触发
-    WaitForSingleObject(g_sendBufferFullEvent, INFINITE);
-
-    // 接收数据
-    DWORD data = *(DWORD*)&g_send[1];
-    g_tail += sprintf_s(g_tail, 100, "@%d", data);
-
-    ResetEvent(g_sendBufferFullEvent);
-    SetEvent(g_sendBufferEmptyEvent);
-
-    // 等待对方接收数据,由DownloadSDKServer.exe触发
-    WaitForSingleObject(g_recvBufferEmptyEvent, INFINITE);
-
-    // 写入数据3固定的
-    g_recv[0] = 3;
-
-    ResetEvent(g_recvBufferEmptyEvent);
-    SetEvent(g_recvBufferFullEvent);
-
-    // ClientAliveMutex
-    strcpy_s(g_tail, 100, "|ClientAliveMutex");
-    HANDLE clientAliveMutex = OpenMutexA(MUTEX_ALL_ACCESS, FALSE, g_arg);
-
-    if (NULL == clientAliveMutex)
-    {
-        return -2;
-    }
-
-    // 进入临界区,防止DownloadSDKServer.exe的主循环退出
-    WaitForSingleObject(clientAliveMutex, INFINITE);
-    CloseHandle(clientAliveMutex);
-
-    // 再次打开共享内存,名称不一样啦
-    ret = open_sharememory();
-
-    if (0 != ret)
-    {
-        return -3;
-    }
-
-    // 临时数据
-    g_recv_tmp = malloc(0x10000);
-    g_send_tmp = malloc(0x10000);
-
-    return 0;
-}
-
-int init_sdk()
-{
-    p_data_head p = (p_data_head)g_recv_tmp;
-
-    // 调用函数XL_Init,格式:数据总长(不包含本身4字节),函数ID,参数1长度,参数
-    p->func_id = XL_Init;
-    p->arg1.len = sprintf_s(p->arg1.data, 100, "xzcGMudGh1bmRlclg7MA^^SDK=="
-                                               "edee53fd0b15e8d65dbfe7824f5f^a23");
-
-    p_arg_head arg2 = (p_arg_head)&(p->arg1.data[p->arg1.len]);
-    arg2->len = 0x28;
-    memset(arg2->data, 0, arg2->len);
-    strcpy_s(arg2->data, 20, "\xff\xff\xff\xff  11.3.5.1864");
-    arg2->data[4] = 0x00;   // 字符串中的空格应该是\x00
-    arg2->data[5] = 0x00;
-
-    p->len = 8 + p->arg1.len + 4 + arg2->len;
-
-    call_func();  // 调用函数
-
-    p->func_id = XL_GetPeerId;
-    p->len = 0x04;
-    int ret = call_func();
-
-    if (0 != ret)
-    {
-        return -1;
-    }
-
-    //char peerid[128];
-    //strncpy_s(peerid, sizeof(peerid), g_send + 16, *(DWORD*)(g_send_tmp + 12));;
-    //MessageBoxA(NULL, peerid, "peerid", MB_OK);
-
-    p->func_id = XL_SetUserInfo;
-    p->data[0] = 0x00;
-    p->data[1] = 0x00;
-    p->len = 0x0c;
-    call_func();
-
-    if (0 != ret)
-    {
-        return -2;
-    }
-
-    p->func_id = XL_SetGlobalExtInfo;
-    p->arg1.len = sprintf_s(p->arg1.data, 100, "isvip=0,viptype=,viplevel=0,userchannel=100001");
-    p->len = 8 + p->arg1.len;
-    call_func();
-
-    if (0 != ret)
-    {
-        return -3;
-    }
-
-    p->func_id = XL_SetDownloadSpeedLimit;
-    p->data[0] = 0xffffffff;
-    p->len = 0x08;
-    call_func();
-
-    if (0 != ret)
-    {
-        return -4;
-    }
-
-    p->func_id = XL_SetUploadSpeedLimit;
-    p->data[0] = 0xffffffff;
-    p->len = 0x08;
-    call_func();
-
-    if (0 != ret)
-    {
-        return -5;
-    }
-
-    p->func_id = XL_SetGlobalConnectionLimit;
-    p->data[0] = 0xffffffff;
-    p->len = 0x08;
-    call_func();
-
-    if (0 != ret)
-    {
-        return -6;
-    }
-
-    p->func_id = XL_QueryGlobalStat;
-    p->len = 0x04;
-    call_func();
-
-    if (0 != ret)
-    {
-        return -7;
-    }
-
-    return 0;
-}
-
-int download_torrent_file(HWND wnd, int *taskid, wchar_t *filename)
-{
-    if (!g_init)
-    {
-        return -1;
-    }
-
-    // 参数1,磁力URL,参数2,本地文件名,都是UNICODE编码
-    p_data_head p = (p_data_head)g_recv_tmp;
-
-    wchar_t *url = (wchar_t*)p->arg1.data;
-    GetDlgItemTextW(wnd, IDC_EDIT, url, 1024*100);
-    p->arg1.len = wcslen(url);
-
-    MessageBox(wnd, url, _T("url"), MB_OK);
-
-    p_arg_head arg2 = (p_arg_head)(p->arg1.data + p->arg1.len * 2);
-    wchar_t *file = (wchar_t*)arg2->data;
-    arg2->len = _stprintf_s(file, 100, _T("d:\\5.downloads\\%u.torrent"), GetTickCount());;
-
-    MessageBox(wnd, file, _T("file"), MB_OK);
-
-    p->func_id = XL_CreateMagnetTask;
-    p->len = 8 + p->arg1.len * 2 + 4 + arg2->len * 2;
-
-    int ret = call_func();
-
-    if (0 != ret)
-    {
-        return -2;
-    }
-
-    *taskid = *(int*)(g_send_tmp + 12);
-    _tcscpy_s(filename, 100, file);
-
-    return 0;
-}
-
-int download_bt_file(HWND wnd, int *taskid, wchar_t *filename)
-{
-    if (!g_init)
-    {
-        return -1;
-    }
-
-    *taskid = *(int*)(g_send_tmp + 12);
-
-    return 0;
-}
-
-int download_file_start(int taskid)
-{
-    p_data_head p = (p_data_head)g_recv_tmp;
-    p->func_id = XL_SetTaskStrategy;
-    p->data[0] = taskid;
-    p->data[1] = 7;
-    p->len = 0x0c;
-    int ret = call_func();
-
-    if (0 != ret)
-    {
-        return -1;
-    }
-
-    p->func_id = XL_SetTaskExtInfo;
-    p->data[0] = taskid;
-    p->data[1] = 0x2b;
-    strcpy_s((char*)&(p->data[2]), 100, "parentid=109183876,taskorigin=newwindow_url");
-    p->len = 0x0c + 0x2b;
-    ret = call_func();
-
-    if (0 != ret)
-    {
-        return -2;
-    }
-
-    p->func_id = XL_StartTask;
-    p->data[0] = taskid;
-    p->len = 0x08;
-    ret = call_func();
-
-    if (0 != ret)
-    {
-        return -3;
-    }
-
-    return 0;
-}
-
-void insert_list(int taskid, TCHAR *filename)
-{
-    TCHAR info[128];
-    SP(_T("%d"), taskid);
-
-    LVITEM item;
-    item.mask = LVIF_TEXT;
-    item.pszText = info;
-    item.iItem = ListView_GetItemCount(g_list);
-    item.iSubItem = 0;
-    ListView_InsertItem(g_list, &item);
-
-    item.pszText = filename;
-    item.iSubItem = 1;
-    ListView_SetItem(g_list, &item);
-
-    item.pszText = _T("0.00%");
-    item.iSubItem = 2;
-    ListView_SetItem(g_list, &item);
-}
-
-void btn_download(HWND wnd)
-{
-    int     ret;
-    int     taskid;
-    TCHAR   info[128];
-    wchar_t filename[MAX_PATH];
-
-    if (IsWindowVisible(g_list))
-    {
-        ret = download_torrent_file(wnd, &taskid, filename);
+        _stprintf_s(info, 16, _T("%.2fKB%s"), k, unit);
     }
     else
     {
-        ret = download_bt_file(wnd, &taskid, filename);
+        _stprintf_s(info, 16, _T("%I64uB%s"), data, unit);
+    }
+}
+
+/**
+ * \brief   下载按钮
+ * \param   [in]  HWND wnd 窗体句柄
+ * \return  无
+ */
+void btn_download(HWND wnd)
+{
+    int     ret;
+    TCHAR   info[128];
+
+    int     taskid;
+    char    list[MAX_PATH];
+    short   file[MAX_PATH];
+    short   filename[MAX_PATH];
+
+    short  *path   = L"D:\\5.downloads\\bt";
+    BOOL    magnet = IsWindowVisible(g_list);
+
+    GetDlgItemTextW(wnd, IDC_EDIT, file, sizeof(file));
+
+    if (magnet)
+    {
+        ret = create_magnet_task(file, path, &taskid, filename);
+    }
+    else
+    {
+        ret = create_file_task(file, path, list, &taskid);
     }
 
     if (0 != ret)
     {
         SP(_T("download file error:%d"), ret);
-        MessageBox(wnd, info, _T(""), MB_OK);
+        MessageBox(wnd, info, _T("error"), MB_OK);
         return;
     }
 
-    ret = download_file_start(taskid);
+    ret = start_download_file(taskid, magnet);
 
     if (0 != ret)
     {
@@ -942,7 +136,21 @@ void btn_download(HWND wnd)
         MessageBox(wnd, info, _T(""), MB_OK);
     }
 
-    insert_list(taskid, filename);
+    SP(_T("%d"), taskid);
+
+    LVITEM item;
+    item.mask = LVIF_TEXT;
+    item.pszText = info;
+    item.iItem = ListView_GetItemCount(g_list);
+    item.iSubItem = LIST_TASK;
+    ListView_InsertItem(g_list, &item);
+
+    item.pszText = filename;
+    item.iSubItem = LIST_FILE;
+    ListView_SetItem(g_list, &item);
+
+    ShowWindow(g_list, SW_SHOW);
+    ShowWindow(g_torr, SW_HIDE);
     return;
 }
 
@@ -953,70 +161,92 @@ void btn_download(HWND wnd)
  */
 void on_timer(HWND wnd)
 {
-    int ret;
-    TCHAR info[128];
+    if (!IsWindowVisible(g_list))
+    {
+        return;
+    }
+
+    int              ret;
+    TCHAR            info[128];
+
+    int              taskid;
+    double           speed;
+    unsigned int     time;
+    unsigned __int64 size;
+    unsigned __int64 down;
 
     for (int i = 0; i < ListView_GetItemCount(g_list); i++)
     {
-        ListView_GetItemText(g_list, i, 2, info, SIZEOF(info));
+        ListView_GetItemText(g_list, i, LIST_PROG, info, SIZEOF(info));
 
-        if (0 == _tcscmp(info, _T("100%")))
+        if (0 == _tcscmp(info, _T("100.00%")))
         {
             continue;
         }
 
-        ListView_GetItemText(g_list, i, 0, info, SIZEOF(info));
+        ListView_GetItemText(g_list, i, LIST_TASK, info, SIZEOF(info));
 
-        p_data_head p = (p_data_head)g_recv_tmp;
-        p->func_id = XL_QueryTaskInfo;
-        p->data[0] = _ttoi(info);
-        p->len = 0x08;
-        ret = call_func();
+        taskid = _ttoi(info);
+
+        ret = get_task_info(taskid, &size, &down, &time);
 
         if (0 != ret)
         {
+            SP(_T("XL_QueryTaskInfo:%d"), ret);
+            MessageBox(wnd, info, _T("error"), MB_OK);
             continue;
         }
-/*
-        DWORD count = *(DWORD*)g_send_tmp;
-        TCHAR *ptr = info;
-
-        for (DWORD i = 0; i < count; i++)
-        {
-            ptr += _stprintf_s(ptr, 10, _T("%02x "), g_send_tmp[i]);
-
-            if (i % 64 == 63 && i != 0)
-            {
-                ptr += _stprintf_s(ptr, 10, _T("\n"));
-            }
-        }
-
-        MessageBox(wnd, info, _T("XL_QueryTaskInfo"), MB_OK);
-*/
-        unsigned __int64 size = *(unsigned __int64*)(g_send_tmp + 0x18);
-        unsigned __int64 down = *(unsigned __int64*)(g_send_tmp + 0x20);
-        unsigned int     time = *(unsigned int*)(g_send_tmp + 0x28);
 
         LVITEM item;
         item.mask = LVIF_TEXT;
         item.iItem = i;
-        item.iSubItem = 2;
         item.pszText = info;
 
         if (0 == size) // 下载完成
         {
-            //p->func_id = XL_DeleteTask;
-            //p->data[0] = _ttoi(info);
-            //p->len = 0x08;
-            //call_func();
+            SP(_T(""));
+            item.iSubItem = LIST_SPEE;
+            ListView_SetItem(g_list, &item);
 
-            lstrcpy(info, _T("100%"));
+            SP(_T("100.00%%"));
+            item.iSubItem = LIST_PROG;
+            ListView_SetItem(g_list, &item);
+            continue;
+        }
+
+        if (down > g_task[taskid].down && time > g_task[taskid].time)
+        {
+            if (g_task[taskid].down == 0)   // 只更新1次
+            {
+                format_data(size, _T(""), info);
+                item.iSubItem = LIST_SIZE;
+                ListView_SetItem(g_list, &item);
+            }
+            else
+            {
+                speed = (double)(down - g_task[taskid].down) / (time - g_task[taskid].time);
+
+                format_data((unsigned __int64)speed, _T("/s"), info);
+                item.iSubItem = LIST_SPEE;
+                ListView_SetItem(g_list, &item);
+            }
+
+            SP(_T("%0.2f%%"), (double)down / size * 100.0);
+            item.iSubItem = LIST_PROG;
+            ListView_SetItem(g_list, &item);
+
+            g_task[taskid].down = down;
+            g_task[taskid].time = time;
         }
         else
         {
-            SP(_T("%.2f"), down / (double)size);
+            SP(_T(""));
+            item.iSubItem = LIST_SPEE;
+            ListView_SetItem(g_list, &item);
         }
 
+        SP(_T("%ds"), time);
+        item.iSubItem = LIST_TIME;
         ListView_SetItem(g_list, &item);
     }
 }
@@ -1026,69 +256,48 @@ void on_timer(HWND wnd)
  * \param   [in]  WPARAM w 拖拽句柄
  * \return  无
  */
-void on_dropfiles(WPARAM w)
+void on_dropfiles(HWND wnd, WPARAM w)
 {
     HDROP drop = (HDROP)w;
 
+    // iFile:0-只取第1个,0xFFFFFFFF-返回拖拽文件个数
     char filename[MAX_PATH];
-    DragQueryFileA(drop, 0, filename, MAX_PATH);    // 0-只取第1个,0xFFFFFFFF-返回拖拽文件个数
+    DragQueryFileA(drop, 0, filename, MAX_PATH);
     DragFinish(drop);
 
-    char         *buff;
-    unsigned int  size;
+    torrent info = {0};
 
-    if (0 != get_file_data(filename, &buff, &size))
+    int ret = get_torrent_info(filename, &info);
+
+    if (0 != ret)
     {
-        return;
+        TCHAR info[MAX_PATH];
+        SP(_T("get_torrent_info error:%d"), ret);
+        MessageBox(wnd, info, _T("error"), MB_OK);
     }
-
-    info_head data;
-    data.name  = (TCHAR*)buff;
-    data.last  = 0;
-    data.count = 0;
-
-    bencode_dict(buff, size, &data);
-
-    TCHAR info[MAX_PATH];
 
     LVITEM item;
     item.mask = LVIF_TEXT;
 
-    for (int i = 0; i < data.count; i++)
+    ListView_DeleteAllItems(g_torr);
+
+    TCHAR txt[MAX_PATH];
+
+    for (int i = 0; i < info.count; i++)
     {
-        item.pszText = data.file[i].name;
+        format_data(info.file[i].len, _T(""), txt);
+
         item.iItem = i;
-        item.iSubItem = 0;
+        item.iSubItem = TORR_SIZE;
+        item.pszText = txt;
         ListView_InsertItem(g_torr, &item);
 
-        double g = data.file[i].len / (1024.0 * 1024 * 1024);
-        double m = data.file[i].len / (1024.0 * 1024);
-        double k = data.file[i].len / (1024.0);
-
-        if (g > 1.0)
-        {
-            SP(_T("%.2fGB"), g);
-        }
-        else if (m > 1.0)
-        {
-            SP(_T("%.2fMB"), m);
-        }
-        else if (k > 1.0)
-        {
-            SP(_T("%.2fKB"), k);
-        }
-        else
-        {
-            SP(_T("%lldB"), data.file[i].len);
-        }
-
-        item.pszText = info;
-        item.iSubItem = 1;
+        item.iSubItem = TORR_FILE;
+        item.pszText = info.file[i].name_unicode;
         ListView_SetItem(g_torr, &item);
     }
 
-    free(buff);
-
+    SetWindowTextA(g_edit, filename);
     ShowWindow(g_list, SW_HIDE);
     ShowWindow(g_torr, SW_SHOW);
 }
@@ -1110,25 +319,6 @@ void on_sys_notify(HWND wnd, LPARAM l)
 }
 
 /**
- * \brief   命令消息处理函数,菜单,按钮都会发此消息
- * \param   [in]  HWND   wnd 窗体句柄
- * \param   [in]  WPARAM w   消息参数
- * \return  无
- */
-void on_command(HWND wnd, WPARAM w)
-{
-    int obj = LOWORD(w);
-    int cmd = HIWORD(w);
-
-    switch (obj)
-    {
-        case IDM_EXIT:          PostMessage(wnd, WM_CLOSE, 0, 0);                       break;
-        case IDM_SHOW:          ShowWindow(wnd, IsWindowVisible(wnd)?SW_HIDE:SW_SHOW);  break;
-        case IDC_BTN_DOWNLOAD:  btn_download(wnd);                                      break;
-    }
-}
-
-/**
  * \brief   改变大小消息处理函数
  * \param   [in]  LPARAM l 窗体s宽高
  * \return  无
@@ -1139,26 +329,35 @@ void on_size(LPARAM l)
     int h = HIWORD(l);
 
     MoveWindow(g_edit, 0,        1, w - 100,     25, TRUE);
-    MoveWindow(g_butt, w - 100,  1, 100 - 1,     25, TRUE);
+    MoveWindow(g_down, w - 100,  1, 100 - 1,     25, TRUE);
     MoveWindow(g_list, 0,       27,       w, h - 27, TRUE);
     MoveWindow(g_torr, 0,       27,       w, h - 27, TRUE);
 
     LVCOLUMN col = {0};
     col.mask = LVCF_WIDTH;
-    col.cx = 90;
-    ListView_SetColumn(g_list, 0, &col);
+    col.cx = 40;
+    ListView_SetColumn(g_list, LIST_TASK, &col);    // 任务ID
 
-    col.cx = w - 180;
-    ListView_SetColumn(g_list, 1, &col);
-
-    col.cx = 90;
-    ListView_SetColumn(g_list, 2, &col);
-
-    col.cx = w - 90;
-    ListView_SetColumn(g_torr, 0, &col);
+    col.cx = w - 320;
+    ListView_SetColumn(g_list, LIST_FILE, &col);    // 目录
 
     col.cx = 70;
-    ListView_SetColumn(g_torr, 1, &col);
+    ListView_SetColumn(g_list, LIST_SIZE, &col);    // 大小
+
+    col.cx = 90;
+    ListView_SetColumn(g_list, LIST_SPEE, &col);    // 速度
+
+    col.cx = 65;
+    ListView_SetColumn(g_list, LIST_PROG, &col);    // 进度
+
+    col.cx = 50;
+    ListView_SetColumn(g_list, LIST_TIME, &col);    // 用时
+
+    col.cx = 90;
+    ListView_SetColumn(g_torr, TORR_SIZE, &col);    // 大小
+
+    col.cx = w - 110;
+    ListView_SetColumn(g_torr, TORR_FILE, &col);    // 文件
 }
 
 /**
@@ -1206,7 +405,7 @@ void on_create(HWND wnd, LPARAM l)
 
     SendMessage(g_edit, WM_SETFONT, (WPARAM)font, (LPARAM)TRUE);
 
-    g_butt = CreateWindow(WC_BUTTON,
+    g_down = CreateWindow(WC_BUTTON,
                           _T("download"),
                           WS_CHILD |
                           WS_VISIBLE |
@@ -1218,7 +417,7 @@ void on_create(HWND wnd, LPARAM l)
                           NULL,
                           NULL);
 
-    SendMessage(g_butt, WM_SETFONT, (WPARAM)font, (LPARAM)TRUE);
+    SendMessage(g_down, WM_SETFONT, (WPARAM)font, (LPARAM)TRUE);
 
     g_list = CreateWindow(WC_LISTVIEW,
                           _T("listview"),
@@ -1241,13 +440,24 @@ void on_create(HWND wnd, LPARAM l)
     LVCOLUMN col = {0};
     col.mask = LVCF_TEXT;
     col.pszText = _T("任务");
-    ListView_InsertColumn(g_list, 0, &col);
+    ListView_InsertColumn(g_list, LIST_TASK, &col);
 
-    col.pszText = _T("名称");
-    ListView_InsertColumn(g_list, 1, &col);
+    col.pszText = _T("文件");
+    ListView_InsertColumn(g_list, LIST_FILE, &col);
+
+    col.mask = LVCF_TEXT | LVCF_FMT;
+    col.fmt = LVCFMT_RIGHT;
+    col.pszText = _T("大小");
+    ListView_InsertColumn(g_list, LIST_SIZE, &col);
+
+    col.pszText = _T("速度");
+    ListView_InsertColumn(g_list, LIST_SPEE, &col);
 
     col.pszText = _T("进度");
-    ListView_InsertColumn(g_list, 2, &col);
+    ListView_InsertColumn(g_list, LIST_PROG, &col);
+
+    col.pszText = _T("用时");
+    ListView_InsertColumn(g_list, LIST_TIME, &col);
 
     g_torr = CreateWindow(WC_LISTVIEW,
                           _T("listview"),
@@ -1265,11 +475,12 @@ void on_create(HWND wnd, LPARAM l)
 
     SendMessage(g_torr, WM_SETFONT, (WPARAM)font, (LPARAM)TRUE);
 
-    col.pszText = _T("文件");
-    ListView_InsertColumn(g_torr, 0, &col);
-
+    col.mask = LVCF_TEXT;
     col.pszText = _T("大小");
-    ListView_InsertColumn(g_torr, 1, &col);
+    ListView_InsertColumn(g_torr, TORR_SIZE, &col);
+
+    col.pszText = _T("文件");
+    ListView_InsertColumn(g_torr, TORR_FILE, &col);
 }
 
 /**
@@ -1283,11 +494,33 @@ void on_create(HWND wnd, LPARAM l)
  */
 void on_close(HWND wnd)
 {
-    int ret = MessageBox(wnd, _T("确定退出?"), _T(""), MB_ICONQUESTION | MB_YESNO);
+    ///////////////////////////////ShowWindow(wnd, SW_HIDE);
+    DestroyWindow(wnd);
+}
 
-    if (IDYES == ret)
+/**
+ * \brief   窗体关闭处理函数
+ * \param   [in]  HWND wnd 窗体句柄
+ * \return  无
+ */
+void on_exit(HWND wnd)
+{
+    int ret = MessageBox(wnd, _T("确定退出?"), _T("消息"), MB_ICONQUESTION | MB_YESNO);
+
+    if (IDNO == ret)
     {
-        DestroyWindow(wnd);
+        return;
+    }
+
+    DestroyWindow(wnd);
+
+    TCHAR info[MAX_PATH];
+
+    for (int i = 0; i < ListView_GetItemCount(g_list); i++)
+    {
+        ListView_GetItemText(g_list, i, 0, info, SIZEOF(info));
+
+        stop_download_file(_ttoi(info));
     }
 }
 
@@ -1300,6 +533,35 @@ void on_destory(HWND wnd)
 {
     Shell_NotifyIcon(NIM_DELETE, &g_nid);
     PostQuitMessage(0);
+}
+
+/**
+ * \brief   窗体显示函数
+ * \param   [in]  HWND wnd 窗体句柄
+ * \return  无
+ */
+void on_show(HWND wnd)
+{
+    ShowWindow(wnd, IsWindowVisible(wnd)?SW_HIDE:SW_SHOW);
+}
+
+/**
+ * \brief   命令消息处理函数,菜单,按钮都会发此消息
+ * \param   [in]  HWND   wnd 窗体句柄
+ * \param   [in]  WPARAM w   消息参数
+ * \return  无
+ */
+void on_command(HWND wnd, WPARAM w)
+{
+    int obj = LOWORD(w);
+    int cmd = HIWORD(w);
+
+    switch (obj)
+    {
+        case IDM_EXIT:          on_exit(wnd);       break;
+        case IDM_SHOW:          on_show(wnd);       break;
+        case IDC_BTN_DOWNLOAD:  btn_download(wnd);  break;
+    }
 }
 
 /**
@@ -1320,7 +582,7 @@ LRESULT CALLBACK window_proc(HWND wnd, UINT msg, WPARAM w, LPARAM l)
     switch(msg)
     {
         case WM_TIMER:       on_timer(wnd);         break;
-        case WM_DROPFILES:   on_dropfiles(w);       break;
+        case WM_DROPFILES:   on_dropfiles(wnd, w);  break;
         case WM_COMMAND:     on_command(wnd, w);    break;
         case WM_SIZE:        on_size(l);            break;
         case WM_CREATE:      on_create(wnd, l);     break;
@@ -1382,6 +644,29 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
     // 重绘窗体
     UpdateWindow(wnd);
 
+    TCHAR info[MAX_PATH];
+    unsigned int len;
+
+    // 加载拼音数据
+    int ret = load_pinyin_res(IDR_PINYIN, _T("PINYIN"), &g_pinyin, &len);
+
+    if (0 != ret)
+    {
+        SP(_T("load_pinyin_data error:%d"), ret);
+        MessageBox(wnd, info, _T("SDKStart"), MB_OK);
+        return -2;
+    }
+
+    // 初始化SDK
+    ret = init();
+
+    if (0 != ret)
+    {
+        SP(_T("init sdk error:%d"), ret);
+        MessageBox(wnd, info, _T("SDKStart"), MB_OK);
+        return -2;
+    }
+
     // 系统托盘
     WM_MY_NOTIFY           = RegisterWindowMessage(_T("WM_MY_NOTIFYICON"));
     g_nid.cbSize           = sizeof(NOTIFYICONDATA);
@@ -1390,47 +675,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
     g_nid.uFlags           = NIF_MESSAGE | NIF_ICON;    // 消息,图标
     g_nid.uCallbackMessage = WM_MY_NOTIFY;              // 消息ID
 
-    Shell_NotifyIcon(NIM_ADD, &g_nid);
-
-    for (int i = 0; i < 1; i++)
-    {
-        int ret = create_process(); // 创建子进程,启动DownloadSDKServer.exe
-
-        if (0 != ret)
-        {
-            MessageBox(wnd, _T("run DownloadSDKServer.exe error"), _T("SDKStart"), MB_OK);
-            break;
-        }
-
-        ret = create_mutex();
-
-        if (0 != ret)
-        {
-            MessageBox(wnd, _T("create mutex error"), _T("SDKStart"), MB_OK);
-            break;
-        }
-
-        ret = init_sys();
-
-        if (0 != ret)
-        {
-            MessageBox(wnd, _T("init sys error"), _T("SDKStart"), MB_OK);
-            break;
-        }
-
-        ret = init_sdk();
-
-        if (0 != ret)
-        {
-            MessageBox(wnd, _T("init sdk error"), _T("SDKStart"), MB_OK);
-            break;
-        }
-
-        g_init = TRUE;
-    }
+    Shell_NotifyIcon(NIM_ADD, &g_nid);                  // 添加系统托盘图标
 
     // 定时器
-    SetTimer(wnd, 1, 1000, NULL);
+    SetTimer(wnd, 1, 5000, NULL);
 
     // 消息体
     MSG msg;
