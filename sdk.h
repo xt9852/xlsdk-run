@@ -62,3 +62,13 @@ int stop_download_file(int taskid);
  * \return  0-成功，其它失败
  */
 int get_task_info(int taskid, unsigned __int64 *size, unsigned __int64 *down, unsigned int *time);
+
+/**
+ * \brief   添加服务器
+ * \param   [in]   int      *taski      任务ID
+ * \param   [in]   int      count       服务器数量
+ * \param   [in]   void     *data       服务器数据
+ * \param   [in]   int      data_len    数据长度
+ * \return  0-成功，其它失败
+ */
+int add_bt_tracker(int taskid, int count, void *data, int data_len);

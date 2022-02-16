@@ -37,11 +37,12 @@ typedef struct _torrent_info
     file_info           file[512];              // 种子内包含的文件信息
 
     int                 announce_len;           // 数据长
-    char                announce[10240];        // 服务器列表
+    int                 announce_count;         // 服务器列表数量
+    short               announce[10240];        // 服务器列表
 
     int                 last;                   // 上一个字符串是什么
     char               *name_tail;              // 指向当是文件名结尾
-    char               *announce_tail;          // 指向服务器列表结尾
+    short              *announce_tail;          // 指向服务器列表结尾
 
 }torrent, *p_torrent;                           // 种子文件信息
 

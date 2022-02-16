@@ -13,7 +13,6 @@
 #include <stdlib.h>
 #include <tchar.h>
 #include <Windows.h>
-//#include <CommCtrl.h>
 #include "resource.h"
 
 #define SIZEOF(x)               sizeof(x)/sizeof(x[0])
@@ -72,7 +71,115 @@ HANDLE g_sendShareMemory        = NULL;     // 共享内存1M,对方发送的数
 HANDLE g_sendBufferFullEvent    = NULL;     // 信号,表示有数据,我方可以处理啦
 HANDLE g_sendBufferEmptyEvent   = NULL;     // 信号,表示我方可以处理完成,对方可以再次发送
 
+int    g_track_len              = 0;
 
+int    g_track_count            = 0;
+
+short *g_track_data[10240]      = {0};
+
+const short *g_track[] = {
+    L"http://1337.abcvg.info:80/announce",
+    L"http://filetracker.xyz:11451/announce",
+    L"http://nyaa.tracker.wf:7777/announce",
+    L"http://opentracker.xyz:80/announce",
+    L"http://rt.tace.ru:80/announce",
+    L"http://share.camoe.cn:8080/announce",
+    L"http://t.nyaatracker.com:80/announce",
+    L"http://torrentsmd.com:8080/announce",
+    L"http://tr.cili001.com:8070/announce",
+    L"http://tracker-cdn.moeking.me:2095/announce",
+    L"http://tracker.anirena.com:80/announce",
+    L"http://tracker.anirena.com:80/b16a15d9a238d1f59178d3614b857290/announce",
+    L"http://tracker.bt4g.com:2095/announce",
+    L"http://tracker.darmowy-torrent.pl:80/announce",
+    L"http://tracker.files.fm:6969/announce",
+    L"http://tracker.gbitt.info:80/announce",
+    L"http://tracker.ipv6tracker.ru:80/announce",
+    L"http://tracker.tfile.co:80/announce",
+    L"http://tracker.trackerfix.com:80/announce",
+    L"http://trk.publictracker.xyz:6969/announce",
+    L"http://vps02.net.orel.ru:80/announce",
+    L"https://1337.abcvg.info:443/announce",
+    L"https://bt.nfshost.com:443/announce",
+    L"https://tp.m-team.cc:443/announce.php",
+    L"https://tracker.coalition.space:443/announce",
+    L"https://tracker.foreverpirates.co:443/announce",
+    L"https://tracker.gbitt.info:443/announce",
+    L"https://tracker.hama3.net:443/announce",
+    L"https://tracker.imgoingto.icu:443/announce",
+    L"https://tracker.iriseden.eu:443/announce",
+    L"https://tracker.iriseden.fr:443/announce",
+    L"https://tracker.lilithraws.cf:443/announce",
+    L"https://tracker.nanoha.org:443/announce",
+    L"https://tracker.nitrix.me:443/announce",
+    L"https://tracker.tamersunion.org:443/announce",
+    L"https://w.wwwww.wtf:443/announce",
+    L"udp://6rt.tace.ru:80/announce",
+    L"udp://9.rarbg.me:2710/announce",
+    L"udp://9.rarbg.to:2710/announce",
+    L"udp://bubu.mapfactor.com:6969/announce",
+    L"udp://code2chicken.nl:6969/announce",
+    L"udp://discord.heihachi.pw:6969/announce",
+    L"udp:/edu.uifr.ru:6969/announce",
+    L"udp://engplus.ru:6969/announce",
+    L"udp://exodus.desync.com:6969/announce",
+    L"udp://explodie.org:6969/announce",
+    L"udp://fe.dealclub.de:6969/announce",
+    L"udp://free.publictracker.xyz:6969/announce",
+    L"udp://ipv6.tracker.zerobytes.xyz:16661/announce",
+    L"udp://mail.realliferpg.de:6969/announce",
+    L"udp://movies.zsw.ca:6969/announce",
+    L"udp://mts.tvbit.co:6969/announce",
+    L"udp://newtoncity.org:6969/announce",
+    L"udp://open.demonii.com:1337/announce",
+    L"udp://open.stealth.si:80/announce",
+    L"udp://opentor.org:2710/announce",
+    L"udp://opentracker.i2p.rocks:6969/announce",
+    L"udp://p4p.arenabg.com:1337/announce",
+    L"udp://retracker.lanta-net.ru:2710/announce",
+    L"udp://retracker.netbynet.ru:2710/announce",
+    L"udp://t1.leech.ie:1337/announce",
+    L"udp:/t2.leech.ie:1337/announce",
+    L"udp://thetracker.org:80/announce",
+    L"udp://torrentclub.online:54123/announce",
+    L"udp://tracker.0x.tf:6969/announce",
+    L"udp://tracker.altrosky.nl:6969/announce",
+    L"udp://tracker.army:6969/announce",
+    L"udp://tracker.beeimg.com:6969/announce",
+    L"udp://tracker.birkenwald.de:6969/announce",
+    L"udp://tracker.ccp.ovh:6969/announce",
+    L"udp://tracker.dler.org:6969/announce",
+    L"udp://tracker.moeking.me:6969/announce",
+    L"udp://tracker.monitorit4.me:6969/announce",
+    L"udp://tracker.nrx.me:6969/announce",
+    L"udp://tracker.openbittorrent.com:6969/announce",
+    L"udp://tracker.opentrackr.org:1337/announce",
+    L"udp://tracker.shkinev.me:6969/announce",
+    L"udp://tracker.theoks.net:6969/announce",
+    L"udp://tracker.tiny-vps.com:6969/announce",
+    L"udp://tracker.torrent.eu.org:451/announce",
+    L"udp://tracker.uw0.xyz:6969/announce",
+    L"udp://tracker.v6speed.org:6969/announce",
+    L"udp://tracker.zemoj.com:6969/announce",
+    L"udp://tracker.zerobytes.xyz:1337/announce",
+    L"udp://tracker0.ufibox.com:6969/announce",
+    L"udp://tracker2.dler.org:80/announce",
+    L"udp://tracker4.itzmx.com:2710/announce",
+    L"udp://u.wwwww.wtf:1/announce",
+    L"udp://udp-tracker.shittyurl.org:6969/announce",
+    L"udp://valakas.rollo.dnsabr.com:2710/announce",
+    L"udp://vibe.community:6969/announce",
+    L"udp://vibe.sleepyinternetfun.xyz:1738/announce",
+    L"udp://wassermann.online:6969/announce",
+    L"udp://www.torrent.eu.org:451/announce",
+    L"udp://z.mercax.com:53/announce",
+    L"udp://zephir.monocul.us:6969/announce",
+    L"udp://tracker4.itzmx.com:2710/announce",
+    L"http://tracker4.itzmx.com:2710/announce",
+    L"http://tracker3.itzmx.com:6961/announce",
+    L"http://tracker2.itzmx.com:6961/announce",
+    L"http://tracker1.itzmx.com:8080/announce"
+};
 
 enum    // SDK函数ID
 {
@@ -516,6 +623,21 @@ int init()
         return -4;
     }
 
+    DWORD len;
+
+    g_track_count = SIZEOF(g_track);
+
+    for (int i = 0; i < g_track_count; i++)
+    {
+        len = wcslen(g_track[i]);
+
+        *((DWORD*)g_track_data + g_track_len) = len;
+
+        memcpy(g_track_data + g_track_len + 2, g_track[i], len * 2);
+
+        g_track_len += 2 + len;
+    }
+
     g_init = TRUE;
 
     return 0;
@@ -609,11 +731,13 @@ int create_file_task(short *torrent, short *path, char *list, int *taskid)
     // 参数2,本地下载目录
     p_arg_head arg2 = (p_arg_head)(p->arg1.data + p->arg1.len * 2);
     len = wcslen(path);
+    arg2->len = len;
     memcpy(arg2->data, path, len * 2);
 
     // 参数3,下载列表,1-下载,0-不下载
     p_arg_head arg3 = (p_arg_head)(arg2->data + arg2->len * 2);
     len = strlen(list);
+    arg3->len = len;
     memcpy(arg3->data, list, len);
 
     // 创建下载BT文件任务
@@ -783,6 +907,44 @@ int get_task_info(int taskid, unsigned __int64 *size, unsigned __int64 *down, un
     *size = *(unsigned __int64*)(g_send_tmp + 0x18);
     *down = *(unsigned __int64*)(g_send_tmp + 0x20);
     *time = *(unsigned int*)(g_send_tmp + 0x30);
+
+    return 0;
+}
+
+
+
+/**
+ * \brief   添加服务器
+ * \param   [in]   int      *taski      任务ID
+ * \param   [in]   int      count       服务器数量
+ * \param   [in]   void     *data       服务器数据
+ * \param   [in]   int      data_len    数据长度
+ * \return  0-成功，其它失败
+ */
+int add_bt_tracker(int taskid, int count, void *data, int data_len)
+{
+    int cnt = SIZEOF(g_track);
+
+    p_data_head p = (p_data_head)g_recv_tmp;
+    p->func_id = XL_BatchAddBTTracker;
+    p->data[0] = taskid;
+    p->data[1] = count + g_track_count;
+    p->len     = 0x0c + data_len + g_track_len;
+
+    char *ptr = (char*)(p->data + 2);
+
+    memcpy(ptr, data, data_len);
+
+    ptr += data_len;
+
+    memcpy(ptr + data_len, g_track_data, g_track_len);
+
+    int ret = call_sdk_func();
+
+    if (0 != ret)
+    {
+        return -1;
+    }
 
     return 0;
 }

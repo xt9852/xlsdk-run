@@ -40,6 +40,7 @@ enum    // 种子文件字段
 int bencode_str(const char *s, unsigned int len, p_torrent info)
 {
     unsigned int str_len = 0;
+    unsigned int dst_len = 0;
 
     for (unsigned int i = 0; i < len; i++)
     {
@@ -64,6 +65,7 @@ int bencode_str(const char *s, unsigned int len, p_torrent info)
             {
                 info->last = 0;
                 info->count = 1;
+                info->file[0].name_len = str_len;
                 memcpy(info->file[0].name, s + i, str_len);
             }
             else if (info->last == PATH_LIST) // 多文件
@@ -75,9 +77,11 @@ int bencode_str(const char *s, unsigned int len, p_torrent info)
             }
             else if (info->last == ANNOUNCE_LIST_LIST)
             {
-                ((DWORD*)info->announce_tail)[0] = str_len;    // 字符串长度
-                memcpy(info->announce_tail + 4, s + i, str_len);
-                info->announce_tail += 4 + str_len;
+                dst_len = MAX_PATH;
+                info->announce_count++;
+                *((DWORD*)info->announce_tail) = str_len;    // 字符串长度
+                utf8_unicode(s + i, str_len, info->announce_tail + 2, &dst_len);
+                info->announce_tail += 2 + str_len;
             }
             else if (0 == strncmp(s + i, "ed2k", str_len))
             {
@@ -365,10 +369,6 @@ int sort(p_file_info info, int count)
     return 0;
 }
 
-#define SIZEOF(x)   sizeof(x)/sizeof(x[0])
-#define SP(...)     _stprintf_s(info, SIZEOF(info), __VA_ARGS__)
-
-
 int sort_group(p_file_info info, int count)
 {
     if (NULL == info || count < 0)
@@ -397,11 +397,6 @@ int sort_group(p_file_info info, int count)
     unsigned char   c;
     unsigned char   s;
     file_info       tmp;
-
-    static int level = 0;
-
-
-    level++;
 
     // 目录
     for (int i = 0; i < count; i++)
@@ -434,16 +429,6 @@ int sort_group(p_file_info info, int count)
             (c >= 0xA8 && c <= 0xA9 && s >= 0x40 && s <= 0xA0))     // gbk符号
 
         {
-            if (level == 3)
-            {
-                c = info[i].name_tmp[0];
-                s = info[i].name_tmp[1];
-
-                char txt[MAX_PATH];
-                sprintf_s(txt, MAX_PATH, "level:%d c:%02x s:%02x name_tmp:%s", level, c, s, info[i].name_tmp);
-                MessageBoxA(NULL, txt, "flage ",  MB_OK);
-            }
-
             tmp = info[i];
             info[i] = info[flage_id + flage_cnt];
             info[flage_id + flage_cnt] = tmp;
@@ -518,14 +503,6 @@ int sort_group(p_file_info info, int count)
 
         strcpy_s(head, MAX_PATH, ptr);              // 去除目录
 
-        //{
-        //    TCHAR info[MAX_PATH];
-        //    SP(_T("len:%d dir:%s head:%s"), dir_name_len, dir_name, head);
-        //    MessageBox(NULL, info, _T("dir_name"),  MB_OK);
-        //}
-        //
-        //MessageBox(NULL, dir_name, _T("dir_name"),  MB_OK);
-
         for (int i = dir_id + 1; i < dir_id + dir_cnt; i++)
         {
             head = info[i].name_tmp;
@@ -546,12 +523,6 @@ int sort_group(p_file_info info, int count)
             }
             else // 新目录
             {
-                //{
-                //    TCHAR info[MAX_PATH];
-                //    SP(_T("len:%d dir:%s begin:%d count:%d"), dir_name_len, tmp_name, begin, count);
-                //    MessageBox(NULL, info, _T("tmp_name2"),  MB_OK);
-                //}
-
                 if (0 != sort_group(&info[begin], count))
                 {
                     return -2;
@@ -568,12 +539,6 @@ int sort_group(p_file_info info, int count)
 
         if (count > 0)
         {
-            //{
-            //    TCHAR info[MAX_PATH];
-            //    SP(_T("len:%d dir:%s begin:%d count:%d"), dir_name_len, tmp_name, begin, count);
-            //    MessageBox(NULL, info, _T("tmp_name1"),  MB_OK);
-            //}
-
             if (0 != sort_group(&info[begin], count))
             {
                 return -2;
@@ -648,28 +613,31 @@ int get_torrent_info(const char *filename, p_torrent info)
 
     if (size != bencode_dict(buff, size, info))
     {
+        free(buff);
         return -4;
     }
+
+    info->announce_len = (info->announce_tail - info->announce) * 2;
 
     free(buff);
 
     // 删除旧版本信息
-    for (int i = 0; i < info->count;)
-    {
-        if (0 == strncmp(info->file[i].name, "_____padding_file_", 18))
-        {
-            for (int j = i; j < info->count - 1; j++)
-            {
-                info->file[j] = info->file[j + 1];
-            }
-
-            info->count--;
-        }
-        else
-        {
-            i++;
-        }
-    }
+    //for (int i = 0; i < info->count;)
+    //{
+    //    if (0 == strncmp(info->file[i].name, "_____padding_file_", 18))
+    //    {
+    //        for (int j = i; j < info->count - 1; j++)
+    //        {
+    //            info->file[j] = info->file[j + 1];
+    //        }
+    //
+    //        info->count--;
+    //    }
+    //    else
+    //    {
+    //        i++;
+    //    }
+    //}
 
     DWORD len1;
     DWORD len2;
@@ -721,10 +689,10 @@ int get_torrent_info(const char *filename, p_torrent info)
         //MessageBoxA(NULL, info->file[i].name_pinyin,  "pinyin",       MB_OK);
     }
 
-    if (0 != sort_group(info->file, info->count))
-    {
-        return -8;
-    }
+    //if (0 != sort_group(info->file, info->count))
+    //{
+    //    return -8;
+    //}
 
     return 0;
 }

@@ -53,6 +53,8 @@ HWND                    g_list;
 HWND                    g_torr;
 HMENU                   g_menu;
 
+torrent                 g_info          = {0};      // 种子文件信息
+
 task_info               g_task[128]     = {0};      // 当前正在下载的任务信息
 
 NOTIFYICONDATA          g_nid           = {0};      // 任务栏图标数据结构
@@ -93,6 +95,52 @@ void format_data(unsigned __int64 data, TCHAR *unit, TCHAR *info)
 }
 
 /**
+ * \brief   得到格式化后的信息
+ * \param   [out]   char   *list        列表
+ * \param   [in]    int     list_size   列表空间
+ * \param   [out]   short  *filename    最后一个选中的文件
+ * \return  0-成功,其它失败
+ */
+int get_select_list(char *list, int list_size, short *filename)
+{
+    if (NULL == list || list_size <= 0)
+    {
+        return -1;
+    }
+
+    int count = ListView_GetItemCount(g_torr);
+
+    if (count >= list_size)
+    {
+        return -2;
+    }
+
+    for (int i = 0; i < count; i++)
+    {
+        if (ListView_GetCheckState(g_torr, i))
+        {
+            list[i] = '1';
+            ListView_GetItemText(g_torr, i, TORR_FILE, filename, MAX_PATH);
+        }
+        else
+        {
+            list[i] = '0';
+        }
+    }
+
+    char *ptr = strrchr(list, '1');
+
+    if (NULL == ptr)
+    {
+        return -3;
+    }
+
+    *(++ptr) = '\0';
+
+    return 0;
+}
+
+/**
  * \brief   下载按钮
  * \param   [in]  HWND wnd 窗体句柄
  * \return  无
@@ -115,17 +163,46 @@ void btn_download(HWND wnd)
     if (magnet)
     {
         ret = create_magnet_task(file, path, &taskid, filename);
+
+        if (0 != ret)
+        {
+            SP(_T("create task error:%d"), ret);
+            MessageBox(wnd, info, _T("error"), MB_OK);
+            return;
+        }
     }
     else
     {
-        ret = create_file_task(file, path, list, &taskid);
-    }
+        ret = get_select_list(list, sizeof(list) - 1, filename);
 
-    if (0 != ret)
-    {
-        SP(_T("download file error:%d"), ret);
-        MessageBox(wnd, info, _T("error"), MB_OK);
-        return;
+        if (0 != ret)
+        {
+            SP(_T("get select list error:%d"), ret);
+            MessageBox(wnd, info, _T("error"), MB_OK);
+            return;
+        }
+
+        ret = create_file_task(file, path, list, &taskid);
+
+        if (0 != ret)
+        {
+            SP(_T("create task error:%d"), ret);
+            MessageBox(wnd, info, _T("error"), MB_OK);
+            return;
+        }
+
+        if (g_info.announce_len > 0)
+        {
+            ret = add_bt_tracker(taskid, g_info.announce_count,
+                                 g_info.announce, g_info.announce_len);
+
+            if (0 != ret)
+            {
+                SP(_T("add_bt_tracker error:%d"), ret);
+                MessageBox(wnd, info, _T("error"), MB_OK);
+                return;
+            }
+        }
     }
 
     ret = start_download_file(taskid, magnet);
@@ -265,15 +342,15 @@ void on_dropfiles(HWND wnd, WPARAM w)
     DragQueryFileA(drop, 0, filename, MAX_PATH);
     DragFinish(drop);
 
-    torrent info = {0};
+    TCHAR info[MAX_PATH];
 
-    int ret = get_torrent_info(filename, &info);
+    int ret = get_torrent_info(filename, &g_info);
 
     if (0 != ret)
     {
-        TCHAR info[MAX_PATH];
         SP(_T("get_torrent_info error:%d"), ret);
         MessageBox(wnd, info, _T("error"), MB_OK);
+        return;
     }
 
     LVITEM item;
@@ -281,19 +358,17 @@ void on_dropfiles(HWND wnd, WPARAM w)
 
     ListView_DeleteAllItems(g_torr);
 
-    TCHAR txt[MAX_PATH];
-
-    for (int i = 0; i < info.count; i++)
+    for (int i = 0; i < g_info.count; i++)
     {
-        format_data(info.file[i].len, _T(""), txt);
+        format_data(g_info.file[i].len, _T(""), info);
 
         item.iItem = i;
         item.iSubItem = TORR_SIZE;
-        item.pszText = txt;
+        item.pszText = info;
         ListView_InsertItem(g_torr, &item);
 
         item.iSubItem = TORR_FILE;
-        item.pszText = info.file[i].name_unicode;
+        item.pszText = g_info.file[i].name_unicode;
         ListView_SetItem(g_torr, &item);
     }
 
