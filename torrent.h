@@ -19,11 +19,13 @@ typedef struct _file_info
 
     char                name[MAX_PATH];         // 文件名,UTF8
 
-    char                name_asni[MAX_PATH];    // 文件名,gbk
+    char                name_ansi[MAX_PATH];    // 文件名,gbk
 
     char                name_pinyin[MAX_PATH];  // 文件名,拼音
 
     short               name_unicode[MAX_PATH]; // 文件名,unicode
+
+    char                name_tmp[MAX_PATH];     // 文件名,gbk
 
     unsigned __int64    len;                    // 文件长
 

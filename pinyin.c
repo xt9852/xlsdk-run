@@ -1,7 +1,7 @@
 /**
  * Copyright:   2022, XT Tech. Co., Ltd.
  * File name:   pinyin.c
- * Description: 将gb2312转成拼音实现
+ * Description: 将gbk转成拼音实现
  * Author:      xt
  * Version:     0.0.0.1
  * Code:        UTF-8(无BOM)
@@ -174,14 +174,14 @@ int load_pinyin_data(const char *filename, char **data, unsigned int *len)
 }
 
 /**
- * \brief   将gb2312转成拼音
+ * \brief   将gbk转成拼音
  * \param   [in]        const char      *src        源串
  * \param   [in]        unsigned int     src_len    源串长
  * \param   [out]       short           *dst        目标串
  * \param   [in/out]    unsigned int    *dst_len    目标串最大长,目标串长
  * \return  0-成功，其它失败
  */
-int gb2312_pinyin(const unsigned char *src, int src_len, char *dst, int *dst_len)
+int gbk_pinyin(const unsigned char *src, int src_len, char *dst, int *dst_len)
 {
     if (NULL == src || NULL == dst)
     {
@@ -201,10 +201,12 @@ int gb2312_pinyin(const unsigned char *src, int src_len, char *dst, int *dst_len
 
     for (int i = 0; i < src_len; )
     {
-        if (src[i]     >= 0xb0 && src[i]     <= 0xfe &&
-            src[i + 1] >= 0xa1 && src[i + 1] <= 0xfe) // gb2312的汉字
+        // GBK/2, GBK/3, GBK/4
+        if ((src[i] >= 0xb0 && src[i] <= 0xf7 && src[i + 1] >= 0xa1 && src[i + 1] <= 0xfe) ||
+            (src[i] >= 0x81 && src[i] <= 0xa0 && src[i + 1] >= 0x40 && src[i + 1] <= 0xfe) ||
+            (src[i] >= 0xaa && src[i] <= 0xfe && src[i + 1] >= 0x40 && src[i + 1] <= 0xa0))
         {
-            buff_pos = ((src[i] - 0xb0) * 94 + (src[i + 1] - 0xa1)) * 2;
+            buff_pos = ((src[i] - 0x81) * (0xfe - 0x40 + 1) + (src[i + 1] - 0x40)) * 2;
 
             sm_value = g_pinyin[buff_pos];
             ym_value = g_pinyin[buff_pos + 1];
