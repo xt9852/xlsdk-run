@@ -13,7 +13,7 @@
 #include <stdlib.h>
 #include <tchar.h>
 #include <Windows.h>
-#include "resource.h"
+#include "sdk.h"
 
 #define SIZEOF(x)               sizeof(x)/sizeof(x[0])
 #define SP(...)                 _stprintf_s(info, SIZEOF(info), __VA_ARGS__)
@@ -280,9 +280,9 @@ int call_sdk_func()
 
     DWORD *head = (DWORD*)g_send_tmp;
 
-    if (0 != head[2])
+    if (0 != head[2]) // 返回值
     {
-        return 1;
+        return head[2];
     }
 
     return 0;
@@ -644,16 +644,52 @@ int init()
 }
 
 /**
+ * \brief   添加服务器
+ * \param   [in]   int      *taski      任务ID
+ * \param   [in]   int      count       服务器数量
+ * \param   [in]   void     *data       服务器数据
+ * \param   [in]   int      data_len    数据长度
+ * \return  0-成功，其它失败
+ */
+int add_bt_tracker(int taskid, int count, void *data, int data_len)
+{
+    int cnt = SIZEOF(g_track);
+
+    p_data_head p = (p_data_head)g_recv_tmp;
+    p->func_id = XL_BatchAddBTTracker;
+    p->data[0] = taskid;
+    p->data[1] = count + g_track_count;
+    p->len     = 0x0c + data_len + g_track_len;
+
+    char *ptr = (char*)(p->data + 2);
+
+    memcpy(ptr, data, data_len);
+
+    ptr += data_len;
+
+    memcpy(ptr + data_len, g_track_data, g_track_len);
+
+    int ret = call_sdk_func();
+
+    if (0 != ret)
+    {
+        return -1;
+    }
+
+    return 0;
+}
+
+/**
  * \brief   创建下载种子文件任务
  * \param   [in]    short   *magnet     magnet磁力URL,UNICODE
  * \param   [in]    short   *path       本地存储路径,UNICODE
  * \param   [out]   int     *taskid     任务ID
- * \param   [out]   short   *fullname   种子文件全名,UNICODE
+ * \param   [out]   short   *task_name  任务名称
  * \return  0-成功，其它失败
  */
-int create_magnet_task(short *magnet, short *path, int *taskid, short *fullname)
+int create_magnet_task(short *magnet, short *path, int *taskid, short *task_name)
 {
-    if (NULL == magnet || NULL == path || NULL == taskid || NULL == fullname)
+    if (NULL == magnet || NULL == path || NULL == taskid || NULL == task_name)
     {
         return -1;
     }
@@ -668,20 +704,19 @@ int create_magnet_task(short *magnet, short *path, int *taskid, short *fullname)
         return -3;
     }
 
-    wchar_t id[128];
+    short id[128];
     wcsncpy_s(id, sizeof(id), magnet + 20, 40); // 取得magnet中的id
 
     // 参数1,磁力连接URL
-    p_data_head p = (p_data_head)g_recv_tmp;
-    short *url = (short*)p->arg1.data;
     int len = wcslen(magnet);
+    p_data_head p = (p_data_head)g_recv_tmp;
+    memcpy(p->arg1.data, magnet, len * 2);
     p->arg1.len = len;
-    memcpy(url, magnet, len * 2);
 
     // 参数2,本地文件名
     p_arg_head arg2 = (p_arg_head)(p->arg1.data + p->arg1.len * 2);
-    short *file = (short*)arg2->data;
-    arg2->len = swprintf_s(file, MAX_PATH, L"%s\\%s.torrent", path, id);
+    short *fullname = (short*)arg2->data;
+    arg2->len = swprintf_s(fullname, MAX_PATH, L"%s\\%s.torrent", path, id);
 
     // 创建下载种子文件任务
     p->func_id = XL_CreateMagnetTask;
@@ -696,22 +731,30 @@ int create_magnet_task(short *magnet, short *path, int *taskid, short *fullname)
 
     *taskid = *(int*)(g_send_tmp + 12);
 
-    wcscpy_s(fullname, MAX_PATH, file);
+    wcscpy_s(task_name, MAX_PATH, fullname);
 
     return 0;
 }
 
 /**
  * \brief   创建下载BT文件任务
- * \param   [in]    short   *torrent    种子文件全名
- * \param   [in]    short   *path       本地下载目录
- * \param   [in]    char    *list       文件下载列表,例:"001",0-不下载,1-下载,文件按拼音顺序排列
- * \param   [out]   int     *taskid     任务ID
+ * \param   [in]    short   *torrent        种子文件全名
+ * \param   [in]    short   *path           本地下载目录
+ * \param   [in]    char    *list           文件下载列表,例:"001",0-不下载,1-下载,文件按拼音顺序排列
+ * \param   [in]    int      announce_count tracker服务器数量
+ * \param   [in]    short   *announce       tracker服务器数据
+ * \param   [in]    int      announce_len   tracker服务器数据长度
+ * \param   [out]   int     *taskid         任务ID
+ * \param   [out]   short   *task_name      任务名称
  * \return  0-成功，其它失败
  */
-int create_file_task(short *torrent, short *path, char *list, int *taskid)
+int create_bt_task(short *torrent, short *path, char *list,
+                   int announce_count, short *announce, int announce_len,
+                   int *taskid)
 {
-    if (NULL == torrent || NULL == path || NULL == list || NULL == taskid)
+    if (NULL == torrent || NULL == path || NULL == list ||
+        NULL == announce || announce_count < 0 || announce_len < 0 ||
+        NULL == taskid)
     {
         return -1;
     }
@@ -722,23 +765,22 @@ int create_file_task(short *torrent, short *path, char *list, int *taskid)
     }
 
     // 参数1,本地种子文件全名
-    p_data_head p = (p_data_head)g_recv_tmp;
-    short *file = (short*)p->arg1.data;
     int len = wcslen(torrent);
+    p_data_head p = (p_data_head)g_recv_tmp;
+    memcpy(p->arg1.data, torrent, len * 2);
     p->arg1.len = len;
-    memcpy(file, torrent, len * 2);
 
     // 参数2,本地下载目录
-    p_arg_head arg2 = (p_arg_head)(p->arg1.data + p->arg1.len * 2);
     len = wcslen(path);
-    arg2->len = len;
+    p_arg_head arg2 = (p_arg_head)(p->arg1.data + p->arg1.len * 2);
     memcpy(arg2->data, path, len * 2);
+    arg2->len = len;
 
     // 参数3,下载列表,1-下载,0-不下载
-    p_arg_head arg3 = (p_arg_head)(arg2->data + arg2->len * 2);
     len = strlen(list);
-    arg3->len = len;
+    p_arg_head arg3 = (p_arg_head)(arg2->data + arg2->len * 2);
     memcpy(arg3->data, list, len);
+    arg3->len = len;
 
     // 创建下载BT文件任务
     p->func_id = XL_CreateBTTask;
@@ -753,16 +795,101 @@ int create_file_task(short *torrent, short *path, char *list, int *taskid)
 
     *taskid = *(int*)(g_send_tmp + 12);
 
+    if (announce_count <=0 || announce_len <= 0)
+    {
+        return 0;
+    }
+
+    ret = add_bt_tracker(*taskid, announce_count, announce, announce_len);
+
+    if (0 != ret)
+    {
+        return -4;
+    }
+
+    return 0;
+}
+
+/**
+ * \brief   创建下载URL文件任务
+ * \param   [in]    short   *url        URL地址
+ * \param   [in]    short   *path       本地下载目录
+ * \param   [out]   int     *taskid     任务ID
+ * \param   [out]   short   *task_name  任务名称
+ * \return  0-成功，其它失败
+ */
+int create_url_task(short *url, short *path, int *taskid, short *task_name)
+{
+    if (NULL == url || NULL == path || NULL == taskid || NULL == task_name)
+    {
+        return -1;
+    }
+
+    if (!g_init)
+    {
+        return -2;
+    }
+
+    short *filename = wcsrchr(url, L'/');
+
+    if (NULL == filename)
+    {
+        return -3;
+    }
+
+    filename++;
+
+    // 参数1,URL地址
+    int len = wcslen(url);
+    p_data_head p = (p_data_head)g_recv_tmp;
+    memcpy(p->arg1.data, url, len * 2);
+    p->arg1.len = len;
+
+    // 参数2,8个00
+    char *arg2 = p->arg1.data + p->arg1.len * 2;
+    memset(arg2, 0, 8);
+
+    // 参数3,本地下载目录
+    len = wcslen(path);
+    p_arg_head arg3 = (p_arg_head)(arg2 + 8);
+    memcpy(arg3->data, path, len * 2);
+    arg3->len = len;
+
+    // 参数4,文件名称
+    len = wcslen(filename);
+    p_arg_head arg4 = (p_arg_head)(arg3->data + arg3->len * 2);
+    memcpy(arg4->data, filename, len * 2);
+    arg4->len = len;
+
+    // 创建下载URL文件任务
+    p->func_id = XL_CreateP2spTask;
+    p->len = 8 + p->arg1.len * 2 + 8 + 4 + arg3->len * 2 + 4 + arg4->len * 2;
+
+    int ret = call_sdk_func();
+
+    if (0 != ret)
+    {
+        swprintf_s(task_name, MAX_PATH, L"ret:%d taskname:%s\\%s", ret, path, filename);
+        MessageBox(NULL, task_name, L"error", MB_OK);
+        return -4;
+    }
+
+    *taskid = *(int*)(g_send_tmp + 12);
+
+    swprintf_s(task_name, MAX_PATH, L"%s\\%s", path, filename);
+
+    MessageBox(NULL, task_name, L"", MB_OK);
+
     return 0;
 }
 
 /**
  * \brief   开始下载文件
  * \param   [in]   int     *taski       任务ID
- * \param   [in]   BOOL     magnet      磁力任务
+ * \param   [in]   int      task_type   任务类型
  * \return  0-成功，其它失败
  */
-int start_download_file(int taskid, BOOL magnet)
+int start_download_file(int taskid, int task_type)
 {
     p_data_head p = (p_data_head)g_recv_tmp;
     p->func_id = XL_SetTaskStrategy;
@@ -780,7 +907,7 @@ int start_download_file(int taskid, BOOL magnet)
     p->data[0] = taskid;
     p->data[1] = sprintf_s((char*)&(p->data[2]), 100,
                            "parentid=109183876,taskorigin=%s",
-                           magnet ? "Magnet" : "newwindow_url");
+                           (TASK_MAGNET == task_type) ? "Magnet" : "newwindow_url");
     p->len = 0x0c + p->data[1];
     ret = call_sdk_func();
 
@@ -907,44 +1034,6 @@ int get_task_info(int taskid, unsigned __int64 *size, unsigned __int64 *down, un
     *size = *(unsigned __int64*)(g_send_tmp + 0x18);
     *down = *(unsigned __int64*)(g_send_tmp + 0x20);
     *time = *(unsigned int*)(g_send_tmp + 0x30);
-
-    return 0;
-}
-
-
-
-/**
- * \brief   添加服务器
- * \param   [in]   int      *taski      任务ID
- * \param   [in]   int      count       服务器数量
- * \param   [in]   void     *data       服务器数据
- * \param   [in]   int      data_len    数据长度
- * \return  0-成功，其它失败
- */
-int add_bt_tracker(int taskid, int count, void *data, int data_len)
-{
-    int cnt = SIZEOF(g_track);
-
-    p_data_head p = (p_data_head)g_recv_tmp;
-    p->func_id = XL_BatchAddBTTracker;
-    p->data[0] = taskid;
-    p->data[1] = count + g_track_count;
-    p->len     = 0x0c + data_len + g_track_len;
-
-    char *ptr = (char*)(p->data + 2);
-
-    memcpy(ptr, data, data_len);
-
-    ptr += data_len;
-
-    memcpy(ptr + data_len, g_track_data, g_track_len);
-
-    int ret = call_sdk_func();
-
-    if (0 != ret)
-    {
-        return -1;
-    }
 
     return 0;
 }

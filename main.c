@@ -46,14 +46,13 @@ typedef struct _task_info {
 
 }task_info, *p_task_info;
 
-
 HWND                    g_edit;
 HWND                    g_down;
 HWND                    g_list;
 HWND                    g_torr;
 HMENU                   g_menu;
 
-torrent                 g_info          = {0};      // 种子文件信息
+torrent                 g_torrent       = {0};      // 种子文件信息
 
 task_info               g_task[128]     = {0};      // 当前正在下载的任务信息
 
@@ -61,7 +60,7 @@ NOTIFYICONDATA          g_nid           = {0};      // 任务栏图标数据结�
 
 UINT                    WM_MY_NOTIFY    = 0;        // 注册系统消息
 
-extern unsigned char    *g_pinyin;
+extern unsigned char    *g_pinyin;                  // 拼音数据
 
 /**
  * \brief   得到格式化后的信息
@@ -150,30 +149,29 @@ void btn_download(HWND wnd)
     int     ret;
     TCHAR   info[128];
 
+    int     len;
     int     taskid;
     char    list[MAX_PATH];
     short   file[MAX_PATH];
-    short   filename[MAX_PATH];
-
+    short   taskname[MAX_PATH];
+    int     tasktype;
     short  *path   = L"D:\\5.downloads\\bt";
-    BOOL    magnet = IsWindowVisible(g_list);
 
     GetDlgItemTextW(wnd, IDC_EDIT, file, sizeof(file));
 
-    if (magnet)
-    {
-        ret = create_magnet_task(file, path, &taskid, filename);
+    len = wcslen(file);
 
-        if (0 != ret)
-        {
-            SP(_T("create task error:%d"), ret);
-            MessageBox(wnd, info, _T("error"), MB_OK);
-            return;
-        }
-    }
-    else
+    if (0 == wcsncmp(file, L"magnet:?", 8))   // 磁力连接URL
     {
-        ret = get_select_list(list, sizeof(list) - 1, filename);
+        tasktype = TASK_MAGNET;
+
+        ret = create_magnet_task(file, path, &taskid, taskname);
+    }
+    else if (0 == wcscmp(file + len - 8, L".torrent"))
+    {
+        tasktype = TASK_BT;
+
+        ret = get_select_list(list, sizeof(list) - 1, taskname);
 
         if (0 != ret)
         {
@@ -182,30 +180,25 @@ void btn_download(HWND wnd)
             return;
         }
 
-        ret = create_file_task(file, path, list, &taskid);
+        ret = create_bt_task(file, path, list, g_torrent.announce_count,
+                             g_torrent.announce, g_torrent.announce_len,
+                             &taskid);
+    }
+    else
+    {
+        tasktype = TASK_URL;
 
-        if (0 != ret)
-        {
-            SP(_T("create task error:%d"), ret);
-            MessageBox(wnd, info, _T("error"), MB_OK);
-            return;
-        }
-
-        if (g_info.announce_len > 0)
-        {
-            ret = add_bt_tracker(taskid, g_info.announce_count,
-                                 g_info.announce, g_info.announce_len);
-
-            if (0 != ret)
-            {
-                SP(_T("add_bt_tracker error:%d"), ret);
-                MessageBox(wnd, info, _T("error"), MB_OK);
-                return;
-            }
-        }
+        ret = create_url_task(file, path, &taskid, taskname);
     }
 
-    ret = start_download_file(taskid, magnet);
+    if (0 != ret)
+    {
+        SP(_T("create task error:%d"), ret);
+        MessageBox(wnd, info, _T("error"), MB_OK);
+        return;
+    }
+
+    ret = start_download_file(taskid, tasktype);
 
     if (0 != ret)
     {
@@ -222,7 +215,7 @@ void btn_download(HWND wnd)
     item.iSubItem = LIST_TASK;
     ListView_InsertItem(g_list, &item);
 
-    item.pszText = filename;
+    item.pszText = taskname;
     item.iSubItem = LIST_FILE;
     ListView_SetItem(g_list, &item);
 
@@ -344,7 +337,7 @@ void on_dropfiles(HWND wnd, WPARAM w)
 
     TCHAR info[MAX_PATH];
 
-    int ret = get_torrent_info(filename, &g_info);
+    int ret = get_torrent_info(filename, &g_torrent);
 
     if (0 != ret)
     {
@@ -358,9 +351,9 @@ void on_dropfiles(HWND wnd, WPARAM w)
 
     ListView_DeleteAllItems(g_torr);
 
-    for (int i = 0; i < g_info.count; i++)
+    for (int i = 0; i < g_torrent.count; i++)
     {
-        format_data(g_info.file[i].len, _T(""), info);
+        format_data(g_torrent.file[i].len, _T(""), info);
 
         item.iItem = i;
         item.iSubItem = TORR_SIZE;
@@ -368,7 +361,7 @@ void on_dropfiles(HWND wnd, WPARAM w)
         ListView_InsertItem(g_torr, &item);
 
         item.iSubItem = TORR_FILE;
-        item.pszText = g_info.file[i].name_unicode;
+        item.pszText = g_torrent.file[i].name_unicode;
         ListView_SetItem(g_torr, &item);
     }
 
@@ -570,6 +563,16 @@ void on_create(HWND wnd, LPARAM l)
 void on_close(HWND wnd)
 {
     ///////////////////////////////ShowWindow(wnd, SW_HIDE);
+
+    TCHAR info[MAX_PATH];
+
+    for (int i = 0; i < ListView_GetItemCount(g_list); i++)
+    {
+        ListView_GetItemText(g_list, i, 0, info, SIZEOF(info));
+
+        stop_download_file(_ttoi(info));
+    }
+
     DestroyWindow(wnd);
 }
 

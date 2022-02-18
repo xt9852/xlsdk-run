@@ -284,11 +284,11 @@ ReleaseMutex("|ProxyAliveMutex")
 
 3, XL_CreateP2spTask
 
-发送数据包:数据长度+函数ID+URL地址长度+URL地址+下载目录长度+下载目录
+发送数据包:数据长度+函数ID+URL地址长度+URL地址+8字节0+下载目录长度+下载目录+文件名长度+文件名
 接收数据包:数据长度+函数ID+返回值+任务ID
 
-URL地址,下载目录为UNICODE
-URL地址长度,下载目录长度为UNICODE长度
+URL地址,下载目录,文件名为UNICODE
+URL地址长度,下载目录长度文件名长度为UNICODE长度
 
 4, XL_SetTaskStrategy
 发送数据包:数据长度+函数ID+任务ID+7
