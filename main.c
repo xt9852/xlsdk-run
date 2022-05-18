@@ -22,6 +22,14 @@
 #define SIZEOF(x)   sizeof(x)/sizeof(x[0])
 #define SP(...)     _stprintf_s(info, SIZEOF(info), __VA_ARGS__)
 
+#ifndef TRUE
+#define TRUE 1
+#endif
+
+#ifndef FALSE
+#define FALSE 0
+#endif
+
 enum    // 任务列表控件列ID
 {
     LIST_TASK,
@@ -43,6 +51,8 @@ typedef struct _task_info {
     unsigned __int64    down;               // 已经下载的数量
 
     unsigned int        time;               // 用时秒数
+    
+    unsigned int        show_size;          // 是否已经显示大小
 
 }task_info, *p_task_info;
 
@@ -52,15 +62,17 @@ HWND                    g_list;
 HWND                    g_torr;
 HMENU                   g_menu;
 
-torrent                 g_torrent       = {0};      // 种子文件信息
+torrent                 g_torrent       = {0};                              // 种子文件信息
 
-task_info               g_task[128]     = {0};      // 当前正在下载的任务信息
+task_info               g_task[128]     = {0};                              // 当前正在下载的任务信息
 
-NOTIFYICONDATA          g_nid           = {0};      // 任务栏图标数据结构
+NOTIFYICONDATA          g_nid           = {0};                              // 任务栏图标数据结构
 
-UINT                    WM_MY_NOTIFY    = 0;        // 注册系统消息
+UINT                    g_notify_id     = 0;                                // 注册系统消息
 
-extern unsigned char    *g_pinyin;                  // 拼音数据
+static const TCHAR     *g_title         = _T("DownloadSDKServerStart.exe"); // 标题
+
+extern unsigned char   *g_pinyin;                                           // 拼音数据
 
 /**
  * \brief   得到格式化后的信息
@@ -69,7 +81,7 @@ extern unsigned char    *g_pinyin;                  // 拼音数据
  * \param   [out]   TCHAR               *info   信息
  * \return  无
  */
-void format_data(unsigned __int64 data, TCHAR *unit, TCHAR *info)
+void format_data(unsigned __int64 data, TCHAR *info)
 {
     double g = data / 1024.0 / 1024.0 / 1024.0;
     double m = data / 1024.0 / 1024.0;
@@ -77,19 +89,19 @@ void format_data(unsigned __int64 data, TCHAR *unit, TCHAR *info)
 
     if (g > 1.0)
     {
-        _stprintf_s(info, 16, _T("%.2fGB%s"), g, unit);
+        _stprintf_s(info, 16, _T("%.2fG"), g);
     }
     else if (m > 1.0)
     {
-        _stprintf_s(info, 16, _T("%.2fMB%s"), m, unit);
+        _stprintf_s(info, 16, _T("%.2fM"), m);
     }
     else if (k > 1.0)
     {
-        _stprintf_s(info, 16, _T("%.2fKB%s"), k, unit);
+        _stprintf_s(info, 16, _T("%.2fK"), k);
     }
     else
     {
-        _stprintf_s(info, 16, _T("%I64uB%s"), data, unit);
+        _stprintf_s(info, 16, _T("%I64u"), data);
     }
 }
 
@@ -169,9 +181,11 @@ void btn_download(HWND wnd)
     }
     else if (0 == wcscmp(file + len - 8, L".torrent"))
     {
+		wcsncpy_s(taskname, MAX_PATH - 1, file + wcslen(path) + 1, 41);
+		
         tasktype = TASK_BT;
 
-        ret = get_select_list(list, sizeof(list) - 1, taskname);
+        ret = get_select_list(list, sizeof(list) - 1, taskname + 41);
 
         if (0 != ret)
         {
@@ -249,7 +263,7 @@ void on_timer(HWND wnd)
     {
         ListView_GetItemText(g_list, i, LIST_PROG, info, SIZEOF(info));
 
-        if (0 == _tcscmp(info, _T("100.00%")))
+        if (0 == _tcscmp(info, _T("100")))
         {
             continue;
         }
@@ -271,14 +285,22 @@ void on_timer(HWND wnd)
         item.mask = LVIF_TEXT;
         item.iItem = i;
         item.pszText = info;
+        
+        if (!g_task[taskid].show_size)  // 显示大小
+        {
+            g_task[taskid].show_size = TRUE;
+            format_data(size, info);
+            item.iSubItem = LIST_SIZE;
+            ListView_SetItem(g_list, &item);
+        }
 
-        if (0 == size) // 下载完成
+        if (down >= size && 0 != down)  // 下载完成
         {
             SP(_T(""));
             item.iSubItem = LIST_SPEE;
             ListView_SetItem(g_list, &item);
 
-            SP(_T("100.00%%"));
+            SP(_T("100"));
             item.iSubItem = LIST_PROG;
             ListView_SetItem(g_list, &item);
             continue;
@@ -286,22 +308,13 @@ void on_timer(HWND wnd)
 
         if (down > g_task[taskid].down && time > g_task[taskid].time)
         {
-            if (g_task[taskid].down == 0)   // 只更新1次
-            {
-                format_data(size, _T(""), info);
-                item.iSubItem = LIST_SIZE;
-                ListView_SetItem(g_list, &item);
-            }
-            else
-            {
-                speed = (double)(down - g_task[taskid].down) / (time - g_task[taskid].time);
+            speed = (double)(down - g_task[taskid].down) / (time - g_task[taskid].time);
 
-                format_data((unsigned __int64)speed, _T("/s"), info);
-                item.iSubItem = LIST_SPEE;
-                ListView_SetItem(g_list, &item);
-            }
+            format_data((unsigned __int64)speed, info);
+            item.iSubItem = LIST_SPEE;
+            ListView_SetItem(g_list, &item);
 
-            SP(_T("%0.2f%%"), (double)down / size * 100.0);
+            SP(_T("%0.2f"), (double)down / size * 100.0);
             item.iSubItem = LIST_PROG;
             ListView_SetItem(g_list, &item);
 
@@ -315,7 +328,7 @@ void on_timer(HWND wnd)
             ListView_SetItem(g_list, &item);
         }
 
-        SP(_T("%ds"), time);
+        SP(_T("%d"), time);
         item.iSubItem = LIST_TIME;
         ListView_SetItem(g_list, &item);
     }
@@ -353,7 +366,7 @@ void on_dropfiles(HWND wnd, WPARAM w)
 
     for (int i = 0; i < g_torrent.count; i++)
     {
-        format_data(g_torrent.file[i].len, _T(""), info);
+        format_data(g_torrent.file[i].len, info);
 
         item.iItem = i;
         item.iSubItem = TORR_SIZE;
@@ -396,35 +409,35 @@ void on_size(LPARAM l)
     int w = LOWORD(l);
     int h = HIWORD(l);
 
-    MoveWindow(g_edit, 0,        1, w - 100,     25, TRUE);
-    MoveWindow(g_down, w - 100,  1, 100 - 1,     25, TRUE);
-    MoveWindow(g_list, 0,       27,       w, h - 27, TRUE);
-    MoveWindow(g_torr, 0,       27,       w, h - 27, TRUE);
+    MoveWindow(g_edit, 0,       1, w - 70,     20, TRUE);
+    MoveWindow(g_down, w - 70,  1,     70,     20, TRUE);
+    MoveWindow(g_list, 0,      22,      w, h - 22, TRUE);
+    MoveWindow(g_torr, 0,      22,      w, h - 22, TRUE);
 
     LVCOLUMN col = {0};
     col.mask = LVCF_WIDTH;
     col.cx = 40;
     ListView_SetColumn(g_list, LIST_TASK, &col);    // 任务ID
 
-    col.cx = w - 320;
+    col.cx = w - 250;
     ListView_SetColumn(g_list, LIST_FILE, &col);    // 目录
 
-    col.cx = 70;
+    col.cx = 60;
     ListView_SetColumn(g_list, LIST_SIZE, &col);    // 大小
 
-    col.cx = 90;
+    col.cx = 60;
     ListView_SetColumn(g_list, LIST_SPEE, &col);    // 速度
 
-    col.cx = 65;
+    col.cx = 50;
     ListView_SetColumn(g_list, LIST_PROG, &col);    // 进度
 
-    col.cx = 50;
+    col.cx = 40;
     ListView_SetColumn(g_list, LIST_TIME, &col);    // 用时
 
-    col.cx = 90;
+    col.cx = 80;
     ListView_SetColumn(g_torr, TORR_SIZE, &col);    // 大小
 
-    col.cx = w - 110;
+    col.cx = w - 80;
     ListView_SetColumn(g_torr, TORR_FILE, &col);    // 文件
 }
 
@@ -652,7 +665,7 @@ void on_command(HWND wnd, WPARAM w)
  */
 LRESULT CALLBACK window_proc(HWND wnd, UINT msg, WPARAM w, LPARAM l)
 {
-    if (WM_MY_NOTIFY == msg)
+    if (g_notify_id == msg)
     {
         on_sys_notify(wnd, l);
     }
@@ -679,13 +692,12 @@ LRESULT CALLBACK window_proc(HWND wnd, UINT msg, WPARAM w, LPARAM l)
  * \param   [in]  int       nCmdShow        显示状态(最小化,最大化,隐藏)
  * \return  int 程序返回值
  */
-int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
-                   LPSTR lpCmdLine, int nCmdShow)
+int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
     // 窗体居中
     int cx = 800;
     int cy = 600;
-    int x = (GetSystemMetrics(SM_CXSCREEN) - cx) / 2;   // GetSystemMetrics得到屏幕大小
+    int x = (GetSystemMetrics(SM_CXSCREEN) - cx) / 2;           // GetSystemMetrics得到屏幕大小
     int y = (GetSystemMetrics(SM_CYSCREEN) - cy) / 2;
 
     // 加载鼠标,笔刷,图标,菜单
@@ -696,25 +708,25 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
     // 窗体类
     WNDCLASS wc      = {0};
-    wc.style         = CS_HREDRAW | CS_VREDRAW;         // 类型属性
-    wc.lpfnWndProc   = window_proc;                     // 窗体消息处理函数
-    wc.lpszClassName = _T("class_name");                // 类名称
-    wc.hInstance     = hInstance;                       // 实例
-    wc.hIcon         = icon;                            // 图标
-    wc.hCursor       = cursor;                          // 鼠标指针
-    wc.hbrBackground = brush;                           // 背景刷
+    wc.style         = CS_HREDRAW | CS_VREDRAW;     // 类型属性
+    wc.lpfnWndProc   = window_proc;                 // 窗体消息处理函数
+    wc.lpszClassName = _T("class_name");            // 类名称
+    wc.hInstance     = hInstance;                   // 实例
+    wc.hIcon         = icon;                        // 图标
+    wc.hCursor       = cursor;                      // 鼠标指针
+    wc.hbrBackground = brush;                       // 背景刷
     RegisterClass(&wc);
 
     // 创建窗体
-    HWND wnd = CreateWindow(wc.lpszClassName,           // 类名称
-                            _T("SDKStart"),             // 窗体名称
-                            WS_OVERLAPPEDWINDOW,        // 窗体属性
-                            x,  y,                      // 窗体位置
-                            cx, cy,                     // 窗体大小
-                            NULL,                       // 父窗句柄
-                            NULL,                       // 菜单句柄
-                            hInstance,                  // 实例句柄
-                            NULL);                      // 参数,给WM_CREATE的lParam
+    HWND wnd = CreateWindow(wc.lpszClassName,       // 类名称
+                            g_title,                // 窗体名称
+                            WS_OVERLAPPEDWINDOW,    // 窗体属性
+                            x,  y,                  // 窗体位置
+                            cx, cy,                 // 窗体大小
+                            NULL,                   // 父窗句柄
+                            NULL,                   // 菜单句柄
+                            hInstance,              // 实例句柄
+                            NULL);                  // 参数,给WM_CREATE的lParam
 
     // 显示窗体
     ShowWindow(wnd, SW_SHOWNORMAL);
@@ -741,17 +753,17 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
     if (0 != ret)
     {
         SP(_T("init sdk error:%d"), ret);
-        MessageBox(wnd, info, _T("SDKStart"), MB_OK);
+        MessageBox(wnd, info, g_title, MB_OK);
         return -2;
     }
 
     // 系统托盘
-    WM_MY_NOTIFY           = RegisterWindowMessage(_T("WM_MY_NOTIFYICON"));
+    g_notify_id            = RegisterWindowMessage(_T("WM_MY_NOTIFYICON"));
     g_nid.cbSize           = sizeof(NOTIFYICONDATA);
     g_nid.hWnd             = wnd;                       // 指定接收托盘消息的句柄
     g_nid.hIcon            = icon;                      // 指定托盘图标
     g_nid.uFlags           = NIF_MESSAGE | NIF_ICON;    // 消息,图标
-    g_nid.uCallbackMessage = WM_MY_NOTIFY;              // 消息ID
+    g_nid.uCallbackMessage = g_notify_id;               // 消息ID
 
     Shell_NotifyIcon(NIM_ADD, &g_nid);                  // 添加系统托盘图标
 
