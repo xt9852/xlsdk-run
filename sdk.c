@@ -57,11 +57,11 @@ BOOL   g_init                   = FALSE;    // 是否完成初始化
 UCHAR *g_recv                   = NULL;     // 共享内存1M,对方接收的数据,我方发送的
 UCHAR *g_send                   = NULL;     // 共享内存1M,我方发送的数据,需要对方处理
 
-UCHAR *g_recv_tmp               = NULL;
-UCHAR *g_send_tmp               = NULL;
+UCHAR *g_recv_tmp               = NULL;     // 临时缓存区
+UCHAR *g_send_tmp               = NULL;     // 临时缓存区
 
-HANDLE g_proxyAliveMutex        = NULL;
-HANDLE g_serverStartUpEvent     = NULL;
+HANDLE g_proxyAliveMutex        = NULL;     // 互斥
+HANDLE g_serverStartUpEvent     = NULL;     // 事件s
 
 HANDLE g_recvShareMemory        = NULL;     // 共享内存1M,我方发送的数据,需要对方处理
 HANDLE g_recvBufferFullEvent    = NULL;     // 信号,表示有数据,对方可以处理啦
@@ -316,6 +316,10 @@ int create_process()
     return 0;
 }
 
+/**
+ * \brief   创建互斥
+ * \return  0-成功，其它失败
+ */
 int create_mutex()
 {
     strcpy_s(g_tail, 100, "|ProxyAliveMutex");
@@ -337,6 +341,10 @@ int create_mutex()
     return 0;
 }
 
+/**
+ * \brief   打开共享内存
+ * \return  0-成功，其它失败
+ */
 int open_sharememory()
 {
     strcpy_s(g_tail, 100, "|RecvShareMemory");
@@ -410,6 +418,10 @@ int open_sharememory()
     return 0;
 }
 
+/**
+ * \brief   初始化系统
+ * \return  0-成功，其它失败
+ */
 int init_sys()
 {
     // 等待,由DownloadSDKServer.exe触发
@@ -485,6 +497,10 @@ int init_sys()
     return 0;
 }
 
+/**
+ * \brief   初始化SDK
+ * \return  0-成功，其它失败
+ */
 int init_sdk()
 {
     p_data_head p = (p_data_head)g_recv_tmp;
@@ -748,9 +764,7 @@ int create_magnet_task(short *magnet, short *path, int *taskid, short *task_name
  * \param   [out]   short   *task_name      任务名称
  * \return  0-成功，其它失败
  */
-int create_bt_task(short *torrent, short *path, char *list,
-                   int announce_count, short *announce, int announce_len,
-                   int *taskid)
+int create_bt_task(short *torrent, short *path, char *list, int announce_count, short *announce, int announce_len, int *taskid)
 {
     if (NULL == torrent || NULL == path || NULL == list ||
         NULL == announce || announce_count < 0 || announce_len < 0 ||

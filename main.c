@@ -51,7 +51,7 @@ typedef struct _task_info {
     unsigned __int64    down;               // 已经下载的数量
 
     unsigned int        time;               // 用时秒数
-    
+
     unsigned int        show_size;          // 是否已经显示大小
 
 }task_info, *p_task_info;
@@ -182,7 +182,7 @@ void btn_download(HWND wnd)
     else if (0 == wcscmp(file + len - 8, L".torrent"))
     {
 		wcsncpy_s(taskname, MAX_PATH - 1, file + wcslen(path) + 1, 41);
-		
+
         tasktype = TASK_BT;
 
         ret = get_select_list(list, sizeof(list) - 1, taskname + 41);
@@ -254,23 +254,28 @@ void on_timer(HWND wnd)
     TCHAR            info[128];
 
     int              taskid;
-    double           speed;
+    unsigned int     show_size;
     unsigned int     time;
-    unsigned __int64 size;
+    unsigned int     last_time;
     unsigned __int64 down;
+    unsigned __int64 last_down;
+    unsigned __int64 size;
 
     for (int i = 0; i < ListView_GetItemCount(g_list); i++)
     {
         ListView_GetItemText(g_list, i, LIST_PROG, info, SIZEOF(info));
 
-        if (0 == _tcscmp(info, _T("100")))
+        if (0 == _tcscmp(info, _T("100")))  // 已经下载完成
         {
             continue;
         }
 
         ListView_GetItemText(g_list, i, LIST_TASK, info, SIZEOF(info));
 
-        taskid = _ttoi(info);
+        taskid    = _ttoi(info);
+        last_down = g_task[taskid].down;
+        last_time = g_task[taskid].time;
+        show_size = g_task[taskid].show_size;
 
         ret = get_task_info(taskid, &size, &down, &time);
 
@@ -281,56 +286,46 @@ void on_timer(HWND wnd)
             continue;
         }
 
-        LVITEM item;
-        item.mask = LVIF_TEXT;
-        item.iItem = i;
-        item.pszText = info;
-        
-        if (!g_task[taskid].show_size)  // 显示大小
+        if (size <= 0)  // 第一次可以出错
         {
-            g_task[taskid].show_size = TRUE;
-            format_data(size, info);
-            item.iSubItem = LIST_SIZE;
-            ListView_SetItem(g_list, &item);
-        }
-
-        if (down >= size && 0 != down)  // 下载完成
-        {
-            SP(_T(""));
-            item.iSubItem = LIST_SPEE;
-            ListView_SetItem(g_list, &item);
-
-            SP(_T("100"));
-            item.iSubItem = LIST_PROG;
-            ListView_SetItem(g_list, &item);
             continue;
         }
 
-        if (down > g_task[taskid].down && time > g_task[taskid].time)
+        if (!show_size) // 显示文件大小
         {
-            speed = (double)(down - g_task[taskid].down) / (time - g_task[taskid].time);
+            format_data(size, info);
+            ListView_SetItemText(g_list, i, LIST_SIZE, info);
 
-            format_data((unsigned __int64)speed, info);
-            item.iSubItem = LIST_SPEE;
-            ListView_SetItem(g_list, &item);
+            g_task[taskid].show_size = TRUE;
+        }
+
+        if ((down == size) || (time == last_time && time != 0)) // 下载完成
+        {
+            ListView_SetItemText(g_list, i, LIST_SPEE, _T(""));
+            ListView_SetItemText(g_list, i, LIST_PROG, _T("100"));
+            continue;
+        }
+
+        if (down == last_down)  // 没有速度
+        {
+            //ListView_SetItemText(g_list, i, LIST_SPEE, _T(""));
+            SP(_T("%lld %lld %lld %d %d"), down, last_down, size, time, last_time);
+            ListView_SetItemText(g_list, i, LIST_SPEE, info);
+        }
+        else
+        {
+            format_data((unsigned __int64)((double)(down - last_down) / (time - last_time)), info);
+            ListView_SetItemText(g_list, i, LIST_SPEE, info);
 
             SP(_T("%0.2f"), (double)down / size * 100.0);
-            item.iSubItem = LIST_PROG;
-            ListView_SetItem(g_list, &item);
+            ListView_SetItemText(g_list, i, LIST_PROG, info);
 
             g_task[taskid].down = down;
             g_task[taskid].time = time;
         }
-        else
-        {
-            SP(_T(""));
-            item.iSubItem = LIST_SPEE;
-            ListView_SetItem(g_list, &item);
-        }
 
         SP(_T("%d"), time);
-        item.iSubItem = LIST_TIME;
-        ListView_SetItem(g_list, &item);
+        ListView_SetItemText(g_list, i, LIST_TIME, info);
     }
 }
 
@@ -406,6 +401,8 @@ void on_sys_notify(HWND wnd, LPARAM l)
  */
 void on_size(LPARAM l)
 {
+    int t = 0;
+    int s = 0;
     int w = LOWORD(l);
     int h = HIWORD(l);
 
@@ -414,31 +411,34 @@ void on_size(LPARAM l)
     MoveWindow(g_list, 0,      22,      w, h - 22, TRUE);
     MoveWindow(g_torr, 0,      22,      w, h - 22, TRUE);
 
-    LVCOLUMN col = {0};
-    col.mask = LVCF_WIDTH;
-    col.cx = 40;
-    ListView_SetColumn(g_list, LIST_TASK, &col);    // 任务ID
+    t = 40;
+    s += t;
+    ListView_SetColumnWidth(g_list, LIST_TASK, t);    // 任务ID
 
-    col.cx = w - 250;
-    ListView_SetColumn(g_list, LIST_FILE, &col);    // 目录
+    t = 50;
+    s += t;
+    ListView_SetColumnWidth(g_list, LIST_SIZE, t);    // 大小
 
-    col.cx = 60;
-    ListView_SetColumn(g_list, LIST_SIZE, &col);    // 大小
+    t = 65;
+    s += t;
+    ListView_SetColumnWidth(g_list, LIST_SPEE, t);    // 速度
 
-    col.cx = 60;
-    ListView_SetColumn(g_list, LIST_SPEE, &col);    // 速度
+    t = 50;
+    s += t;
+    ListView_SetColumnWidth(g_list, LIST_PROG, t);    // 进度
 
-    col.cx = 50;
-    ListView_SetColumn(g_list, LIST_PROG, &col);    // 进度
+    t = 40;
+    s += t;
+    ListView_SetColumnWidth(g_list, LIST_TIME, t);    // 用时
 
-    col.cx = 40;
-    ListView_SetColumn(g_list, LIST_TIME, &col);    // 用时
+    t = w - s;
+    ListView_SetColumnWidth(g_list, LIST_FILE, t);    // 目录
 
-    col.cx = 80;
-    ListView_SetColumn(g_torr, TORR_SIZE, &col);    // 大小
+    t = 80;
+    ListView_SetColumnWidth(g_torr, TORR_SIZE, t);    // 大小
 
-    col.cx = w - 80;
-    ListView_SetColumn(g_torr, TORR_FILE, &col);    // 文件
+    t = w - t;
+    ListView_SetColumnWidth(g_torr, TORR_FILE, t);    // 文件
 }
 
 /**
