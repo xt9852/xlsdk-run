@@ -1,0 +1,9 @@
+{
+    "log": {
+        "name": "DownloadSDKServerStart",
+        "level": "debug",
+        "cycle": "minute",
+        "backup": 2
+    },
+    "path": "D:\\5.downloads\\bt"
+}
