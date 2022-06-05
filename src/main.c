@@ -349,6 +349,8 @@ void on_dropfiles(HWND wnd, WPARAM w)
     char filename[MAX_PATH];
     DragQueryFileA(drop, 0, filename, MAX_PATH);
     DragFinish(drop);
+    
+    DBG(filename);
 
     TCHAR info[MAX_PATH];
 
