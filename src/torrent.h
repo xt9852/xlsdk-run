@@ -11,23 +11,15 @@
 #ifndef _TORRENT_H_
 #define _TORRENT_H_
 
-#ifndef MAX_PATH
-#define MAX_PATH 512
-#endif
-
 typedef struct _file_info
 {
-    unsigned int        name_len;               // 文件名长度
+    unsigned int        name_len;               // 文件名长度,utf8
 
-    char                name[MAX_PATH];         // 文件名,UTF8
+    char                name[512];              // 文件名,utf8
 
-    char                name_ansi[MAX_PATH];    // 文件名,gbk
+    short               name_unicode[512];      // 文件名,unicode
 
-    char                name_pinyin[MAX_PATH];  // 文件名,拼音
-
-    short               name_unicode[MAX_PATH]; // 文件名,unicode
-
-    char                name_tmp[MAX_PATH];     // 文件名,gbk
+    char                name_tmp[512];          // 文件名,临时
 
     unsigned __int64    len;                    // 文件长
 
@@ -48,14 +40,6 @@ typedef struct _torrent_info
 
 }torrent, *p_torrent;                           // 种子文件信息
 
-/**
- * \brief   解析bencode编码的字典，格式：d<bencoding字符串><bencoding编码类型>e
- * \param   [in]     const char    *s       数据
- * \param   [in]     unsigned int   len     数据长
- * \param   [in/out] p_torrent      info    信息
- * \return  0-成功
- */
-int bencode_dict(const char *s, unsigned int len, p_torrent info);
 
 /**
  * \brief   解析种子文件

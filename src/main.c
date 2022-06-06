@@ -15,11 +15,12 @@
 #include <CommCtrl.h>
 #include "xt_log.h"
 #include "xt_http.h"
-#include "xt_pinyin.h"
 #include "config.h"
 #include "resource.h"
 #include "torrent.h"
 #include "xl_sdk.h"
+#include "xt_memory_pool.h"
+//#include "pcre2.h"
 
 
 #define SIZEOF(x)   sizeof(x)/sizeof(x[0])
@@ -73,8 +74,6 @@ task_info               g_task[128]     = {0};                              // �
 NOTIFYICONDATA          g_nid           = {0};                              // 任务栏图标数据结构
 
 static const TCHAR     *g_title         = _T("DownloadSDKServerStart.exe"); // 标题
-
-extern unsigned char   *g_pinyin;                                           // 拼音数据
 
 int http_process_callback(const char *uri, const char *arg, int arg_count, char *content, int *content_len)
 {
@@ -216,8 +215,7 @@ void btn_download(HWND wnd)
 
     if (0 != ret)
     {
-        SP(_T("create task error:%d"), ret);
-        MessageBox(wnd, info, _T("error"), MB_OK);
+        ERR("create task error:%d", ret);
         return;
     }
 
@@ -225,8 +223,7 @@ void btn_download(HWND wnd)
 
     if (0 != ret)
     {
-        SP(_T("download start error:%d"), ret);
-        MessageBox(wnd, info, _T(""), MB_OK);
+        ERR("download start error:%d", ret);
     }
 
     SP(_T("%d"), taskid);
@@ -263,12 +260,13 @@ void on_timer(HWND wnd)
     TCHAR            info[128];
 
     int              taskid;
-    unsigned int     show_size;
-    unsigned int     time;
-    unsigned int     last_time;
-    unsigned __int64 down;
-    unsigned __int64 last_down;
-    unsigned __int64 size;
+    bool             show_size;     // 是否已经显示文件大小
+    unsigned int     time;          // 当前用时
+    unsigned int     last_time;     // 上次刷新显示用时
+    unsigned __int64 speed;         // 下载速度,第一次时,显示的是已经下载文件大小
+    unsigned __int64 size;          // 文件总大小
+    unsigned __int64 down;          // 已经下载的大小
+    unsigned __int64 last_down;     // 上次刷新显示时已经下载的大小
 
     for (int i = 0; i < ListView_GetItemCount(g_list); i++)
     {
@@ -290,8 +288,7 @@ void on_timer(HWND wnd)
 
         if (0 != ret)
         {
-            SP(_T("XL_QueryTaskInfo:%d"), ret);
-            MessageBox(wnd, info, _T("error"), MB_OK);
+            ERR("XL_QueryTaskInfo:%d", ret);
             continue;
         }
 
@@ -321,10 +318,14 @@ void on_timer(HWND wnd)
         }
         else
         {
-            format_data((unsigned __int64)((double)(down - last_down) / (time - last_time)), info);
+            speed = (0 == last_time) ? down : (unsigned __int64)((double)(down - last_down) / (time - last_time));
+
+            format_data(speed, info);
+
             ListView_SetItemText(g_list, i, LIST_SPEE, info);
 
             SP(_T("%0.2f"), (double)down / size * 100.0);
+
             ListView_SetItemText(g_list, i, LIST_PROG, info);
 
             g_task[taskid].down = down;
@@ -349,7 +350,7 @@ void on_dropfiles(HWND wnd, WPARAM w)
     char filename[MAX_PATH];
     DragQueryFileA(drop, 0, filename, MAX_PATH);
     DragFinish(drop);
-    
+
     DBG(filename);
 
     TCHAR info[MAX_PATH];
@@ -358,10 +359,11 @@ void on_dropfiles(HWND wnd, WPARAM w)
 
     if (0 != ret)
     {
-        SP(_T("get_torrent_info error:%d"), ret);
-        MessageBox(wnd, info, _T("error"), MB_OK);
+        ERR("get torrent info error:%d", ret);
         return;
     }
+
+    DBG(filename);
 
     LVITEM item;
     item.mask = LVIF_TEXT;
@@ -385,6 +387,8 @@ void on_dropfiles(HWND wnd, WPARAM w)
     SetWindowTextA(g_edit, filename);
     ShowWindow(g_list, SW_HIDE);
     ShowWindow(g_torr, SW_SHOW);
+
+    DBG(filename);
 }
 
 /**
@@ -725,28 +729,81 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     DBG("http init ok");
 
-    // 加载拼音数据
-    ret = pinyin_init_res("PINYIN", IDR_PINYIN);
-
-    if (0 != ret)
-    {
-        ERR("pinyin init fail %d", ret);
-        return -3;
-    }
-
-    DBG("pinyin init ok");
-
     // 初始化SDK
     ret = xl_sdk_init();
 
     if (0 != ret)
     {
         ERR("init error:%d", ret);
-        return -4;
+        return -3;
     }
 
     DBG("sdk init ok");
 
+
+    memory_pool pool;
+
+    memory_pool_init(&pool, 1024, 100);
+
+    void *mem = NULL;
+
+    for (int i = 0; i < 2000; i++)
+    {
+        ret = memory_pool_get(&pool, &mem);
+
+        DBG("memory_pool_get ret:%d count:%d list-size:%d count:%d head:%d tail:%d", ret, pool.count, 
+        pool.free->size, pool.free->count, pool.free->head, pool.free->tail);
+    }
+
+    ret = memory_pool_put(&pool, mem);
+
+    DBG("memory_pool_put ret:%d memory-pool-count:%d list-size:%d count:%d head:%d tail:%d", ret, pool.count, 
+        pool.free->size, pool.free->count, pool.free->head, pool.free->tail);
+
+    memory_pool_uninit(&pool);
+
+/*
+    int error;
+    PCRE2_SIZE offset;
+    PCRE2_SIZE *ovector;
+
+    char *pattern = "{0-9}{5}";
+
+    pcre2_code *pcre_data = pcre2_compile((PCRE2_SPTR)pattern, 0, 0, &error, &offset, NULL);
+
+    if (pcre_data == NULL)
+    {
+        PCRE2_UCHAR info[256];
+        //pcre2_get_error_message(error, info, sizeof(info));
+        ERR("PCRE init fail pattern:%s offste:%d err:%s", pattern, offset, error, info);
+    }
+
+    DBG("pcre2_compile ok pattern:\"%s\"", pattern);
+
+    char *subject = "abcdefghijkl";
+
+    pcre2_match_data *match_data = pcre2_match_data_create_from_pattern(pcre_data, NULL);
+
+    ret = pcre2_match(pcre_data, (PCRE2_SPTR)subject, strlen(subject), 0, 0, match_data, NULL); // <0发生错误，==0没有匹配上，>0返回匹配到的元素数量
+
+    if (ret > 0)
+    {
+        ovector = pcre2_get_ovector_pointer(match_data);
+
+        for (int i = 0; i < ret; i++)
+        {
+            //int substring_length = ovector[2 * i + 1] - ovector[2 * i];
+            //char* substring_start = subject + ovector[2*i];
+            //DBG("%d: %d %.*s", i, substring_length, substring_start);
+            DBG("%d:%d %d", i, ovector[2 * i], ovector[2 * i + 1]);
+        }
+    }
+
+    pcre2_match_data_free(match_data);
+    pcre2_code_free(pcre_data);
+
+    DBG("pcre2_match subject:\"%s\" ret:%d", subject, ret);
+*/
     // 窗体居中
     int cx = 800;
     int cy = 600;
