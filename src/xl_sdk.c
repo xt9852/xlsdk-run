@@ -1,13 +1,11 @@
-/*************************************************
- * Copyright:   XT Tech. Co., Ltd.
- * File name:   xt_sdk.c
- * Author:      xt
- * Version:     1.0.0
- * Date:        2022.06.04
- * Code:        UTF-8(No BOM)
- * Description: 迅雷接口实现
-*************************************************/
-
+/**
+ *\copyright    XT Tech. Co., Ltd.
+ *\file         xl_sdk.c
+ *\author       xt
+ *\version      1.0.0
+ *\date         2022-02-08
+ *\brief        迅雷接口实现,UTF-8(No BOM)
+ */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -18,64 +16,66 @@
 #define SIZEOF(x)               sizeof(x)/sizeof(x[0])
 #define FLAG                    "BDAF7A63-568C-43ab-9406-D145CF03B08C"
 
+/// 参数头
 typedef struct _arg_head
 {
-    DWORD               len;                // 参数长度
+    DWORD               len;                ///< 参数长度
 
-    char                data[1];            // 参数
+    char                data[1];            ///< 参数
 
-}arg_head, *p_arg_head;                     // 参数头节点
+}arg_head, *p_arg_head;                     ///< 参数头节点
 
+/// 数据头
 typedef struct _data_head
 {
-    DWORD               len;                // 数据长度(不包含本身4字节)
+    DWORD               len;                ///< 数据长度(不包含本身4字节)
 
-    DWORD               func_id;            // 函数ID
+    DWORD               func_id;            ///< 函数ID
 
-union {
-    arg_head            arg1;               // 参数1头节点
+    union {
+    arg_head            arg1;               ///< 参数1头节点
 
-    DWORD               data[1];            // 参数1整数
+    DWORD               data[1];            ///< 参数1整数
     };
 
-}data_head, *p_data_head;                   // 数据包头节点
+}data_head, *p_data_head;                   ///< 数据包头节点
 
 typedef struct _task_info
 {
-    unsigned __int64    down;               // 已经下载的数量
+    unsigned __int64    down;               ///< 已经下载的数量
 
-    unsigned int        time;               // 用时秒数
+    unsigned int        time;               ///< 用时秒数
 
 }task_info, *p_task_info;
 
-int    g_cur_process_id         = 0;        // 本进程ID
-int    g_sdk_process_id         = 0;        // SDK进程ID
-int    g_share_memory_id        = 0;        // 共享内存ID
+int    g_cur_process_id         = 0;        ///< 本进程ID
+int    g_sdk_process_id         = 0;        ///< SDK进程ID
+int    g_share_memory_id        = 0;        ///< 共享内存ID
 
-BOOL   g_init                   = FALSE;    // 是否完成初始化
+BOOL   g_init                   = FALSE;    ///< 是否完成初始化
 
-UCHAR *g_recv                   = NULL;     // 共享内存1M,对方接收的数据,我方发送的
-UCHAR *g_send                   = NULL;     // 共享内存1M,我方发送的数据,需对方处理
+UCHAR *g_recv                   = NULL;     ///< 共享内存1M,对方接收的数据,我方发送的
+UCHAR *g_send                   = NULL;     ///< 共享内存1M,我方发送的数据,需对方处理
 
-UCHAR *g_recv_tmp               = NULL;     // 临时缓存区
-UCHAR *g_send_tmp               = NULL;     // 临时缓存区
+UCHAR *g_recv_tmp               = NULL;     ///< 临时缓存区
+UCHAR *g_send_tmp               = NULL;     ///< 临时缓存区
 
-HANDLE g_proxyAliveMutex        = NULL;     // 互斥
-HANDLE g_serverStartUpEvent     = NULL;     // 事件
+HANDLE g_proxyAliveMutex        = NULL;     ///< 互斥
+HANDLE g_serverStartUpEvent     = NULL;     ///< 事件
 
-HANDLE g_recvShareMemory        = NULL;     // 共享内存1M,我方发送的数据,需要对方处理
-HANDLE g_recvBufferFullEvent    = NULL;     // 信号,表示有数据,对方可以处理啦
-HANDLE g_recvBufferEmptyEvent   = NULL;     // 信号,表示对方处理完成,我方可以再次发送
+HANDLE g_recvShareMemory        = NULL;     ///< 共享内存1M,我方发送的数据,需要对方处理
+HANDLE g_recvBufferFullEvent    = NULL;     ///< 信号,表示有数据,对方可以处理啦
+HANDLE g_recvBufferEmptyEvent   = NULL;     ///< 信号,表示对方处理完成,我方可以再次发送
 
-HANDLE g_sendShareMemory        = NULL;     // 共享内存1M,对方发送的数据,需要我方处理
-HANDLE g_sendBufferFullEvent    = NULL;     // 信号,表示有数据,我方可以处理啦
-HANDLE g_sendBufferEmptyEvent   = NULL;     // 信号,表示我方可以处理完成,对方可以再次发送
+HANDLE g_sendShareMemory        = NULL;     ///< 共享内存1M,对方发送的数据,需要我方处理
+HANDLE g_sendBufferFullEvent    = NULL;     ///< 信号,表示有数据,我方可以处理啦
+HANDLE g_sendBufferEmptyEvent   = NULL;     ///< 信号,表示我方可以处理完成,对方可以再次发送
 
-int    g_track_len              = 0;
+int    g_track_len              = 0;        ///< track数据长度
 
-int    g_track_count            = 0;
+int    g_track_count            = 0;        ///< track数据数量
 
-short *g_track_data[10240]      = {0};
+short *g_track_data[10240]      = {0};      ///< track缓冲区
 
 const short *g_track[] = {
     L"http://1337.abcvg.info:80/announce",
@@ -181,7 +181,8 @@ const short *g_track[] = {
     L"http://tracker1.itzmx.com:8080/announce"
 };
 
-enum    // SDK函数ID
+/// SDK函数ID
+enum    
 {
     /* 1*/ XL_Init = 1,
     /* 2*/ XL_UnInit,
@@ -256,6 +257,7 @@ enum    // SDK函数ID
     /*47*/ XL_UpdateTaskVideoByteRatio
 };
 
+/// 函数名称
 const char * SDK_FUNC_NAME[] =
 {
     /* 1*/ "XL_Init",
@@ -332,8 +334,8 @@ const char * SDK_FUNC_NAME[] =
 };
 
 /**
- * \brief   调用SDK的函数
- * \return  0-成功
+ *\brief    调用SDK的函数
+ *\return   0   成功
  */
 int xl_sdk_call_sdk_func()
 {
@@ -368,8 +370,8 @@ int xl_sdk_call_sdk_func()
 }
 
 /**
- * \brief   打开共享内存和内存操作信号,RecvShareMemory,SendShareMemory
- * \return  0-成功
+ *\brief    打开共享内存和内存操作信号,RecvShareMemory,SendShareMemory
+ *\return   0   成功
  */
 int xl_sdk_open_share_memory_event(bool reopen)
 {
@@ -508,8 +510,8 @@ int xl_sdk_open_share_memory_event(bool reopen)
 }
 
 /**
- * \brief   创建SDK的进程,"C:\***\DownloadSDKServer.exe" BDAF7A63-568C-43ab-9406-D145CF03B08C:2824(父进程ID)
- * \return  0-成功
+ *\brief    创建SDK的进程,"C:\***\DownloadSDKServer.exe" BDAF7A63-568C-43ab-9406-D145CF03B08C:2824(父进程ID)
+ *\return   0   成功
  */
 int xl_sdk_create_download_process()
 {
@@ -535,8 +537,8 @@ int xl_sdk_create_download_process()
 }
 
 /**
- * \brief   创建互斥和信号,ProxyAliveMutex,ServerStartUpEvent
- * \return  0-成功
+ *\brief    创建互斥和信号,ProxyAliveMutex,ServerStartUpEvent
+ *\return   0   成功
  */
 int xl_sdk_create_ServerStartUpEvent()
 {
@@ -569,8 +571,8 @@ int xl_sdk_create_ServerStartUpEvent()
 }
 
 /**
- * \brief   创建信号,发送数据1,接收数据2,发送数据3
- * \return  0-成功
+ *\brief    创建信号,发送数据1,接收数据2,发送数据3
+ *\return   0   成功
  */
 int xl_sdk_open_AccetpReturnEvent()
 {
@@ -596,8 +598,8 @@ int xl_sdk_open_AccetpReturnEvent()
 }
 
 /**
- * \brief   打开互斥,ClientAliveMutex
- * \return  0-成功
+ *\brief    打开互斥,ClientAliveMutex
+ *\return   0   成功
  */
 int xl_sdk_open_ClientAliveMutex()
 {
@@ -621,8 +623,8 @@ int xl_sdk_open_ClientAliveMutex()
 }
 
 /**
- * \brief   得到共享内存ID,发送数据1,接收数据2,发送数据3
- * \return  0-成功
+ *\brief    得到共享内存ID,发送数据1,接收数据2,发送数据3
+ *\return   0   成功
  */
 int xl_sdk_call_get_share_memory_id()
 {
@@ -669,8 +671,8 @@ int xl_sdk_call_get_share_memory_id()
 }
 
 /**
- * \brief   初始化SDK,调用XL_Init,XL_GetPeerId,XL_SetUserInfo,XL_SetGlobalExtInfo,XL_SetDownloadSpeedLimit,XL_SetUploadSpeedLimit
- * \return  0-成功
+ *\brief    初始化SDK,调用XL_Init,XL_GetPeerId,XL_SetUserInfo,XL_SetGlobalExtInfo,XL_SetDownloadSpeedLimit,XL_SetUploadSpeedLimit
+ *\return   0   成功
  */
 int xl_sdk_call_sdk_init()
 {
@@ -786,8 +788,8 @@ int xl_sdk_call_sdk_init()
 }
 
 /**
- * \brief   生成TRACK数据UNICODE
- * \return  0-成功
+ *\brief    生成TRACK数据UNICODE
+ *\return   0   成功
  */
 int xl_sdk_proc_track()
 {
@@ -810,8 +812,8 @@ int xl_sdk_proc_track()
 }
 
 /**
- * \brief   初始化SDK
- * \return  0-成功
+ *\brief    初始化SDK
+ *\return   0   成功
  */
 int xl_sdk_init()
 {
@@ -897,12 +899,12 @@ int xl_sdk_init()
 }
 
 /**
- * \brief   添加服务器
- * \param   [in]   int      *taski      任务ID
- * \param   [in]   int      count       服务器数量
- * \param   [in]   void     *data       服务器数据
- * \param   [in]   int      data_len    数据长度
- * \return  0-成功
+ *\brief        添加服务器
+ *\param[in]    taski       任务ID
+ *\param[in]    count       服务器数量
+ *\param[in]    data        服务器数据
+ *\param[in]    data_len    数据长度
+ *\return       0           成功
  */
 int xl_sdk_add_bt_tracker(int taskid, int count, void *data, int data_len)
 {
@@ -933,12 +935,12 @@ int xl_sdk_add_bt_tracker(int taskid, int count, void *data, int data_len)
 }
 
 /**
- * \brief   创建下载种子文件任务
- * \param   [in]    short   *magnet     magnet磁力URL,UNICODE
- * \param   [in]    short   *path       本地存储路径,UNICODE
- * \param   [out]   int     *taskid     任务ID
- * \param   [out]   short   *task_name  任务名称
- * \return  0-成功
+ * \brief       创建下载种子文件任务
+ * \param[in]   magnet      magnet磁力URL,UNICODE
+ * \param[in]   path        本地存储路径,UNICODE
+ * \param[out]  taskid      任务ID
+ * \param[out]  task_name   任务名称
+ * \return      0           成功
  */
 int xl_sdk_create_magnet_task(short *magnet, short *path, int *taskid, short *task_name)
 {
@@ -990,16 +992,16 @@ int xl_sdk_create_magnet_task(short *magnet, short *path, int *taskid, short *ta
 }
 
 /**
- * \brief   创建下载BT文件任务
- * \param   [in]    short   *torrent        种子文件全名
- * \param   [in]    short   *path           本地下载目录
- * \param   [in]    char    *list           文件下载列表,例:"001",0-不下载,1-下载,文件按拼音顺序排列
- * \param   [in]    int      announce_count tracker服务器数量
- * \param   [in]    short   *announce       tracker服务器数据
- * \param   [in]    int      announce_len   tracker服务器数据长度
- * \param   [out]   int     *taskid         任务ID
- * \param   [out]   short   *task_name      任务名称
- * \return  0-成功
+ * \brief       创建下载BT文件任务
+ * \param[in]   torrent         种子文件全名
+ * \param[in]   path            本地下载目录
+ * \param[in]   list            文件下载列表,例:"001",0-不下载,1-下载,文件按拼音顺序排列
+ * \param[in]   announce_count  tracker服务器数量
+ * \param[in]   announce        tracker服务器数据
+ * \param[in]   announce_len    tracker服务器数据长度
+ * \param[out]  taskid          任务ID
+ * \param[out]  task_name       任务名称
+ * \return      0               成功
  */
 int xl_sdk_create_bt_task(short *torrent, short *path, char *list, int announce_count, short *announce, int announce_len, int *taskid)
 {
@@ -1062,12 +1064,12 @@ int xl_sdk_create_bt_task(short *torrent, short *path, char *list, int announce_
 }
 
 /**
- * \brief   创建下载URL文件任务
- * \param   [in]    short   *url        URL地址
- * \param   [in]    short   *path       本地下载目录
- * \param   [out]   int     *taskid     任务ID
- * \param   [out]   short   *task_name  任务名称
- * \return  0-成功
+ * \brief       创建下载URL文件任务
+ * \param[in]   url             URL地址
+ * \param[in]   path            本地下载目录
+ * \param[out]  taskid          任务ID
+ * \param[out]  task_name       任务名称
+ * \return      0               成功
  */
 int xl_sdk_create_url_task(short *url, short *path, int *taskid, short *task_name)
 {
@@ -1135,10 +1137,10 @@ int xl_sdk_create_url_task(short *url, short *path, int *taskid, short *task_nam
 }
 
 /**
- * \brief   开始下载文件
- * \param   [in]   int     *taski       任务ID
- * \param   [in]   int      task_type   任务类型
- * \return  0-成功
+ * \brief       开始下载文件
+ * \param[in]   taski           任务ID
+ * \param[in]   task_type       任务类型
+ * \return      0               成功
  */
 int xl_sdk_start_download_file(int taskid, int task_type)
 {
@@ -1225,9 +1227,9 @@ int xl_sdk_start_download_file(int taskid, int task_type)
 }
 
 /**
- * \brief   停止下载文件
- * \param   [in]   int     *taskid       任务ID
- * \return  0-成功
+ * \brief       停止下载文件
+ * \param[in]   taskid          任务ID
+ * \return      0               成功
  */
 int xl_sdk_stop_download_file(int taskid)
 {
@@ -1256,12 +1258,12 @@ int xl_sdk_stop_download_file(int taskid)
 }
 
 /**
- * \brief   得到下载任务信息
- * \param   [in]    int                 *taskid     任务ID
- * \param   [out]   unsigned __int64    *size       下载的数据总大小
- * \param   [out]   unsigned __int64    *down       已经下载的数据总大小
- * \param   [out]   unsigned __int64    *time       本次下载任务用时单位秒
- * \return  0-成功
+ * \brief       得到下载任务信息
+ * \param[in]   taskid          任务ID
+ * \param[out]  size            下载的数据总大小
+ * \param[out]  down            已经下载的数据总大小
+ * \param[out]  time            本次下载任务用时单位秒
+ * \return      0               成功
  */
 int xl_sdk_get_task_info(int taskid, unsigned __int64 *size, unsigned __int64 *down, unsigned int *time)
 {

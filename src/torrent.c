@@ -1,13 +1,11 @@
-/*************************************************
- * Copyright:   XT Tech. Co., Ltd.
- * File name:   torrent.c
- * Author:      xt
- * Version:     1.0.0
- * Date:        2022.06.04
- * Code:        UTF-8(No BOM)
- * Description: bencode编码的种子文件解析实现
-*************************************************/
-
+/**
+ *\copyright    XT Tech. Co., Ltd.
+ *\file         torrent.c
+ *\author       xt
+ *\version      1.0.0
+ *\date         2022-02-08
+ *\brief        bencode编码的种子文件解析实现,UTF-8(No BOM)
+ */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -17,7 +15,8 @@
 #include "xt_pinyin.h"
 #include "xt_character_set.h"
 
-enum    // 种子文件字段
+/// 种子文件字段
+enum    
 {
     ED2K = 1,
     FILEHASH,
@@ -26,19 +25,19 @@ enum    // 种子文件字段
     LENGTH,
     PIECES,
     ANNOUNCE,
-    PATH_LIST,              // path的list
-    ANNOUNCE_LIST,          // announce的list
-    ANNOUNCE_LIST_LIST,     // announce的list的list
+    PATH_LIST,              ///< path的list
+    ANNOUNCE_LIST,          ///< announce的list
+    ANNOUNCE_LIST_LIST,     ///< announce的list的list
 };
 
 int bencode_dict(const char *s, unsigned int len, p_torrent info);
 
 /**
- * \brief   解析bencode编码的字符串,格式:<字符串长度>字符串
- * \param   [in]     const char    *s       数据
- * \param   [in]     unsigned int   len     数据长
- * \param   [in/out] p_torrent      info    信息
- * \return  文本长度,小于0错误
+ *\brief        解析bencode编码的字符串,格式:<字符串长度>字符串
+ *\param[in]    s           数据
+ *\param[in]    len         数据长
+ *\param[out]   info        信息
+ *\return       文本长度,小于0错误
  */
 int bencode_str(const char *s, unsigned int len, p_torrent info)
 {
@@ -129,11 +128,11 @@ int bencode_str(const char *s, unsigned int len, p_torrent info)
 }
 
 /**
- * \brief   解析bencode编码的整数,格式:i<整数>e
- * \param   [in]     const char    *s       数据
- * \param   [in]     unsigned int   len     数据长
- * \param   [in/out] p_torrent      info    信息
- * \return  文本长度,小于0错误
+ *\brief        解析bencode编码的整数,格式:i<整数>e
+ *\param[in]    s           数据
+ *\param[in]    len         数据长
+ *\param[out]   info        信息
+ *\return       文本长度,小于0错误
  */
 int bencode_int(const char *s, unsigned int len, p_torrent info)
 {
@@ -175,11 +174,11 @@ int bencode_int(const char *s, unsigned int len, p_torrent info)
 }
 
 /**
- * \brief   解析bencode编码的列表,格式:l<bencoding编码类型>e
- * \param   [in]     const char    *s       数据
- * \param   [in]     unsigned int   len     数据长
- * \param   [in/out] p_torrent      info    信息
- * \return  文本长度,小于0错误
+ *\brief        解析bencode编码的列表,格式:l<bencoding编码类型>e
+ *\param[in]    s           数据
+ *\param[in]    len         数据长
+ *\param[out]   info        信息
+ *\return       文本长度,小于0错误
  */
 int bencode_list(const char *s, unsigned int len, p_torrent info)
 {
@@ -258,11 +257,11 @@ int bencode_list(const char *s, unsigned int len, p_torrent info)
 }
 
 /**
- * \brief   解析bencode编码的字典,格式:d<bencoding字符串><bencoding编码类型>e
- * \param   [in]     const char    *s       数据
- * \param   [in]     unsigned int   len     数据长
- * \param   [in/out] p_torrent      info    信息
- * \return  文本长度,小于0错误
+ *\brief        解析bencode编码的字典,格式:d<bencoding字符串><bencoding编码类型>e
+ *\param[in]    s           数据
+ *\param[in]    len         数据长
+ *\param[out]   info        信息
+ *\return       文本长度,小于0错误
  */
 int bencode_dict(const char *s, unsigned int len, p_torrent info)
 {
@@ -317,11 +316,11 @@ int bencode_dict(const char *s, unsigned int len, p_torrent info)
 }
 
 /**
- * \brief   打开文件取得文件数据
- * \param   [in]  const char    *filename   文件名
- * \param   [out] char          **data      数据
- * \param   [out] unsigned int  *len        数据长
- * \return  0-成功
+ *\brief        打开文件取得文件数据
+ *\param[in]    filename    文件名
+ *\param[out]   data        数据
+ *\param[out]   len         数据长
+ *\return       0           成功
  */
 int load_file_data(const char *filename, char **data, unsigned int *len)
 {
@@ -347,10 +346,10 @@ int load_file_data(const char *filename, char **data, unsigned int *len)
 }
 
 /**
- * \brief   解析种子文件
- * \param   [in]    const char *filename    种子文件名
- * \param   [out]   p_torrent   info        种子信息
- * \return  0-成功
+ *\brief        解析种子文件
+ *\param[in]    filename    种子文件名
+ *\param[out]   info        种子信息
+ *\return       0           成功
  */
 int get_torrent_info(const char *filename, p_torrent info)
 {

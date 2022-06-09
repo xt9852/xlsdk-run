@@ -1,13 +1,11 @@
-/*************************************************
- * Copyright:   XT Tech. Co., Ltd.
- * File name:   main.c
- * Author:      xt
- * Version:     1.0.0
- * Date:        2022-02-08
- * Code:        UTF-8(No BOM)
- * Description: 主模块实现
-*************************************************/
-
+/**
+ *\copyright    XT Tech. Co., Ltd.
+ *\file         main.c
+ *\author       xt
+ *\version      1.0.0
+ *\date         2022-02-08
+ *\brief        主模块实现,UTF-8(No BOM)
+ */
 #include <stdio.h>
 #include <stdlib.h>
 #include <tchar.h>
@@ -20,6 +18,8 @@
 #include "torrent.h"
 #include "xl_sdk.h"
 #include "xt_memory_pool.h"
+#include "xt_base64.h"
+#include "xt_md5.h"
 //#include "pcre2.h"
 
 
@@ -34,47 +34,59 @@
 #define FALSE 0
 #endif
 
-enum    // 任务列表控件列ID
+/// 任务列表控件列ID
+enum
 {
-    LIST_TASK,
-    LIST_FILE,
-    LIST_SIZE,
-    LIST_SPEE,
-    LIST_PROG,
-    LIST_TIME
+    LIST_TASK,  ///< 任务ID
+    LIST_FILE,  ///< 文件名
+    LIST_SIZE,  ///< 文件大小
+    LIST_SPEE,  ///< 下载速度
+    LIST_PROG,  ///< 下载进度
+    LIST_TIME   ///< 下载用时
 };
 
-enum    // 种子列表控件列ID
+/// 种子列表控件列ID
+enum
 {
-    TORR_SIZE,
-    TORR_FILE
+    TORR_SIZE,  ///< 文件大小
+    TORR_FILE   ///< 文件名
 };
 
+/// 任务信息
 typedef struct _task_info {
 
-    unsigned __int64    down;               // 已经下载的数量
+    unsigned __int64    down;               ///< 已经下载的数量
 
-    unsigned int        time;               // 用时秒数
+    unsigned int        time;               ///< 用时秒数
 
-    unsigned int        show_size;          // 是否已经显示大小
+    unsigned int        show_size;          ///< 是否已经显示大小
 
 }task_info, *p_task_info;
 
-HWND                    g_wnd;
+HWND                    g_wnd;              ///< 主窗体句柄
 HWND                    g_edit;
 HWND                    g_down;
 HWND                    g_list;
 HWND                    g_torr;
 HMENU                   g_menu;
 
-torrent                 g_torrent       = {0};                              // 种子文件信息
+torrent                 g_torrent       = {0};                              ///< 种子文件信息
 
-task_info               g_task[128]     = {0};                              // 当前正在下载的任务信息
+task_info               g_task[128]     = {0};                              ///< 当前正在下载的任务信息
 
-NOTIFYICONDATA          g_nid           = {0};                              // 任务栏图标数据结构
+NOTIFYICONDATA          g_nid           = {0};                              ///< 任务栏图标数据结构
 
-static const TCHAR     *g_title         = _T("DownloadSDKServerStart.exe"); // 标题
+static const TCHAR     *g_title         = _T("DownloadSDKServerStart.exe"); ///< 标题
 
+/**
+ * \brief       HTTP服务回调
+ * \param[in]   uri         URI地址
+ * \param[in]   arg         URL参数
+ * \param[out]  content     返回内容
+ * \param[out]  content_len 返回内容长度
+ * \return      200         成功 \n
+                404         没有找文件
+ */
 int http_process_callback(const char *uri, const char *arg, int arg_count, char *content, int *content_len)
 {
     strcpy_s(content, *content_len, "200");
@@ -83,11 +95,11 @@ int http_process_callback(const char *uri, const char *arg, int arg_count, char 
 }
 
 /**
- * \brief   得到格式化后的信息
- * \param   [in]    unsigned __int64     data   数据
- * \param   [in]    TCHAR               *unit   单位
- * \param   [out]   TCHAR               *info   信息
- * \return  无
+ *\brief        得到格式化后的信息
+ *\param[in]    data        数据
+ *\param[in]    unit        单位
+ *\param[out]   info        信息
+ *\return                  无
  */
 void format_data(unsigned __int64 data, TCHAR *info)
 {
@@ -114,13 +126,13 @@ void format_data(unsigned __int64 data, TCHAR *info)
 }
 
 /**
- * \brief   得到格式化后的信息
- * \param   [out]   char   *list        列表
- * \param   [in]    int     list_size   列表空间
- * \param   [out]   short  *filename    最后一个选中的文件
- * \return  0-成功
+ *\brief        得到格式化后的信息
+ *\param[in]    list_size   列表空间
+ *\param[out]   list        列表
+ *\param[out]   filename    最后一个选中的文件
+ *\return       0           成功
  */
-int get_select_list(char *list, int list_size, short *filename)
+int get_select_list(int list_size, char *list, short *filename)
 {
     if (NULL == list || list_size <= 0)
     {
@@ -160,9 +172,9 @@ int get_select_list(char *list, int list_size, short *filename)
 }
 
 /**
- * \brief   下载按钮
- * \param   [in]  HWND wnd 窗体句柄
- * \return  无
+ *\brief        下载按钮
+ *\param[in]    wnd         窗体句柄
+ *\return                   无
  */
 void btn_download(HWND wnd)
 {
@@ -193,7 +205,7 @@ void btn_download(HWND wnd)
 
         tasktype = TASK_BT;
 
-        ret = get_select_list(list, sizeof(list) - 1, taskname + 41);
+        ret = get_select_list(sizeof(list) - 1, list, taskname + 41);
 
         if (0 != ret)
         {
@@ -245,9 +257,9 @@ void btn_download(HWND wnd)
 }
 
 /**
- * \brief   定时任务
- * \param   [in]  HWND wnd 窗体句柄
- * \return  无
+ *\brief        定时任务
+ *\param[in]    wnd         窗体句柄
+ *\return                   无
  */
 void on_timer(HWND wnd)
 {
@@ -338,9 +350,10 @@ void on_timer(HWND wnd)
 }
 
 /**
- * \brief   拖拽文件
- * \param   [in]  WPARAM w 拖拽句柄
- * \return  无
+ *\brief        拖拽文件
+ *\param[in]    wnd         窗体句柄
+ *\param[in]    w           拖拽句柄
+ *\return                   无
  */
 void on_dropfiles(HWND wnd, WPARAM w)
 {
@@ -392,10 +405,10 @@ void on_dropfiles(HWND wnd, WPARAM w)
 }
 
 /**
- * \brief   系统托盘消息处理函数
- * \param   [in]  HWND   wnd 窗体句柄
- * \param   [in]  LPARAM l   操作
- * \return  无
+ *\brief        系统托盘消息处理函数
+ *\param[in]    wnd         窗体句柄
+ *\param[in]    l           操作
+ *\return                   无
  */
 void on_sys_notify(HWND wnd, LPARAM l)
 {
@@ -409,9 +422,9 @@ void on_sys_notify(HWND wnd, LPARAM l)
 }
 
 /**
- * \brief   改变大小消息处理函数
- * \param   [in]  LPARAM l 窗体s宽高
- * \return  无
+ *\brief        改变大小消息处理函数
+ *\param[in]    l           窗体s宽高
+ *\return                   无
  */
 void on_size(LPARAM l)
 {
@@ -456,9 +469,9 @@ void on_size(LPARAM l)
 }
 
 /**
- * \brief   创建消息处理函数
- * \param   [in]  HWND wnd 窗体句柄
- * \return  无
+ *\brief        创建消息处理函数
+ *\param[in]    wnd         窗体句柄
+ *\return                   无
  */
 void on_create(HWND wnd, LPARAM l)
 {
@@ -579,13 +592,13 @@ void on_create(HWND wnd, LPARAM l)
 }
 
 /**
- * \brief   窗体关闭处理函数
-            当用户点击窗体上的关闭按钮时,
-            系统发出WM_CLOSE消息,自己执行DestroyWindow关闭窗口,
-            然后发送WM_DESTROY消息,自己执行PostQuitMessage关闭应用程序,
-            最后发出WM_QUIT消息来关闭消息循环
- * \param   [in]  HWND wnd 窗体句柄
- * \return  无
+ *\brief        窗体关闭处理函数 \n
+                当用户点击窗体上的关闭按钮时 \n
+                系统发出WM_CLOSE消息,自己执行DestroyWindow关闭窗口 \n
+                然后发送WM_DESTROY消息,自己执行PostQuitMessage关闭应用程序 \n
+                最后发出WM_QUIT消息来关闭消息循环
+ *\param[in]    wnd         窗体句柄
+ *\return                   无
  */
 void on_close(HWND wnd)
 {
@@ -602,9 +615,9 @@ void on_close(HWND wnd)
 }
 
 /**
- * \brief   窗体关闭处理函数
- * \param   [in]  HWND wnd 窗体句柄
- * \return  无
+ *\brief        窗体关闭处理函数
+ *\param[in]    wnd         窗体句柄
+ *\return                   无
  */
 void on_exit(HWND wnd)
 {
@@ -628,9 +641,9 @@ void on_exit(HWND wnd)
 }
 
 /**
- * \brief   窗体消毁处理函数
- * \param   [in]  HWND wnd 窗体句柄
- * \return  无
+ *\brief        窗体消毁处理函数
+ *\param[in]    wnd         窗体句柄
+ *\return                   无
  */
 void on_destory(HWND wnd)
 {
@@ -639,9 +652,9 @@ void on_destory(HWND wnd)
 }
 
 /**
- * \brief   窗体显示函数
- * \param   [in]  HWND wnd 窗体句柄
- * \return  无
+ *\brief        窗体显示函数
+ *\param[in]    wnd         窗体句柄
+ *\return                   无
  */
 void on_show(HWND wnd)
 {
@@ -649,10 +662,10 @@ void on_show(HWND wnd)
 }
 
 /**
- * \brief   命令消息处理函数,菜单,按钮都会发此消息
- * \param   [in]  HWND   wnd 窗体句柄
- * \param   [in]  WPARAM w   消息参数
- * \return  无
+ *\brief        命令消息处理函数,菜单,按钮都会发此消息
+ *\param[in]    wnd         窗体句柄
+ *\param[in]    w           消息参数
+ *\return                   无
  */
 void on_command(HWND wnd, WPARAM w)
 {
@@ -697,12 +710,12 @@ LRESULT CALLBACK window_proc(HWND wnd, UINT msg, WPARAM w, LPARAM l)
 }
 
 /**
- * \brief   窗体类程序主函数
- * \param   [in]  HINSTANCE hInstance       当前实例句柄
- * \param   [in]  HINSTANCE hPrevInstance   先前实例句柄
- * \param   [in]  LPSTR     lpCmdLine       命令行参数
- * \param   [in]  int       nCmdShow        显示状态(最小化,最大化,隐藏)
- * \return  int 程序返回值
+ *\brief        窗体类程序主函数
+ *\param[in]    hInstance       当前实例句柄
+ *\param[in]    hPrevInstance   先前实例句柄
+ *\param[in]    lpCmdLine       命令行参数
+ *\param[in]    nCmdShow        显示状态(最小化,最大化,隐藏)
+ *\return                       exe程序返回值
  */
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
@@ -717,7 +730,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         return -1;
     }
 
-    DBG("config init ok, download path:%s", config_get_path());
+    DBG("config init ok, download path:%s", config_get_download_path());
 
     ret = http_init(80, http_process_callback);
 
@@ -740,7 +753,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     DBG("sdk init ok");
 
-
     memory_pool pool;
 
     memory_pool_init(&pool, 1024, 100);
@@ -751,16 +763,40 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     {
         ret = memory_pool_get(&pool, &mem);
 
-        DBG("memory_pool_get ret:%d count:%d list-size:%d count:%d head:%d tail:%d", ret, pool.count, 
+        DBG("memory_pool_get ret:%d count:%d list-size:%d count:%d head:%d tail:%d", ret, pool.count,
         pool.free->size, pool.free->count, pool.free->head, pool.free->tail);
     }
 
     ret = memory_pool_put(&pool, mem);
 
-    DBG("memory_pool_put ret:%d memory-pool-count:%d list-size:%d count:%d head:%d tail:%d", ret, pool.count, 
+    DBG("memory_pool_put ret:%d memory-pool-count:%d list-size:%d count:%d head:%d tail:%d", ret, pool.count,
         pool.free->size, pool.free->count, pool.free->head, pool.free->tail);
 
     memory_pool_uninit(&pool);
+
+    int len;
+    char base64[64];
+    char output[64];
+    char data[][10] = { "1", "12", "123", "1234" };
+    
+    for (int i = 0; i < 4; i++)
+    {
+        len = 64;
+        base64_to(data[i], strlen(data[i]), base64, &len);
+        DBG("data:%s base64:%s len:%d", data[i], base64, len);
+        
+        base64_from(base64, len, output, &len);
+        DBG("base64:%s data:%s len:%d", base64, output, len);
+    }
+
+    char md5_string[] = "123";
+    char md5_out[128];
+    md5_info md5;
+    md5_get(md5_string, strlen(md5_string), &md5);
+    DBG("md5 A:%x B:%x C:%x D:%x", md5.A, md5.B, md5.C, md5.D);
+    
+    md5_get_str(md5_string, strlen(md5_string), md5_out);
+    DBG("md5 %s", md5_out);
 
 /*
     int error;
@@ -818,25 +854,25 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     // 窗体类
     WNDCLASS wc      = {0};
-    wc.style         = CS_HREDRAW | CS_VREDRAW;     // 类型属性
-    wc.lpfnWndProc   = window_proc;                 // 窗体消息处理函数
-    wc.lpszClassName = _T("class_name");            // 类名称
-    wc.hInstance     = hInstance;                   // 实例
-    wc.hIcon         = icon;                        // 图标
-    wc.hCursor       = cursor;                      // 鼠标指针
-    wc.hbrBackground = brush;                       // 背景刷
+    wc.style         = CS_HREDRAW | CS_VREDRAW;         // 类型属性
+    wc.lpfnWndProc   = window_proc;                     // 窗体消息处理函数
+    wc.lpszClassName = _T("class_name");                // 类名称
+    wc.hInstance     = hInstance;                       // 实例
+    wc.hIcon         = icon;                            // 图标
+    wc.hCursor       = cursor;                          // 鼠标指针
+    wc.hbrBackground = brush;                           // 背景刷
     RegisterClass(&wc);
 
     // 创建窗体
-    g_wnd = CreateWindow(wc.lpszClassName,          // 类名称
-                         g_title,                   // 窗体名称
-                         WS_OVERLAPPEDWINDOW,       // 窗体属性
-                         x,  y,                     // 窗体位置
-                         cx, cy,                    // 窗体大小
-                         NULL,                      // 父窗句柄
-                         NULL,                      // 菜单句柄
-                         hInstance,                 // 实例句柄
-                         NULL);                     // 参数,给WM_CREATE的lParam
+    g_wnd = CreateWindow(wc.lpszClassName,              // 类名称
+                         g_title,                       // 窗体名称
+                         WS_OVERLAPPEDWINDOW,           // 窗体属性
+                         x,  y,                         // 窗体位置
+                         cx, cy,                        // 窗体大小
+                         NULL,                          // 父窗句柄
+                         NULL,                          // 菜单句柄
+                         hInstance,                     // 实例句柄
+                         NULL);                         // 参数,给WM_CREATE的lParam
 
     // 显示窗体
     ShowWindow(g_wnd, SW_SHOWNORMAL);

@@ -1,13 +1,11 @@
-﻿/*************************************************
- * Copyright:   XT Tech. Co., Ltd.
- * File name:   config.c
- * Author:      xt
- * Version:     1.0.0
- * Date:        2022.06.04
- * Code:        UTF-8(No BOM)
- * Description: 配置模块实现
-*************************************************/
-
+﻿/**
+ *\copyright    XT Tech. Co., Ltd.
+ *\file         config.c
+ *\author       xt
+ *\version      1.0.0
+ *\date         2022-02-08
+ *\brief        配置模块实现,UTF-8(No BOM)
+ */
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/stat.h>
@@ -15,14 +13,12 @@
 #include "xt_log.h"
 #include "cJSON.h"
 
-
-static char g_config_path[512];
-
+static char g_config_download_path[512];    ///< 下载路径
 
 /**
- *\brief      得到文件大小
- *\param[in]  const char *filename 文件名
- *\return     文件大小,小于0时失败
+ *\brief        得到文件大小
+ *\param[in]    filename    文件名
+ *\return       文件大小,小于0时失败
  */
 int get_file_size(const char *filename)
 {
@@ -32,11 +28,11 @@ int get_file_size(const char *filename)
 }
 
 /**
- *\brief      加载配置文件数据
- *\param[in]  const char *filename  文件名
- *\param[in]  char       *buf       数据指针
- *\param[in]  int         len       数据长度
- *\return     0-成功
+ *\brief        加载配置文件数据
+ *\param[in]    filename    文件名
+ *\param[in]    buf         数据指针
+ *\param[in]    len         数据长度
+ *\return       0           成功
  */
 int get_config_data(const char *filename, char *buf, int len)
 {
@@ -66,9 +62,9 @@ int get_config_data(const char *filename, char *buf, int len)
 }
 
 /**
- *\brief      初始化配置
- *\param[in]  const char *filename 配置文件名
- *\return     0-成功
+ *\brief        初始化配置
+ *\param[in]    filename    配置文件名
+ *\return       0           成功
  */
 int config_init(const char *filename)
 {
@@ -145,17 +141,17 @@ int config_init(const char *filename)
         return -3;
     }
 
-    strcpy_s(g_config_path, sizeof(g_config_path), path->valuestring);
+    strcpy_s(g_config_download_path, sizeof(g_config_download_path), path->valuestring);
 
     DBG("ok");
     return 0;
 }
 
 /**
- *\brief      得到配置的路径
- *\return     配置的路径
+ *\brief      得到下载路径
+ *\return     下载路径
  */
-const char * config_get_path()
+const char * config_get_download_path()
 {
-    return g_config_path;
+    return g_config_download_path;
 }

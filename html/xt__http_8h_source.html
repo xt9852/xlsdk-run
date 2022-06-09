@@ -1,0 +1,73 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=9"/>
+<meta name="generator" content="Doxygen 1.8.10"/>
+<title>XLDownloadSDKServerStart: D:/2.code/12.XLDownloadSDKServerStart/utitly/xt_http.h 源文件</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="dynsections.js"></script>
+<link href="doxygen.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr style="height: 56px;">
+  <td id="projectlogo"><img alt="Logo" src="main.ico"/></td>
+  <td id="projectalign" style="padding-left: 0.5em;">
+   <div id="projectname">XLDownloadSDKServerStart
+   </div>
+  </td>
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- 制作者 Doxygen 1.8.10 -->
+  <div id="navrow1" class="tabs">
+    <ul class="tablist">
+      <li><a href="index.html"><span>首页</span></a></li>
+      <li><a href="annotated.html"><span>结构体</span></a></li>
+      <li class="current"><a href="files.html"><span>文件</span></a></li>
+    </ul>
+  </div>
+  <div id="navrow2" class="tabs2">
+    <ul class="tablist">
+      <li><a href="files.html"><span>文件列表</span></a></li>
+      <li><a href="globals.html"><span>全局定义</span></a></li>
+    </ul>
+  </div>
+<div id="nav-path" class="navpath">
+  <ul>
+<li class="navelem"><a class="el" href="dir_8ee2913beb34dfdcd4a64b701b5084ad.html">utitly</a></li>  </ul>
+</div>
+</div><!-- top -->
+<div class="header">
+  <div class="headertitle">
+<div class="title">xt_http.h</div>  </div>
+</div><!--header-->
+<div class="contents">
+<a href="xt__http_8h.html">浏览该文件的文档.</a><div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;</div>
+<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;<span class="preprocessor">#ifndef _XT_HTTP_H_</span></div>
+<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;<span class="preprocessor">#define _XT_HTTP_H_</span></div>
+<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;</div>
+<div class="line"><a name="l00021"></a><span class="lineno"><a class="line" href="xt__http_8h.html#a667e1a39d4ba01b78fb84c0e9277e00a">   21</a></span>&#160;<span class="keyword">typedef</span> int (*<a class="code" href="xt__http_8h.html#a667e1a39d4ba01b78fb84c0e9277e00a">HTTP_PROCESS</a>)(<span class="keyword">const</span> <span class="keywordtype">char</span> *uri, <span class="keyword">const</span> <span class="keywordtype">char</span> *arg, <span class="keywordtype">int</span> arg_count, <span class="keywordtype">char</span> *content, <span class="keywordtype">int</span> *content_len);</div>
+<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;</div>
+<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;</div>
+<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;<span class="keywordtype">int</span> <a class="code" href="xt__http_8h.html#a803e9c124f6e3a1ba3b916c18a45237a">http_init</a>(<span class="keywordtype">int</span> port, <a class="code" href="xt__http_8h.html#a667e1a39d4ba01b78fb84c0e9277e00a">HTTP_PROCESS</a> proc);</div>
+<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;</div>
+<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="ttc" id="xt__http_8h_html_a667e1a39d4ba01b78fb84c0e9277e00a"><div class="ttname"><a href="xt__http_8h.html#a667e1a39d4ba01b78fb84c0e9277e00a">HTTP_PROCESS</a></div><div class="ttdeci">int(* HTTP_PROCESS)(const char *uri, const char *arg, int arg_count, char *content, int *content_len)</div><div class="ttdoc">http回调函数 </div><div class="ttdef"><b>Definition:</b> xt_http.h:21</div></div>
+<div class="ttc" id="xt__http_8h_html_a803e9c124f6e3a1ba3b916c18a45237a"><div class="ttname"><a href="xt__http_8h.html#a803e9c124f6e3a1ba3b916c18a45237a">http_init</a></div><div class="ttdeci">int http_init(int port, HTTP_PROCESS proc)</div><div class="ttdoc">初始化http </div><div class="ttdef"><b>Definition:</b> xt_http.c:312</div></div>
+</div><!-- fragment --></div><!-- contents -->
+<!-- start footer part -->
+<hr class="footer"/><address class="footer"><small>
+制作者 &#160;<a href="http://www.doxygen.org/index.html">
+<img class="footer" src="doxygen.png" alt="doxygen"/>
+</a> 1.8.10
+</small></address>
+</body>
+</html>

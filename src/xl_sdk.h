@@ -1,36 +1,35 @@
-/*************************************************
- * Copyright:   XT Tech. Co., Ltd.
- * File name:   xt_sdk.h
- * Author:      xt
- * Version:     1.0.0
- * Date:        2022.06.04
- * Code:        UTF-8(No BOM)
- * Description: 迅雷接口定义
-*************************************************/
-
+/**
+ *\copyright    XT Tech. Co., Ltd.
+ *\file         xl_sdk.h
+ *\author       xt
+ *\version      1.0.0
+ *\date         2022-02-08
+ *\brief        迅雷接口定义,UTF-8(No BOM)
+ */
 #ifndef _XL_SDK_H_
 #define _XL_SDK_H_
 
-enum    // 任务类型
+/// 任务类型
+enum    
 {
-    TASK_MAGNET,
-    TASK_BT,
-    TASK_URL
+    TASK_MAGNET,    ///< 磁力 
+    TASK_BT,        ///< BT下载
+    TASK_URL        ///< 普通文件
 };
 
 /**
- * \brief   初始化SDK
- * \return  0-成功
+ *\brief   初始化SDK
+ *\return  0-成功
  */
 int xl_sdk_init();
 
 /**
- * \brief   添加服务器
- * \param   [in]   int      *taski      任务ID
- * \param   [in]   int      count       服务器数量
- * \param   [in]   void     *data       服务器数据
- * \param   [in]   int      data_len    数据长度
- * \return  0-成功
+ *\brief   添加服务器
+ *\param   [in]   int      *taski      任务ID
+ *\param   [in]   int      count       服务器数量
+ *\param   [in]   void     *data       服务器数据
+ *\param   [in]   int      data_len    数据长度
+ *\return  0-成功
  */
 int xl_sdk_add_bt_tracker(int taskid, int count, void *data, int data_len);
 

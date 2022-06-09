@@ -1,0 +1,111 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=9"/>
+<meta name="generator" content="Doxygen 1.8.10"/>
+<title>XLDownloadSDKServerStart: D:/2.code/12.XLDownloadSDKServerStart/utitly/xt_list.h 源文件</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="dynsections.js"></script>
+<link href="doxygen.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr style="height: 56px;">
+  <td id="projectlogo"><img alt="Logo" src="main.ico"/></td>
+  <td id="projectalign" style="padding-left: 0.5em;">
+   <div id="projectname">XLDownloadSDKServerStart
+   </div>
+  </td>
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- 制作者 Doxygen 1.8.10 -->
+  <div id="navrow1" class="tabs">
+    <ul class="tablist">
+      <li><a href="index.html"><span>首页</span></a></li>
+      <li><a href="annotated.html"><span>结构体</span></a></li>
+      <li class="current"><a href="files.html"><span>文件</span></a></li>
+    </ul>
+  </div>
+  <div id="navrow2" class="tabs2">
+    <ul class="tablist">
+      <li><a href="files.html"><span>文件列表</span></a></li>
+      <li><a href="globals.html"><span>全局定义</span></a></li>
+    </ul>
+  </div>
+<div id="nav-path" class="navpath">
+  <ul>
+<li class="navelem"><a class="el" href="dir_8ee2913beb34dfdcd4a64b701b5084ad.html">utitly</a></li>  </ul>
+</div>
+</div><!-- top -->
+<div class="header">
+  <div class="headertitle">
+<div class="title">xt_list.h</div>  </div>
+</div><!--header-->
+<div class="contents">
+<a href="xt__list_8h.html">浏览该文件的文档.</a><div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;</div>
+<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;<span class="preprocessor">#ifndef _XT_LIST_STACK_H_</span></div>
+<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;<span class="preprocessor">#define _XT_LIST_STACK_H_</span></div>
+<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;</div>
+<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;<span class="preprocessor">#include &lt;pthread.h&gt;</span></div>
+<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;</div>
+<div class="line"><a name="l00015"></a><span class="lineno"><a class="line" href="struct__list.html">   15</a></span>&#160;<span class="keyword">typedef</span> <span class="keyword">struct </span><a class="code" href="struct__list.html">_list</a></div>
+<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;{</div>
+<div class="line"><a name="l00017"></a><span class="lineno"><a class="line" href="struct__list.html#af00cdd742d205932a8309628d39efd5e">   17</a></span>&#160;    <span class="keywordtype">void</span>          **<a class="code" href="struct__list.html#af00cdd742d205932a8309628d39efd5e">data</a>;   </div>
+<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;</div>
+<div class="line"><a name="l00019"></a><span class="lineno"><a class="line" href="struct__list.html#a439227feff9d7f55384e8780cfc2eb82">   19</a></span>&#160;    <span class="keywordtype">int</span>             <a class="code" href="struct__list.html#a439227feff9d7f55384e8780cfc2eb82">size</a>;   </div>
+<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;</div>
+<div class="line"><a name="l00021"></a><span class="lineno"><a class="line" href="struct__list.html#ad43c3812e6d13e0518d9f8b8f463ffcf">   21</a></span>&#160;    <span class="keywordtype">int</span>             <a class="code" href="struct__list.html#ad43c3812e6d13e0518d9f8b8f463ffcf">count</a>;  </div>
+<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;</div>
+<div class="line"><a name="l00023"></a><span class="lineno"><a class="line" href="struct__list.html#a20358970b1abaf992eb85e071e454653">   23</a></span>&#160;    <span class="keywordtype">int</span>             <a class="code" href="struct__list.html#a20358970b1abaf992eb85e071e454653">head</a>;   </div>
+<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;</div>
+<div class="line"><a name="l00025"></a><span class="lineno"><a class="line" href="struct__list.html#aff39d864a6594bc5f4a5e365282e00fe">   25</a></span>&#160;    <span class="keywordtype">int</span>             <a class="code" href="struct__list.html#aff39d864a6594bc5f4a5e365282e00fe">tail</a>;   </div>
+<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;</div>
+<div class="line"><a name="l00027"></a><span class="lineno"><a class="line" href="struct__list.html#a4acff8232e4aec9cd5c6dc200ac55ef3">   27</a></span>&#160;    pthread_mutex_t <a class="code" href="struct__list.html#a4acff8232e4aec9cd5c6dc200ac55ef3">mutex</a>;  </div>
+<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;</div>
+<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;} <a class="code" href="xt__list_8h.html#ac8c8d86985b0bf4a1279d23c29b38eba">list</a>, *<a class="code" href="xt__list_8h.html#ab1d813ddc9cd42d4cff7ee51f27ce229">p_list</a>;            </div>
+<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;</div>
+<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;<span class="keywordtype">int</span> <a class="code" href="xt__list_8h.html#ae232abf3a87d72d5cd8b2c13414bc53c">list_init</a>(p_list <a class="code" href="struct__list.html">list</a>);</div>
+<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;</div>
+<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;<span class="keywordtype">int</span> <a class="code" href="xt__list_8h.html#aa15f40bd9c71a0411fbec88d88ec505e">list_uninit</a>(p_list <a class="code" href="struct__list.html">list</a>);</div>
+<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;</div>
+<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;<span class="keywordtype">int</span> <a class="code" href="xt__list_8h.html#acd34d25dffc53ba08a05b2db37869722">list_tail_push</a>(p_list <a class="code" href="struct__list.html">list</a>, <span class="keywordtype">void</span> *data);</div>
+<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;</div>
+<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;<span class="keywordtype">int</span> <a class="code" href="xt__list_8h.html#ae8ee91bce67a84e112ad6dd5bfa56a83">list_head_pop</a>(p_list <a class="code" href="struct__list.html">list</a>, <span class="keywordtype">void</span> **data);</div>
+<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;</div>
+<div class="line"><a name="l00068"></a><span class="lineno"><a class="line" href="xt__list_8h.html#ab3991411944e9994e79c554fdda32a8b">   68</a></span>&#160;<span class="keyword">typedef</span> int (*<a class="code" href="xt__list_8h.html#ab3991411944e9994e79c554fdda32a8b">LIST_PROC</a>)(<span class="keywordtype">void</span> *data, <span class="keywordtype">void</span> *param);</div>
+<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;</div>
+<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;<span class="keywordtype">int</span> <a class="code" href="xt__list_8h.html#a2f06a5f410579f58d2bcac6d6e8817f6">list_proc</a>(p_list <a class="code" href="struct__list.html">list</a>, <a class="code" href="xt__list_8h.html#ab3991411944e9994e79c554fdda32a8b">LIST_PROC</a> proc, <span class="keywordtype">void</span> *param);</div>
+<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;</div>
+<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="ttc" id="xt__list_8h_html_ac8c8d86985b0bf4a1279d23c29b38eba"><div class="ttname"><a href="xt__list_8h.html#ac8c8d86985b0bf4a1279d23c29b38eba">list</a></div><div class="ttdeci">struct _list list</div><div class="ttdoc">链表 </div></div>
+<div class="ttc" id="struct__list_html"><div class="ttname"><a href="struct__list.html">_list</a></div><div class="ttdoc">链表 </div><div class="ttdef"><b>Definition:</b> xt_list.h:15</div></div>
+<div class="ttc" id="xt__list_8h_html_ae232abf3a87d72d5cd8b2c13414bc53c"><div class="ttname"><a href="xt__list_8h.html#ae232abf3a87d72d5cd8b2c13414bc53c">list_init</a></div><div class="ttdeci">int list_init(p_list list)</div><div class="ttdoc">链表初始化 </div><div class="ttdef"><b>Definition:</b> xt_list.c:22</div></div>
+<div class="ttc" id="struct__list_html_aff39d864a6594bc5f4a5e365282e00fe"><div class="ttname"><a href="struct__list.html#aff39d864a6594bc5f4a5e365282e00fe">_list::tail</a></div><div class="ttdeci">int tail</div><div class="ttdoc">尾节点数组下标 </div><div class="ttdef"><b>Definition:</b> xt_list.h:25</div></div>
+<div class="ttc" id="xt__list_8h_html_ae8ee91bce67a84e112ad6dd5bfa56a83"><div class="ttname"><a href="xt__list_8h.html#ae8ee91bce67a84e112ad6dd5bfa56a83">list_head_pop</a></div><div class="ttdeci">int list_head_pop(p_list list, void **data)</div><div class="ttdoc">从链表头部得到数据 </div><div class="ttdef"><b>Definition:</b> xt_list.c:140</div></div>
+<div class="ttc" id="xt__list_8h_html_aa15f40bd9c71a0411fbec88d88ec505e"><div class="ttname"><a href="xt__list_8h.html#aa15f40bd9c71a0411fbec88d88ec505e">list_uninit</a></div><div class="ttdeci">int list_uninit(p_list list)</div><div class="ttdoc">链表反初始化 </div><div class="ttdef"><b>Definition:</b> xt_list.c:47</div></div>
+<div class="ttc" id="struct__list_html_a439227feff9d7f55384e8780cfc2eb82"><div class="ttname"><a href="struct__list.html#a439227feff9d7f55384e8780cfc2eb82">_list::size</a></div><div class="ttdeci">int size</div><div class="ttdoc">数据数组大小 </div><div class="ttdef"><b>Definition:</b> xt_list.h:19</div></div>
+<div class="ttc" id="struct__list_html_a4acff8232e4aec9cd5c6dc200ac55ef3"><div class="ttname"><a href="struct__list.html#a4acff8232e4aec9cd5c6dc200ac55ef3">_list::mutex</a></div><div class="ttdeci">pthread_mutex_t mutex</div><div class="ttdoc">线程锁 </div><div class="ttdef"><b>Definition:</b> xt_list.h:27</div></div>
+<div class="ttc" id="struct__list_html_af00cdd742d205932a8309628d39efd5e"><div class="ttname"><a href="struct__list.html#af00cdd742d205932a8309628d39efd5e">_list::data</a></div><div class="ttdeci">void ** data</div><div class="ttdoc">指向数据数组 </div><div class="ttdef"><b>Definition:</b> xt_list.h:17</div></div>
+<div class="ttc" id="xt__list_8h_html_ab1d813ddc9cd42d4cff7ee51f27ce229"><div class="ttname"><a href="xt__list_8h.html#ab1d813ddc9cd42d4cff7ee51f27ce229">p_list</a></div><div class="ttdeci">struct _list * p_list</div><div class="ttdoc">链表类型 </div></div>
+<div class="ttc" id="struct__list_html_a20358970b1abaf992eb85e071e454653"><div class="ttname"><a href="struct__list.html#a20358970b1abaf992eb85e071e454653">_list::head</a></div><div class="ttdeci">int head</div><div class="ttdoc">头节点数组下标 </div><div class="ttdef"><b>Definition:</b> xt_list.h:23</div></div>
+<div class="ttc" id="xt__list_8h_html_ab3991411944e9994e79c554fdda32a8b"><div class="ttname"><a href="xt__list_8h.html#ab3991411944e9994e79c554fdda32a8b">LIST_PROC</a></div><div class="ttdeci">int(* LIST_PROC)(void *data, void *param)</div><div class="ttdoc">回调函数 </div><div class="ttdef"><b>Definition:</b> xt_list.h:68</div></div>
+<div class="ttc" id="xt__list_8h_html_a2f06a5f410579f58d2bcac6d6e8817f6"><div class="ttname"><a href="xt__list_8h.html#a2f06a5f410579f58d2bcac6d6e8817f6">list_proc</a></div><div class="ttdeci">int list_proc(p_list list, LIST_PROC proc, void *param)</div><div class="ttdoc">调用指定的回调函数遍历链表 </div><div class="ttdef"><b>Definition:</b> xt_list.c:187</div></div>
+<div class="ttc" id="xt__list_8h_html_acd34d25dffc53ba08a05b2db37869722"><div class="ttname"><a href="xt__list_8h.html#acd34d25dffc53ba08a05b2db37869722">list_tail_push</a></div><div class="ttdeci">int list_tail_push(p_list list, void *data)</div><div class="ttdoc">在链表尾部添加数据 </div><div class="ttdef"><b>Definition:</b> xt_list.c:70</div></div>
+<div class="ttc" id="struct__list_html_ad43c3812e6d13e0518d9f8b8f463ffcf"><div class="ttname"><a href="struct__list.html#ad43c3812e6d13e0518d9f8b8f463ffcf">_list::count</a></div><div class="ttdeci">int count</div><div class="ttdoc">当前节点数量 </div><div class="ttdef"><b>Definition:</b> xt_list.h:21</div></div>
+</div><!-- fragment --></div><!-- contents -->
+<!-- start footer part -->
+<hr class="footer"/><address class="footer"><small>
+制作者 &#160;<a href="http://www.doxygen.org/index.html">
+<img class="footer" src="doxygen.png" alt="doxygen"/>
+</a> 1.8.10
+</small></address>
+</body>
+</html>

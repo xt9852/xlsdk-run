@@ -1,0 +1,849 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=9"/>
+<meta name="generator" content="Doxygen 1.8.10"/>
+<title>XLDownloadSDKServerStart: D:/2.code/12.XLDownloadSDKServerStart/src/main.c 文件参考</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="dynsections.js"></script>
+<link href="doxygen.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr style="height: 56px;">
+  <td id="projectlogo"><img alt="Logo" src="main.ico"/></td>
+  <td id="projectalign" style="padding-left: 0.5em;">
+   <div id="projectname">XLDownloadSDKServerStart
+   </div>
+  </td>
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- 制作者 Doxygen 1.8.10 -->
+  <div id="navrow1" class="tabs">
+    <ul class="tablist">
+      <li><a href="index.html"><span>首页</span></a></li>
+      <li><a href="annotated.html"><span>结构体</span></a></li>
+      <li class="current"><a href="files.html"><span>文件</span></a></li>
+    </ul>
+  </div>
+  <div id="navrow2" class="tabs2">
+    <ul class="tablist">
+      <li><a href="files.html"><span>文件列表</span></a></li>
+      <li><a href="globals.html"><span>全局定义</span></a></li>
+    </ul>
+  </div>
+<div id="nav-path" class="navpath">
+  <ul>
+<li class="navelem"><a class="el" href="dir_68267d1309a1af8e8297ef4c3efbcdba.html">src</a></li>  </ul>
+</div>
+</div><!-- top -->
+<div class="header">
+  <div class="summary">
+<a href="#nested-classes">结构体</a> &#124;
+<a href="#define-members">宏定义</a> &#124;
+<a href="#typedef-members">类型定义</a> &#124;
+<a href="#enum-members">枚举</a> &#124;
+<a href="#func-members">函数</a> &#124;
+<a href="#var-members">变量</a>  </div>
+  <div class="headertitle">
+<div class="title">main.c 文件参考</div>  </div>
+</div><!--header-->
+<div class="contents">
+
+<p>主模块实现,UTF-8(No BOM)  
+<a href="#details">更多...</a></p>
+<div class="textblock"><code>#include &lt;stdio.h&gt;</code><br />
+<code>#include &lt;stdlib.h&gt;</code><br />
+<code>#include &lt;tchar.h&gt;</code><br />
+<code>#include &lt;Windows.h&gt;</code><br />
+<code>#include &lt;CommCtrl.h&gt;</code><br />
+<code>#include &quot;<a class="el" href="xt__log_8h_source.html">xt_log.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="xt__http_8h_source.html">xt_http.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="config_8h_source.html">config.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="resource_8h_source.html">resource.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="torrent_8h_source.html">torrent.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="xl__sdk_8h_source.html">xl_sdk.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="xt__memory__pool_8h_source.html">xt_memory_pool.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="xt__base64_8h_source.html">xt_base64.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="xt__md5_8h_source.html">xt_md5.h</a>&quot;</code><br />
+</div><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="nested-classes"></a>
+结构体</h2></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct__task__info.html">_task_info</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">任务信息  <a href="struct__task__info.html#details">更多...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="define-members"></a>
+宏定义</h2></td></tr>
+<tr class="memitem:a0068e120f916c6331d09e8def0c5996c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0068e120f916c6331d09e8def0c5996c"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>SIZEOF</b>(x)  &#160;&#160;&#160;sizeof(x)/sizeof(x[0])</td></tr>
+<tr class="separator:a0068e120f916c6331d09e8def0c5996c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5ce0a4b3e37164604a3ab245b87ba24f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a5ce0a4b3e37164604a3ab245b87ba24f"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>SP</b>(...)      &#160;&#160;&#160;_stprintf_s(info, SIZEOF(info), __VA_ARGS__)</td></tr>
+<tr class="separator:a5ce0a4b3e37164604a3ab245b87ba24f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa8cecfc5c5c054d2875c03e77b7be15d"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa8cecfc5c5c054d2875c03e77b7be15d"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>TRUE</b>&#160;&#160;&#160;1</td></tr>
+<tr class="separator:aa8cecfc5c5c054d2875c03e77b7be15d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa93f0eb578d23995850d61f7d61c55c1"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa93f0eb578d23995850d61f7d61c55c1"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>FALSE</b>&#160;&#160;&#160;0</td></tr>
+<tr class="separator:aa93f0eb578d23995850d61f7d61c55c1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="typedef-members"></a>
+类型定义</h2></td></tr>
+<tr class="memitem:a582a98938352489f6a5f8e3c0f30d98f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a582a98938352489f6a5f8e3c0f30d98f"></a>
+typedef struct <a class="el" href="struct__task__info.html">_task_info</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="main_8c.html#a582a98938352489f6a5f8e3c0f30d98f">task_info</a></td></tr>
+<tr class="memdesc:a582a98938352489f6a5f8e3c0f30d98f"><td class="mdescLeft">&#160;</td><td class="mdescRight">任务信息 <br /></td></tr>
+<tr class="separator:a582a98938352489f6a5f8e3c0f30d98f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2a33e8c0fdf9f817e90602746ddd603d"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a2a33e8c0fdf9f817e90602746ddd603d"></a>
+typedef struct <a class="el" href="struct__task__info.html">_task_info</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>p_task_info</b></td></tr>
+<tr class="separator:a2a33e8c0fdf9f817e90602746ddd603d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="enum-members"></a>
+枚举</h2></td></tr>
+<tr class="memitem:adc29c2ff13d900c2f185ee95427fb06c"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom">{ <br />
+&#160;&#160;<a class="el" href="main_8c.html#adc29c2ff13d900c2f185ee95427fb06ca68c4182d575adbad183dbf4733900b41">LIST_TASK</a>, 
+<a class="el" href="main_8c.html#adc29c2ff13d900c2f185ee95427fb06ca5333f8c71dfb0c87d5624c16fa11d9c3">LIST_FILE</a>, 
+<a class="el" href="main_8c.html#adc29c2ff13d900c2f185ee95427fb06ca4d5ebd31276e4ed5e23984ef53f22187">LIST_SIZE</a>, 
+<a class="el" href="main_8c.html#adc29c2ff13d900c2f185ee95427fb06caf4d5906f4f070cb5ff8c5fe9a26391a9">LIST_SPEE</a>, 
+<br />
+&#160;&#160;<a class="el" href="main_8c.html#adc29c2ff13d900c2f185ee95427fb06ca06a4730f176844e6ef34bd213e79d9bf">LIST_PROG</a>, 
+<a class="el" href="main_8c.html#adc29c2ff13d900c2f185ee95427fb06ca523bdab7a84f5119de277a581d670eac">LIST_TIME</a>
+<br />
+ }<tr class="memdesc:adc29c2ff13d900c2f185ee95427fb06c"><td class="mdescLeft">&#160;</td><td class="mdescRight">任务列表控件列ID  <a href="main_8c.html#adc29c2ff13d900c2f185ee95427fb06c">更多...</a><br /></td></tr>
+<tr class="separator:adc29c2ff13d900c2f185ee95427fb06c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</td></tr>
+<tr class="memitem:a61dadd085c1777f559549e05962b2c9e"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom">{ <a class="el" href="main_8c.html#a61dadd085c1777f559549e05962b2c9ea11561d1ad3f2caad1c02766e64d16f58">TORR_SIZE</a>, 
+<a class="el" href="main_8c.html#a61dadd085c1777f559549e05962b2c9ea842949d37fa3964c99335232a59cc033">TORR_FILE</a>
+ }<tr class="memdesc:a61dadd085c1777f559549e05962b2c9e"><td class="mdescLeft">&#160;</td><td class="mdescRight">种子列表控件列ID  <a href="main_8c.html#a61dadd085c1777f559549e05962b2c9e">更多...</a><br /></td></tr>
+<tr class="separator:a61dadd085c1777f559549e05962b2c9e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
+函数</h2></td></tr>
+<tr class="memitem:a446ab851ee7047e43fe4f1547ebc2463"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="main_8c.html#a446ab851ee7047e43fe4f1547ebc2463">http_process_callback</a> (const char *uri, const char *arg, int arg_count, char *content, int *content_len)</td></tr>
+<tr class="memdesc:a446ab851ee7047e43fe4f1547ebc2463"><td class="mdescLeft">&#160;</td><td class="mdescRight">HTTP服务回调  <a href="#a446ab851ee7047e43fe4f1547ebc2463">更多...</a><br /></td></tr>
+<tr class="separator:a446ab851ee7047e43fe4f1547ebc2463"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a64209ca506e49dd058734529071cba0b"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="main_8c.html#a64209ca506e49dd058734529071cba0b">format_data</a> (unsigned __int64 data, TCHAR *info)</td></tr>
+<tr class="memdesc:a64209ca506e49dd058734529071cba0b"><td class="mdescLeft">&#160;</td><td class="mdescRight">得到格式化后的信息  <a href="#a64209ca506e49dd058734529071cba0b">更多...</a><br /></td></tr>
+<tr class="separator:a64209ca506e49dd058734529071cba0b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acbae7cecea9b9900630f424351164c08"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="main_8c.html#acbae7cecea9b9900630f424351164c08">get_select_list</a> (int list_size, char *<a class="el" href="xt__list_8h.html#ac8c8d86985b0bf4a1279d23c29b38eba">list</a>, short *filename)</td></tr>
+<tr class="memdesc:acbae7cecea9b9900630f424351164c08"><td class="mdescLeft">&#160;</td><td class="mdescRight">得到格式化后的信息  <a href="#acbae7cecea9b9900630f424351164c08">更多...</a><br /></td></tr>
+<tr class="separator:acbae7cecea9b9900630f424351164c08"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ade2f3c1b6e927eb3ea2f3c7eb08438b1"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="main_8c.html#ade2f3c1b6e927eb3ea2f3c7eb08438b1">btn_download</a> (HWND wnd)</td></tr>
+<tr class="memdesc:ade2f3c1b6e927eb3ea2f3c7eb08438b1"><td class="mdescLeft">&#160;</td><td class="mdescRight">下载按钮  <a href="#ade2f3c1b6e927eb3ea2f3c7eb08438b1">更多...</a><br /></td></tr>
+<tr class="separator:ade2f3c1b6e927eb3ea2f3c7eb08438b1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a377fa824c7b2b723a8ed496d4d3e25b2"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="main_8c.html#a377fa824c7b2b723a8ed496d4d3e25b2">on_timer</a> (HWND wnd)</td></tr>
+<tr class="memdesc:a377fa824c7b2b723a8ed496d4d3e25b2"><td class="mdescLeft">&#160;</td><td class="mdescRight">定时任务  <a href="#a377fa824c7b2b723a8ed496d4d3e25b2">更多...</a><br /></td></tr>
+<tr class="separator:a377fa824c7b2b723a8ed496d4d3e25b2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a09729999751314fdac344813229ff8a7"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="main_8c.html#a09729999751314fdac344813229ff8a7">on_dropfiles</a> (HWND wnd, WPARAM w)</td></tr>
+<tr class="memdesc:a09729999751314fdac344813229ff8a7"><td class="mdescLeft">&#160;</td><td class="mdescRight">拖拽文件  <a href="#a09729999751314fdac344813229ff8a7">更多...</a><br /></td></tr>
+<tr class="separator:a09729999751314fdac344813229ff8a7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae423004ce00c5784ff8518e3a1c8365a"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="main_8c.html#ae423004ce00c5784ff8518e3a1c8365a">on_sys_notify</a> (HWND wnd, LPARAM l)</td></tr>
+<tr class="memdesc:ae423004ce00c5784ff8518e3a1c8365a"><td class="mdescLeft">&#160;</td><td class="mdescRight">系统托盘消息处理函数  <a href="#ae423004ce00c5784ff8518e3a1c8365a">更多...</a><br /></td></tr>
+<tr class="separator:ae423004ce00c5784ff8518e3a1c8365a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5b2ad406b82f902860f8acfd9c97ff23"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="main_8c.html#a5b2ad406b82f902860f8acfd9c97ff23">on_size</a> (LPARAM l)</td></tr>
+<tr class="memdesc:a5b2ad406b82f902860f8acfd9c97ff23"><td class="mdescLeft">&#160;</td><td class="mdescRight">改变大小消息处理函数  <a href="#a5b2ad406b82f902860f8acfd9c97ff23">更多...</a><br /></td></tr>
+<tr class="separator:a5b2ad406b82f902860f8acfd9c97ff23"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a378563bc189ee7f3d175f6bb69e8326a"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="main_8c.html#a378563bc189ee7f3d175f6bb69e8326a">on_create</a> (HWND wnd, LPARAM l)</td></tr>
+<tr class="memdesc:a378563bc189ee7f3d175f6bb69e8326a"><td class="mdescLeft">&#160;</td><td class="mdescRight">创建消息处理函数  <a href="#a378563bc189ee7f3d175f6bb69e8326a">更多...</a><br /></td></tr>
+<tr class="separator:a378563bc189ee7f3d175f6bb69e8326a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa8a5d13a2c6c1bd5c8b51c2abdc8b2f1"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="main_8c.html#aa8a5d13a2c6c1bd5c8b51c2abdc8b2f1">on_close</a> (HWND wnd)</td></tr>
+<tr class="memdesc:aa8a5d13a2c6c1bd5c8b51c2abdc8b2f1"><td class="mdescLeft">&#160;</td><td class="mdescRight">窗体关闭处理函数 <br />
+ 当用户点击窗体上的关闭按钮时 <br />
+ 系统发出WM_CLOSE消息,自己执行DestroyWindow关闭窗口 <br />
+ 然后发送WM_DESTROY消息,自己执行PostQuitMessage关闭应用程序 <br />
+ 最后发出WM_QUIT消息来关闭消息循环  <a href="#aa8a5d13a2c6c1bd5c8b51c2abdc8b2f1">更多...</a><br /></td></tr>
+<tr class="separator:aa8a5d13a2c6c1bd5c8b51c2abdc8b2f1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a59980c5884c3c61b7fa322d47a10bd54"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="main_8c.html#a59980c5884c3c61b7fa322d47a10bd54">on_exit</a> (HWND wnd)</td></tr>
+<tr class="memdesc:a59980c5884c3c61b7fa322d47a10bd54"><td class="mdescLeft">&#160;</td><td class="mdescRight">窗体关闭处理函数  <a href="#a59980c5884c3c61b7fa322d47a10bd54">更多...</a><br /></td></tr>
+<tr class="separator:a59980c5884c3c61b7fa322d47a10bd54"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3db3368f68027ad65e16059f05a9d25b"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="main_8c.html#a3db3368f68027ad65e16059f05a9d25b">on_destory</a> (HWND wnd)</td></tr>
+<tr class="memdesc:a3db3368f68027ad65e16059f05a9d25b"><td class="mdescLeft">&#160;</td><td class="mdescRight">窗体消毁处理函数  <a href="#a3db3368f68027ad65e16059f05a9d25b">更多...</a><br /></td></tr>
+<tr class="separator:a3db3368f68027ad65e16059f05a9d25b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad1ddd8a0947cce201e62272aa95d45f2"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="main_8c.html#ad1ddd8a0947cce201e62272aa95d45f2">on_show</a> (HWND wnd)</td></tr>
+<tr class="memdesc:ad1ddd8a0947cce201e62272aa95d45f2"><td class="mdescLeft">&#160;</td><td class="mdescRight">窗体显示函数  <a href="#ad1ddd8a0947cce201e62272aa95d45f2">更多...</a><br /></td></tr>
+<tr class="separator:ad1ddd8a0947cce201e62272aa95d45f2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa4b4ac7b87d975aed36f9c6ad5a7d73c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="main_8c.html#aa4b4ac7b87d975aed36f9c6ad5a7d73c">on_command</a> (HWND wnd, WPARAM w)</td></tr>
+<tr class="memdesc:aa4b4ac7b87d975aed36f9c6ad5a7d73c"><td class="mdescLeft">&#160;</td><td class="mdescRight">命令消息处理函数,菜单,按钮都会发此消息  <a href="#aa4b4ac7b87d975aed36f9c6ad5a7d73c">更多...</a><br /></td></tr>
+<tr class="separator:aa4b4ac7b87d975aed36f9c6ad5a7d73c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afb84a98016bef0893b02a974660cbeef"><td class="memItemLeft" align="right" valign="top">LRESULT CALLBACK&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="main_8c.html#afb84a98016bef0893b02a974660cbeef">window_proc</a> (HWND wnd, UINT msg, WPARAM w, LPARAM l)</td></tr>
+<tr class="memdesc:afb84a98016bef0893b02a974660cbeef"><td class="mdescLeft">&#160;</td><td class="mdescRight">窗体类消息处理回调函数  <a href="#afb84a98016bef0893b02a974660cbeef">更多...</a><br /></td></tr>
+<tr class="separator:afb84a98016bef0893b02a974660cbeef"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a661c2abc03926acfaeb93b4ae7db4943"><td class="memItemLeft" align="right" valign="top">int WINAPI&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="main_8c.html#a661c2abc03926acfaeb93b4ae7db4943">WinMain</a> (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)</td></tr>
+<tr class="memdesc:a661c2abc03926acfaeb93b4ae7db4943"><td class="mdescLeft">&#160;</td><td class="mdescRight">窗体类程序主函数  <a href="#a661c2abc03926acfaeb93b4ae7db4943">更多...</a><br /></td></tr>
+<tr class="separator:a661c2abc03926acfaeb93b4ae7db4943"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="var-members"></a>
+变量</h2></td></tr>
+<tr class="memitem:ab537e28469e69b7d919972e765a5ec1e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab537e28469e69b7d919972e765a5ec1e"></a>
+HWND&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="main_8c.html#ab537e28469e69b7d919972e765a5ec1e">g_wnd</a></td></tr>
+<tr class="memdesc:ab537e28469e69b7d919972e765a5ec1e"><td class="mdescLeft">&#160;</td><td class="mdescRight">主窗体句柄 <br /></td></tr>
+<tr class="separator:ab537e28469e69b7d919972e765a5ec1e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4adea778e2f850f64365536c9566686d"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4adea778e2f850f64365536c9566686d"></a>
+HWND&#160;</td><td class="memItemRight" valign="bottom"><b>g_edit</b></td></tr>
+<tr class="separator:a4adea778e2f850f64365536c9566686d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac5c0424f59e8b0c9cd00588baed10749"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac5c0424f59e8b0c9cd00588baed10749"></a>
+HWND&#160;</td><td class="memItemRight" valign="bottom"><b>g_down</b></td></tr>
+<tr class="separator:ac5c0424f59e8b0c9cd00588baed10749"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9ac3aa9385a8616c0b815460aef53342"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9ac3aa9385a8616c0b815460aef53342"></a>
+HWND&#160;</td><td class="memItemRight" valign="bottom"><b>g_list</b></td></tr>
+<tr class="separator:a9ac3aa9385a8616c0b815460aef53342"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af2c33a02fc71f185bb2953545cf378aa"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af2c33a02fc71f185bb2953545cf378aa"></a>
+HWND&#160;</td><td class="memItemRight" valign="bottom"><b>g_torr</b></td></tr>
+<tr class="separator:af2c33a02fc71f185bb2953545cf378aa"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac423b1d1e28c19abbc535f7235214086"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac423b1d1e28c19abbc535f7235214086"></a>
+HMENU&#160;</td><td class="memItemRight" valign="bottom"><b>g_menu</b></td></tr>
+<tr class="separator:ac423b1d1e28c19abbc535f7235214086"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2e37b84bbb18e1ec4955d5b7dcd012ab"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a2e37b84bbb18e1ec4955d5b7dcd012ab"></a>
+<a class="el" href="torrent_8h.html#a0136efbd6cf71e1aab2c9096070e3c71">torrent</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="main_8c.html#a2e37b84bbb18e1ec4955d5b7dcd012ab">g_torrent</a> = {0}</td></tr>
+<tr class="memdesc:a2e37b84bbb18e1ec4955d5b7dcd012ab"><td class="mdescLeft">&#160;</td><td class="mdescRight">种子文件信息 <br /></td></tr>
+<tr class="separator:a2e37b84bbb18e1ec4955d5b7dcd012ab"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a27cb2307b7ee54b752699c35de5399f8"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a27cb2307b7ee54b752699c35de5399f8"></a>
+<a class="el" href="main_8c.html#a582a98938352489f6a5f8e3c0f30d98f">task_info</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="main_8c.html#a27cb2307b7ee54b752699c35de5399f8">g_task</a> [128] = {0}</td></tr>
+<tr class="memdesc:a27cb2307b7ee54b752699c35de5399f8"><td class="mdescLeft">&#160;</td><td class="mdescRight">当前正在下载的任务信息 <br /></td></tr>
+<tr class="separator:a27cb2307b7ee54b752699c35de5399f8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af1a1ac2af3f379f42281498bdf4fd2ea"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af1a1ac2af3f379f42281498bdf4fd2ea"></a>
+NOTIFYICONDATA&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="main_8c.html#af1a1ac2af3f379f42281498bdf4fd2ea">g_nid</a> = {0}</td></tr>
+<tr class="memdesc:af1a1ac2af3f379f42281498bdf4fd2ea"><td class="mdescLeft">&#160;</td><td class="mdescRight">任务栏图标数据结构 <br /></td></tr>
+<tr class="separator:af1a1ac2af3f379f42281498bdf4fd2ea"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table>
+<a name="details" id="details"></a><h2 class="groupheader">详细描述</h2>
+<div class="textblock"><p>主模块实现,UTF-8(No BOM) </p>
+<dl class="section copyright"><dt>版权所有</dt><dd>XT Tech. Co., Ltd.</dd></dl>
+<dl class="section author"><dt>作者</dt><dd>xt </dd></dl>
+<dl class="section version"><dt>版本</dt><dd>1.0.0 </dd></dl>
+<dl class="section date"><dt>日期</dt><dd>2022-02-08 </dd></dl>
+</div><h2 class="groupheader">枚举类型说明</h2>
+<a class="anchor" id="adc29c2ff13d900c2f185ee95427fb06c"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">anonymous enum</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>任务列表控件列ID </p>
+<table class="fieldtable">
+<tr><th colspan="2">枚举值</th></tr><tr><td class="fieldname"><a class="anchor" id="adc29c2ff13d900c2f185ee95427fb06ca68c4182d575adbad183dbf4733900b41"></a>LIST_TASK&#160;</td><td class="fielddoc">
+<p>任务ID </p>
+</td></tr>
+<tr><td class="fieldname"><a class="anchor" id="adc29c2ff13d900c2f185ee95427fb06ca5333f8c71dfb0c87d5624c16fa11d9c3"></a>LIST_FILE&#160;</td><td class="fielddoc">
+<p>文件名 </p>
+</td></tr>
+<tr><td class="fieldname"><a class="anchor" id="adc29c2ff13d900c2f185ee95427fb06ca4d5ebd31276e4ed5e23984ef53f22187"></a>LIST_SIZE&#160;</td><td class="fielddoc">
+<p>文件大小 </p>
+</td></tr>
+<tr><td class="fieldname"><a class="anchor" id="adc29c2ff13d900c2f185ee95427fb06caf4d5906f4f070cb5ff8c5fe9a26391a9"></a>LIST_SPEE&#160;</td><td class="fielddoc">
+<p>下载速度 </p>
+</td></tr>
+<tr><td class="fieldname"><a class="anchor" id="adc29c2ff13d900c2f185ee95427fb06ca06a4730f176844e6ef34bd213e79d9bf"></a>LIST_PROG&#160;</td><td class="fielddoc">
+<p>下载进度 </p>
+</td></tr>
+<tr><td class="fieldname"><a class="anchor" id="adc29c2ff13d900c2f185ee95427fb06ca523bdab7a84f5119de277a581d670eac"></a>LIST_TIME&#160;</td><td class="fielddoc">
+<p>下载用时 </p>
+</td></tr>
+</table>
+
+</div>
+</div>
+<a class="anchor" id="a61dadd085c1777f559549e05962b2c9e"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">anonymous enum</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>种子列表控件列ID </p>
+<table class="fieldtable">
+<tr><th colspan="2">枚举值</th></tr><tr><td class="fieldname"><a class="anchor" id="a61dadd085c1777f559549e05962b2c9ea11561d1ad3f2caad1c02766e64d16f58"></a>TORR_SIZE&#160;</td><td class="fielddoc">
+<p>文件大小 </p>
+</td></tr>
+<tr><td class="fieldname"><a class="anchor" id="a61dadd085c1777f559549e05962b2c9ea842949d37fa3964c99335232a59cc033"></a>TORR_FILE&#160;</td><td class="fielddoc">
+<p>文件名 </p>
+</td></tr>
+</table>
+
+</div>
+</div>
+<h2 class="groupheader">函数说明</h2>
+<a class="anchor" id="ade2f3c1b6e927eb3ea2f3c7eb08438b1"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void btn_download </td>
+          <td>(</td>
+          <td class="paramtype">HWND&#160;</td>
+          <td class="paramname"><em>wnd</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>下载按钮 </p>
+<dl class="params"><dt>参数</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">wnd</td><td>窗体句柄 </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>返回</dt><dd>无 </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="a64209ca506e49dd058734529071cba0b"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void format_data </td>
+          <td>(</td>
+          <td class="paramtype">unsigned __int64&#160;</td>
+          <td class="paramname"><em>data</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">TCHAR *&#160;</td>
+          <td class="paramname"><em>info</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>得到格式化后的信息 </p>
+<dl class="params"><dt>参数</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">data</td><td>数据 </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">unit</td><td>单位 </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">info</td><td>信息 </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>返回</dt><dd>无 </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="acbae7cecea9b9900630f424351164c08"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int get_select_list </td>
+          <td>(</td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>list_size</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">char *&#160;</td>
+          <td class="paramname"><em>list</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">short *&#160;</td>
+          <td class="paramname"><em>filename</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>得到格式化后的信息 </p>
+<dl class="params"><dt>参数</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">list_size</td><td>列表空间 </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">list</td><td>列表 </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">filename</td><td>最后一个选中的文件 </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>返回</dt><dd>0 成功 </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="a446ab851ee7047e43fe4f1547ebc2463"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int http_process_callback </td>
+          <td>(</td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>uri</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>arg</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>arg_count</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">char *&#160;</td>
+          <td class="paramname"><em>content</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int *&#160;</td>
+          <td class="paramname"><em>content_len</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>HTTP服务回调 </p>
+<dl class="params"><dt>参数</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">uri</td><td>URI地址 </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">arg</td><td>URL参数 </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">content</td><td>返回内容 </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">content_len</td><td>返回内容长度 </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>返回</dt><dd>200 成功 <br />
+ 404 没有找文件 </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="aa8a5d13a2c6c1bd5c8b51c2abdc8b2f1"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void on_close </td>
+          <td>(</td>
+          <td class="paramtype">HWND&#160;</td>
+          <td class="paramname"><em>wnd</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>窗体关闭处理函数 <br />
+ 当用户点击窗体上的关闭按钮时 <br />
+ 系统发出WM_CLOSE消息,自己执行DestroyWindow关闭窗口 <br />
+ 然后发送WM_DESTROY消息,自己执行PostQuitMessage关闭应用程序 <br />
+ 最后发出WM_QUIT消息来关闭消息循环 </p>
+<dl class="params"><dt>参数</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">wnd</td><td>窗体句柄 </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>返回</dt><dd>无 </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="aa4b4ac7b87d975aed36f9c6ad5a7d73c"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void on_command </td>
+          <td>(</td>
+          <td class="paramtype">HWND&#160;</td>
+          <td class="paramname"><em>wnd</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">WPARAM&#160;</td>
+          <td class="paramname"><em>w</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>命令消息处理函数,菜单,按钮都会发此消息 </p>
+<dl class="params"><dt>参数</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">wnd</td><td>窗体句柄 </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">w</td><td>消息参数 </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>返回</dt><dd>无 </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="a378563bc189ee7f3d175f6bb69e8326a"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void on_create </td>
+          <td>(</td>
+          <td class="paramtype">HWND&#160;</td>
+          <td class="paramname"><em>wnd</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">LPARAM&#160;</td>
+          <td class="paramname"><em>l</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>创建消息处理函数 </p>
+<dl class="params"><dt>参数</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">wnd</td><td>窗体句柄 </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>返回</dt><dd>无 </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="a3db3368f68027ad65e16059f05a9d25b"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void on_destory </td>
+          <td>(</td>
+          <td class="paramtype">HWND&#160;</td>
+          <td class="paramname"><em>wnd</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>窗体消毁处理函数 </p>
+<dl class="params"><dt>参数</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">wnd</td><td>窗体句柄 </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>返回</dt><dd>无 </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="a09729999751314fdac344813229ff8a7"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void on_dropfiles </td>
+          <td>(</td>
+          <td class="paramtype">HWND&#160;</td>
+          <td class="paramname"><em>wnd</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">WPARAM&#160;</td>
+          <td class="paramname"><em>w</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>拖拽文件 </p>
+<dl class="params"><dt>参数</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">wnd</td><td>窗体句柄 </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">w</td><td>拖拽句柄 </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>返回</dt><dd>无 </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="a59980c5884c3c61b7fa322d47a10bd54"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void on_exit </td>
+          <td>(</td>
+          <td class="paramtype">HWND&#160;</td>
+          <td class="paramname"><em>wnd</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>窗体关闭处理函数 </p>
+<dl class="params"><dt>参数</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">wnd</td><td>窗体句柄 </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>返回</dt><dd>无 </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="ad1ddd8a0947cce201e62272aa95d45f2"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void on_show </td>
+          <td>(</td>
+          <td class="paramtype">HWND&#160;</td>
+          <td class="paramname"><em>wnd</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>窗体显示函数 </p>
+<dl class="params"><dt>参数</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">wnd</td><td>窗体句柄 </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>返回</dt><dd>无 </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="a5b2ad406b82f902860f8acfd9c97ff23"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void on_size </td>
+          <td>(</td>
+          <td class="paramtype">LPARAM&#160;</td>
+          <td class="paramname"><em>l</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>改变大小消息处理函数 </p>
+<dl class="params"><dt>参数</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">l</td><td>窗体s宽高 </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>返回</dt><dd>无 </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="ae423004ce00c5784ff8518e3a1c8365a"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void on_sys_notify </td>
+          <td>(</td>
+          <td class="paramtype">HWND&#160;</td>
+          <td class="paramname"><em>wnd</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">LPARAM&#160;</td>
+          <td class="paramname"><em>l</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>系统托盘消息处理函数 </p>
+<dl class="params"><dt>参数</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">wnd</td><td>窗体句柄 </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">l</td><td>操作 </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>返回</dt><dd>无 </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="a377fa824c7b2b723a8ed496d4d3e25b2"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void on_timer </td>
+          <td>(</td>
+          <td class="paramtype">HWND&#160;</td>
+          <td class="paramname"><em>wnd</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>定时任务 </p>
+<dl class="params"><dt>参数</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">wnd</td><td>窗体句柄 </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>返回</dt><dd>无 </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="afb84a98016bef0893b02a974660cbeef"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">LRESULT CALLBACK window_proc </td>
+          <td>(</td>
+          <td class="paramtype">HWND&#160;</td>
+          <td class="paramname"><em>wnd</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">UINT&#160;</td>
+          <td class="paramname"><em>msg</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">WPARAM&#160;</td>
+          <td class="paramname"><em>w</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">LPARAM&#160;</td>
+          <td class="paramname"><em>l</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>窗体类消息处理回调函数 </p>
+<dl class="params"><dt>参数</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">HWND</td><td>wnd 窗体句柄 </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">UINT</td><td>msg 消息ID </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">WPARAM</td><td>w 消息参数 </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">LPARAM</td><td>l 消息参数 </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>返回</dt><dd>LRESULT 消息处理结果，它与发送的消息有关 </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="a661c2abc03926acfaeb93b4ae7db4943"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int WINAPI WinMain </td>
+          <td>(</td>
+          <td class="paramtype">HINSTANCE&#160;</td>
+          <td class="paramname"><em>hInstance</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">HINSTANCE&#160;</td>
+          <td class="paramname"><em>hPrevInstance</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">LPSTR&#160;</td>
+          <td class="paramname"><em>lpCmdLine</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>nCmdShow</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>窗体类程序主函数 </p>
+<dl class="params"><dt>参数</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">hInstance</td><td>当前实例句柄 </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">hPrevInstance</td><td>先前实例句柄 </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">lpCmdLine</td><td>命令行参数 </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">nCmdShow</td><td>显示状态(最小化,最大化,隐藏) </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>返回</dt><dd>exe程序返回值 </dd></dl>
+
+</div>
+</div>
+</div><!-- contents -->
+<!-- start footer part -->
+<hr class="footer"/><address class="footer"><small>
+制作者 &#160;<a href="http://www.doxygen.org/index.html">
+<img class="footer" src="doxygen.png" alt="doxygen"/>
+</a> 1.8.10
+</small></address>
+</body>
+</html>
