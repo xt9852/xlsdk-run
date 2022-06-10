@@ -3,7 +3,8 @@
         "name": "DownloadSDKServerStart",
         "level": "debug",
         "cycle": "day",
-        "backup": 7
+        "backup": 7,
+        "clean": 1
     },
     "path": "D:\\5.downloads\\bt"
 }

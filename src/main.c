@@ -778,25 +778,36 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     char base64[64];
     char output[64];
     char data[][10] = { "1", "12", "123", "1234" };
-    
+
     for (int i = 0; i < 4; i++)
     {
         len = 64;
         base64_to(data[i], strlen(data[i]), base64, &len);
         DBG("data:%s base64:%s len:%d", data[i], base64, len);
-        
+
         base64_from(base64, len, output, &len);
         DBG("base64:%s data:%s len:%d", base64, output, len);
     }
 
-    char md5_string[] = "123";
-    char md5_out[128];
     md5_info md5;
-    md5_get(md5_string, strlen(md5_string), &md5);
-    DBG("md5 A:%x B:%x C:%x D:%x", md5.A, md5.B, md5.C, md5.D);
-    
-    md5_get_str(md5_string, strlen(md5_string), md5_out);
-    DBG("md5 %s", md5_out);
+    char     md5_out[128];
+    char    *md5_in = "1234567890";
+
+    md5_get(md5_in, strlen(md5_in), &md5);
+    DBG("md5.A:%x B:%x C:%x D:%x", md5.A, md5.B, md5.C, md5.D);
+
+    md5_get_str(md5_in, strlen(md5_in), md5_out);
+    DBG("md5=%s", md5_out);
+
+    md5_in = "1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890"\
+             "1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890"\
+             "1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890"\
+             "1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890"\
+             "1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890"\
+             "1234567890";
+
+    md5_get_str(md5_in, strlen(md5_in), md5_out);
+    DBG("md5=%s", md5_out);
 
 /*
     int error;
