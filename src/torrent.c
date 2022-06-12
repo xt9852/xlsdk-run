@@ -3,7 +3,7 @@
  *\file         torrent.c
  *\author       xt
  *\version      1.0.0
- *\date         2022-02-08
+ *\date         2022.02.08
  *\brief        bencode编码的种子文件解析实现,UTF-8(No BOM)
  */
 #include <stdio.h>

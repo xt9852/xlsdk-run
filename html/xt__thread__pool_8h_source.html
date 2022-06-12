@@ -1,0 +1,113 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=9"/>
+<meta name="generator" content="Doxygen 1.8.10"/>
+<title>XLDownloadSDKServerStart: D:/2.code/12.XLDownloadSDKServerStart/utitly/xt_thread_pool.h 源文件</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="dynsections.js"></script>
+<link href="doxygen.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr style="height: 56px;">
+  <td id="projectlogo"><img alt="Logo" src="main.ico"/></td>
+  <td id="projectalign" style="padding-left: 0.5em;">
+   <div id="projectname">XLDownloadSDKServerStart
+   </div>
+  </td>
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- 制作者 Doxygen 1.8.10 -->
+  <div id="navrow1" class="tabs">
+    <ul class="tablist">
+      <li><a href="index.html"><span>首页</span></a></li>
+      <li><a href="annotated.html"><span>结构体</span></a></li>
+      <li class="current"><a href="files.html"><span>文件</span></a></li>
+    </ul>
+  </div>
+  <div id="navrow2" class="tabs2">
+    <ul class="tablist">
+      <li><a href="files.html"><span>文件列表</span></a></li>
+      <li><a href="globals.html"><span>全局定义</span></a></li>
+    </ul>
+  </div>
+<div id="nav-path" class="navpath">
+  <ul>
+<li class="navelem"><a class="el" href="dir_8ee2913beb34dfdcd4a64b701b5084ad.html">utitly</a></li>  </ul>
+</div>
+</div><!-- top -->
+<div class="header">
+  <div class="headertitle">
+<div class="title">xt_thread_pool.h</div>  </div>
+</div><!--header-->
+<div class="contents">
+<a href="xt__thread__pool_8h.html">浏览该文件的文档.</a><div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;</div>
+<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;<span class="preprocessor">#ifndef _XT_THEAD_POOL_H</span></div>
+<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;<span class="preprocessor">#define _XT_THEAD_POOL_H</span></div>
+<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;<span class="preprocessor">#include &quot;<a class="code" href="xt__log_8h.html">xt_log.h</a>&quot;</span></div>
+<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;<span class="preprocessor">#include &quot;<a class="code" href="xt__list_8h.html">xt_list.h</a>&quot;</span></div>
+<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;</div>
+<div class="line"><a name="l00014"></a><span class="lineno"><a class="line" href="xt__thread__pool_8h.html#ac32413257bbafdc23a8ec56b10dc69f4">   14</a></span>&#160;<span class="keyword">typedef</span> void (*<a class="code" href="xt__thread__pool_8h.html#ac32413257bbafdc23a8ec56b10dc69f4">THREAD_POOL_CALLBACK</a>)(<span class="keywordtype">void</span>*);   </div>
+<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;</div>
+<div class="line"><a name="l00017"></a><span class="lineno"><a class="line" href="struct__task.html">   17</a></span>&#160;<span class="keyword">typedef</span> <span class="keyword">struct </span><a class="code" href="struct__task.html">_task</a></div>
+<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;{</div>
+<div class="line"><a name="l00019"></a><span class="lineno"><a class="line" href="struct__task.html#a3b67a0bbaf0209deb1c9dd8da164668c">   19</a></span>&#160;    <a class="code" href="xt__thread__pool_8h.html#ac32413257bbafdc23a8ec56b10dc69f4">THREAD_POOL_CALLBACK</a>    <a class="code" href="struct__task.html#a3b67a0bbaf0209deb1c9dd8da164668c">proc</a>;               </div>
+<div class="line"><a name="l00020"></a><span class="lineno"><a class="line" href="struct__task.html#a13623f1d68513495c21f8b061b1a5aec">   20</a></span>&#160;    <span class="keywordtype">void</span>*                   <a class="code" href="struct__task.html#a13623f1d68513495c21f8b061b1a5aec">param</a>;              </div>
+<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;</div>
+<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;} <a class="code" href="xt__thread__pool_8h.html#aa6c8f49bda45e63912e798a0cc315026">task</a>, *<a class="code" href="xt__thread__pool_8h.html#a4ebd6a2d0e9ce2a114533512786f49be">p_task</a>;                                </div>
+<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;</div>
+<div class="line"><a name="l00025"></a><span class="lineno"><a class="line" href="struct__thread__pool.html">   25</a></span>&#160;<span class="keyword">typedef</span> <span class="keyword">struct </span><a class="code" href="struct__thread__pool.html">_thread_pool</a></div>
+<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;{</div>
+<div class="line"><a name="l00027"></a><span class="lineno"><a class="line" href="struct__thread__pool.html#a3e6f76368abfbc8709f4c1346dfa6a20">   27</a></span>&#160;    <span class="keywordtype">bool</span>            <a class="code" href="struct__thread__pool.html#a3e6f76368abfbc8709f4c1346dfa6a20">run</a>;                        </div>
+<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;</div>
+<div class="line"><a name="l00029"></a><span class="lineno"><a class="line" href="struct__thread__pool.html#a2a469ce06ddf913155542574fd51e40e">   29</a></span>&#160;    <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span>    <a class="code" href="struct__thread__pool.html#a2a469ce06ddf913155542574fd51e40e">thread_count</a>;               </div>
+<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;</div>
+<div class="line"><a name="l00031"></a><span class="lineno"><a class="line" href="struct__thread__pool.html#a2fc6c4d7f75684b99f2692d7dfa42727">   31</a></span>&#160;    <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span>    <a class="code" href="struct__thread__pool.html#a2fc6c4d7f75684b99f2692d7dfa42727">process_count</a>;              </div>
+<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;</div>
+<div class="line"><a name="l00033"></a><span class="lineno"><a class="line" href="struct__thread__pool.html#a5925d0daffbcc54dbd4d25ba3d91b8ab">   33</a></span>&#160;    <a class="code" href="struct__list.html">list</a>            <a class="code" href="struct__thread__pool.html#a5925d0daffbcc54dbd4d25ba3d91b8ab">task_queue</a>;                 </div>
+<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;</div>
+<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;} <a class="code" href="xt__thread__pool_8h.html#af4b0fc34507a17aca3f5b057d7af24d8">thread_pool</a>, *<a class="code" href="struct__thread__pool.html">p_thread_pool</a>;</div>
+<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;</div>
+<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;<span class="keywordtype">int</span> <a class="code" href="xt__thread__pool_8h.html#a01c7aa5a9efaa1eb71592266564771fc">thread_pool_init</a>(p_thread_pool pool, <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> count);</div>
+<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;</div>
+<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;<span class="keywordtype">int</span> <a class="code" href="xt__thread__pool_8h.html#ac1a1f1b66a7d89cdf7cd3bef9f1d1bec">thread_pool_uninit</a>(p_thread_pool pool);</div>
+<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;</div>
+<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;<span class="keywordtype">int</span> <a class="code" href="xt__thread__pool_8h.html#aeba5652b7f7f4327a513fd1aeea3b5f0">thread_pool_put</a>(p_thread_pool pool, <a class="code" href="xt__thread__pool_8h.html#ac32413257bbafdc23a8ec56b10dc69f4">THREAD_POOL_CALLBACK</a> proc, <span class="keywordtype">void</span> *param);</div>
+<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;</div>
+<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="ttc" id="struct__task_html_a13623f1d68513495c21f8b061b1a5aec"><div class="ttname"><a href="struct__task.html#a13623f1d68513495c21f8b061b1a5aec">_task::param</a></div><div class="ttdeci">void * param</div><div class="ttdoc">任务回调参数 </div><div class="ttdef"><b>Definition:</b> xt_thread_pool.h:20</div></div>
+<div class="ttc" id="xt__thread__pool_8h_html_ac1a1f1b66a7d89cdf7cd3bef9f1d1bec"><div class="ttname"><a href="xt__thread__pool_8h.html#ac1a1f1b66a7d89cdf7cd3bef9f1d1bec">thread_pool_uninit</a></div><div class="ttdeci">int thread_pool_uninit(p_thread_pool pool)</div><div class="ttdoc">线程池反初始化 </div><div class="ttdef"><b>Definition:</b> xt_thread_pool.c:98</div></div>
+<div class="ttc" id="struct__task_html_a3b67a0bbaf0209deb1c9dd8da164668c"><div class="ttname"><a href="struct__task.html#a3b67a0bbaf0209deb1c9dd8da164668c">_task::proc</a></div><div class="ttdeci">THREAD_POOL_CALLBACK proc</div><div class="ttdoc">任务回调 </div><div class="ttdef"><b>Definition:</b> xt_thread_pool.h:19</div></div>
+<div class="ttc" id="xt__thread__pool_8h_html_af4b0fc34507a17aca3f5b057d7af24d8"><div class="ttname"><a href="xt__thread__pool_8h.html#af4b0fc34507a17aca3f5b057d7af24d8">thread_pool</a></div><div class="ttdeci">struct _thread_pool thread_pool</div><div class="ttdoc">线程池 </div></div>
+<div class="ttc" id="struct__list_html"><div class="ttname"><a href="struct__list.html">_list</a></div><div class="ttdoc">链表 </div><div class="ttdef"><b>Definition:</b> xt_list.h:15</div></div>
+<div class="ttc" id="xt__thread__pool_8h_html_ac32413257bbafdc23a8ec56b10dc69f4"><div class="ttname"><a href="xt__thread__pool_8h.html#ac32413257bbafdc23a8ec56b10dc69f4">THREAD_POOL_CALLBACK</a></div><div class="ttdeci">void(* THREAD_POOL_CALLBACK)(void *)</div><div class="ttdoc">线程池回调接口 </div><div class="ttdef"><b>Definition:</b> xt_thread_pool.h:14</div></div>
+<div class="ttc" id="xt__thread__pool_8h_html_aeba5652b7f7f4327a513fd1aeea3b5f0"><div class="ttname"><a href="xt__thread__pool_8h.html#aeba5652b7f7f4327a513fd1aeea3b5f0">thread_pool_put</a></div><div class="ttdeci">int thread_pool_put(p_thread_pool pool, THREAD_POOL_CALLBACK proc, void *param)</div><div class="ttdoc">添加任务 </div><div class="ttdef"><b>Definition:</b> xt_thread_pool.c:117</div></div>
+<div class="ttc" id="struct__task_html"><div class="ttname"><a href="struct__task.html">_task</a></div><div class="ttdoc">线程任务 </div><div class="ttdef"><b>Definition:</b> xt_thread_pool.h:17</div></div>
+<div class="ttc" id="xt__thread__pool_8h_html_a4ebd6a2d0e9ce2a114533512786f49be"><div class="ttname"><a href="xt__thread__pool_8h.html#a4ebd6a2d0e9ce2a114533512786f49be">p_task</a></div><div class="ttdeci">struct _task * p_task</div><div class="ttdoc">任务指针 </div></div>
+<div class="ttc" id="xt__log_8h_html"><div class="ttname"><a href="xt__log_8h.html">xt_log.h</a></div><div class="ttdoc">日志模块定义,UTF-8(No BOM) </div></div>
+<div class="ttc" id="struct__thread__pool_html"><div class="ttname"><a href="struct__thread__pool.html">_thread_pool</a></div><div class="ttdoc">线程池 </div><div class="ttdef"><b>Definition:</b> xt_thread_pool.h:25</div></div>
+<div class="ttc" id="xt__thread__pool_8h_html_a01c7aa5a9efaa1eb71592266564771fc"><div class="ttname"><a href="xt__thread__pool_8h.html#a01c7aa5a9efaa1eb71592266564771fc">thread_pool_init</a></div><div class="ttdeci">int thread_pool_init(p_thread_pool pool, unsigned int count)</div><div class="ttdoc">线程池初始化 </div><div class="ttdef"><b>Definition:</b> xt_thread_pool.c:54</div></div>
+<div class="ttc" id="struct__thread__pool_html_a2fc6c4d7f75684b99f2692d7dfa42727"><div class="ttname"><a href="struct__thread__pool.html#a2fc6c4d7f75684b99f2692d7dfa42727">_thread_pool::process_count</a></div><div class="ttdeci">unsigned int process_count</div><div class="ttdoc">当前处理任务线程数量 </div><div class="ttdef"><b>Definition:</b> xt_thread_pool.h:31</div></div>
+<div class="ttc" id="struct__thread__pool_html_a3e6f76368abfbc8709f4c1346dfa6a20"><div class="ttname"><a href="struct__thread__pool.html#a3e6f76368abfbc8709f4c1346dfa6a20">_thread_pool::run</a></div><div class="ttdeci">bool run</div><div class="ttdoc">线程是否运行 </div><div class="ttdef"><b>Definition:</b> xt_thread_pool.h:27</div></div>
+<div class="ttc" id="struct__thread__pool_html_a5925d0daffbcc54dbd4d25ba3d91b8ab"><div class="ttname"><a href="struct__thread__pool.html#a5925d0daffbcc54dbd4d25ba3d91b8ab">_thread_pool::task_queue</a></div><div class="ttdeci">list task_queue</div><div class="ttdoc">任务队列 </div><div class="ttdef"><b>Definition:</b> xt_thread_pool.h:33</div></div>
+<div class="ttc" id="xt__thread__pool_8h_html_aa6c8f49bda45e63912e798a0cc315026"><div class="ttname"><a href="xt__thread__pool_8h.html#aa6c8f49bda45e63912e798a0cc315026">task</a></div><div class="ttdeci">struct _task task</div><div class="ttdoc">线程任务 </div></div>
+<div class="ttc" id="xt__list_8h_html"><div class="ttname"><a href="xt__list_8h.html">xt_list.h</a></div><div class="ttdoc">链表数据结构定义,UTF-8(No BOM) </div></div>
+<div class="ttc" id="struct__thread__pool_html_a2a469ce06ddf913155542574fd51e40e"><div class="ttname"><a href="struct__thread__pool.html#a2a469ce06ddf913155542574fd51e40e">_thread_pool::thread_count</a></div><div class="ttdeci">unsigned int thread_count</div><div class="ttdoc">线程数量 </div><div class="ttdef"><b>Definition:</b> xt_thread_pool.h:29</div></div>
+</div><!-- fragment --></div><!-- contents -->
+<!-- start footer part -->
+<hr class="footer"/><address class="footer"><small>
+制作者 &#160;<a href="http://www.doxygen.org/index.html">
+<img class="footer" src="doxygen.png" alt="doxygen"/>
+</a> 1.8.10
+</small></address>
+</body>
+</html>

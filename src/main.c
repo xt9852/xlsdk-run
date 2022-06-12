@@ -20,8 +20,8 @@
 #include "xt_memory_pool.h"
 #include "xt_base64.h"
 #include "xt_md5.h"
-//#include "pcre2.h"
-
+#include "xt_timer.h"
+#include "xt_thread_pool.h"
 
 #define SIZEOF(x)   sizeof(x)/sizeof(x[0])
 #define SP(...)     _stprintf_s(info, SIZEOF(info), __VA_ARGS__)
@@ -709,6 +709,11 @@ LRESULT CALLBACK window_proc(HWND wnd, UINT msg, WPARAM w, LPARAM l)
     return DefWindowProc(wnd, msg, w, l);
 }
 
+void timer_callback(void *param)
+{
+    DBG("param:%s", (char*)param);
+}
+
 /**
  *\brief        窗体类程序主函数
  *\param[in]    hInstance       当前实例句柄
@@ -764,13 +769,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         ret = memory_pool_get(&pool, &mem);
 
         DBG("memory_pool_get ret:%d count:%d list-size:%d count:%d head:%d tail:%d", ret, pool.count,
-        pool.free->size, pool.free->count, pool.free->head, pool.free->tail);
+        pool.free.size, pool.free.count, pool.free.head, pool.free.tail);
     }
 
     ret = memory_pool_put(&pool, mem);
 
-    DBG("memory_pool_put ret:%d memory-pool-count:%d list-size:%d count:%d head:%d tail:%d", ret, pool.count,
-        pool.free->size, pool.free->count, pool.free->head, pool.free->tail);
+    ERR("memory_pool_put ret:%d memory-pool-count:%d list-size:%d count:%d head:%d tail:%d", ret, pool.count,
+        pool.free.size, pool.free.count, pool.free.head, pool.free.tail);
 
     memory_pool_uninit(&pool);
 
@@ -808,6 +813,28 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     md5_get_str(md5_in, strlen(md5_in), md5_out);
     DBG("md5=%s", md5_out);
+
+    thread_pool task_pool;
+
+    ret = thread_pool_init(&task_pool, 10);
+
+    DBG("thread_pool_init=%d", ret);
+
+    ret = timer_init();
+
+    DBG("timer_init=%d", ret);
+
+    ret = timer_add_cycle("timer_0",  5, &task_pool, timer_callback, "timer_0_param");
+
+    DBG("timer_add_cycle=%d", ret);
+
+    ret = timer_add_cycle("timer_1", 10, &task_pool, timer_callback, "timer_1_param");
+
+    DBG("timer_add_cycle=%d", ret);
+
+    ret = timer_add_cron("timer_2", TIMER_CRON_MINUTE, 0, 0, 0, 0, 0, 0, 0, &task_pool, timer_callback, "timer_2_param");
+
+    DBG("timer_add_cron=%d", ret);
 
 /*
     int error;

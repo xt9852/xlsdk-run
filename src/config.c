@@ -3,7 +3,7 @@
  *\file         config.c
  *\author       xt
  *\version      1.0.0
- *\date         2022-02-08
+ *\date         2022.02.08
  *\brief        配置模块实现,UTF-8(No BOM)
  */
 #include <stdio.h>
@@ -108,28 +108,20 @@ int config_init(const char *filename)
         return -5;
     }
 
-    cJSON *log_root = cJSON_GetObjectItem(root, "log");
+    cJSON *log = cJSON_GetObjectItem(root, "log");
 
-    if (NULL == log_root)
+    if (NULL == log)
     {
         printf("%s|config json no log.file node\n", __FUNCTION__);
         return -6;
     }
 
-    ret = xt_log_parse_config(".\\", log_root);
+    ret = xt_log_init(".\\", log);
 
     if (ret != 0)
     {
-        printf("%s|parse config fail\n", __FUNCTION__);
+        printf("%s|log init fail:%d\n", __FUNCTION__, ret);
         return -7;
-    }
-
-    ret = xt_log_init();
-
-    if (ret != 0)
-    {
-        printf("%s|log init fail\n", __FUNCTION__);
-        return -8;
     }
 
 
@@ -138,7 +130,7 @@ int config_init(const char *filename)
     if (NULL == path)
     {
         DBG("config json no path node\n");
-        return -3;
+        return -8;
     }
 
     strcpy_s(g_config_download_path, sizeof(g_config_download_path), path->valuestring);

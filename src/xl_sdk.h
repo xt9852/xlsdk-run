@@ -3,16 +3,16 @@
  *\file         xl_sdk.h
  *\author       xt
  *\version      1.0.0
- *\date         2022-02-08
- *\brief        迅雷接口定义,UTF-8(No BOM)
+ *\date         2022.02.08
+ *\brief        迅雷SDK定义,UTF-8(No BOM)
  */
 #ifndef _XL_SDK_H_
 #define _XL_SDK_H_
 
 /// 任务类型
-enum    
+enum
 {
-    TASK_MAGNET,    ///< 磁力 
+    TASK_MAGNET,    ///< 磁力
     TASK_BT,        ///< BT下载
     TASK_URL        ///< 普通文件
 };

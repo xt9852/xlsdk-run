@@ -3,8 +3,8 @@
  *\file         config.h
  *\author       xt
  *\version      1.0.0
- *\date         2022-02-08
- *\brief        配置模块接口定义,UTF-8(No BOM)
+ *\date         2022.02.08
+ *\brief        配置模块定义,UTF-8(No BOM)
  */
 #ifndef _CONFIG_H_
 #define _CONFIG_H_

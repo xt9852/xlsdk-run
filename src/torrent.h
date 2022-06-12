@@ -3,8 +3,8 @@
  *\file         torrent.h
  *\author       xt
  *\version      1.0.0
- *\date         2022-02-08
- *\brief        bencode编码的种子文件解析接口定义,UTF-8(No BOM)
+ *\date         2022.02.08
+ *\brief        bencode编码的种子文件解析定义,UTF-8(No BOM)
  */
 #ifndef _TORRENT_H_
 #define _TORRENT_H_

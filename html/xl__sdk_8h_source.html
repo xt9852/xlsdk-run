@@ -1,0 +1,104 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=9"/>
+<meta name="generator" content="Doxygen 1.8.10"/>
+<title>XLDownloadSDKServerStart: D:/2.code/12.XLDownloadSDKServerStart/src/xl_sdk.h 源文件</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="dynsections.js"></script>
+<link href="doxygen.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr style="height: 56px;">
+  <td id="projectlogo"><img alt="Logo" src="main.ico"/></td>
+  <td id="projectalign" style="padding-left: 0.5em;">
+   <div id="projectname">XLDownloadSDKServerStart
+   </div>
+  </td>
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- 制作者 Doxygen 1.8.10 -->
+  <div id="navrow1" class="tabs">
+    <ul class="tablist">
+      <li><a href="index.html"><span>首页</span></a></li>
+      <li><a href="annotated.html"><span>结构体</span></a></li>
+      <li class="current"><a href="files.html"><span>文件</span></a></li>
+    </ul>
+  </div>
+  <div id="navrow2" class="tabs2">
+    <ul class="tablist">
+      <li><a href="files.html"><span>文件列表</span></a></li>
+      <li><a href="globals.html"><span>全局定义</span></a></li>
+    </ul>
+  </div>
+<div id="nav-path" class="navpath">
+  <ul>
+<li class="navelem"><a class="el" href="dir_68267d1309a1af8e8297ef4c3efbcdba.html">src</a></li>  </ul>
+</div>
+</div><!-- top -->
+<div class="header">
+  <div class="headertitle">
+<div class="title">xl_sdk.h</div>  </div>
+</div><!--header-->
+<div class="contents">
+<a href="xl__sdk_8h.html">浏览该文件的文档.</a><div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;</div>
+<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;<span class="preprocessor">#ifndef _XL_SDK_H_</span></div>
+<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;<span class="preprocessor">#define _XL_SDK_H_</span></div>
+<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;</div>
+<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;<span class="keyword">enum</span></div>
+<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;{</div>
+<div class="line"><a name="l00015"></a><span class="lineno"><a class="line" href="xl__sdk_8h.html#a385c44f6fb256e5716a2302a5b940388a1c5eb12bc4f835ffb7ae2dfc1676f872">   15</a></span>&#160;    <a class="code" href="xl__sdk_8h.html#a385c44f6fb256e5716a2302a5b940388a1c5eb12bc4f835ffb7ae2dfc1676f872">TASK_MAGNET</a>,    </div>
+<div class="line"><a name="l00016"></a><span class="lineno"><a class="line" href="xl__sdk_8h.html#a385c44f6fb256e5716a2302a5b940388a2ab906bb5b71afb4e071c2f34d2860ca">   16</a></span>&#160;    <a class="code" href="xl__sdk_8h.html#a385c44f6fb256e5716a2302a5b940388a2ab906bb5b71afb4e071c2f34d2860ca">TASK_BT</a>,        </div>
+<div class="line"><a name="l00017"></a><span class="lineno"><a class="line" href="xl__sdk_8h.html#a385c44f6fb256e5716a2302a5b940388a93a6aaa8dc7c7f4e6cbc0cb28700bd3b">   17</a></span>&#160;    <a class="code" href="xl__sdk_8h.html#a385c44f6fb256e5716a2302a5b940388a93a6aaa8dc7c7f4e6cbc0cb28700bd3b">TASK_URL</a>        </div>
+<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;};</div>
+<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;</div>
+<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;<span class="keywordtype">int</span> <a class="code" href="xl__sdk_8h.html#a1cdf21a13b1d57f98425187ca33f4b4e">xl_sdk_init</a>();</div>
+<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;</div>
+<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;<span class="keywordtype">int</span> <a class="code" href="xl__sdk_8h.html#a55f62d7a5212379a08fd38ae43f606d4">xl_sdk_add_bt_tracker</a>(<span class="keywordtype">int</span> taskid, <span class="keywordtype">int</span> count, <span class="keywordtype">void</span> *data, <span class="keywordtype">int</span> data_len);</div>
+<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;</div>
+<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;<span class="keywordtype">int</span> <a class="code" href="xl__sdk_8h.html#a56b2ce7bcca14b781b95d3dabe1acdca">xl_sdk_create_url_task</a>(<span class="keywordtype">short</span> *url, <span class="keywordtype">short</span> *path, <span class="keywordtype">int</span> *taskid, <span class="keywordtype">short</span> *task_name);</div>
+<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;</div>
+<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;<span class="keywordtype">int</span> <a class="code" href="xl__sdk_8h.html#ae91ce2d17be054f243174343558d0f5b">xl_sdk_create_magnet_task</a>(<span class="keywordtype">short</span> *magnet, <span class="keywordtype">short</span> *path, <span class="keywordtype">int</span> *taskid, <span class="keywordtype">short</span> *task_name);</div>
+<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;</div>
+<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;<span class="keywordtype">int</span> <a class="code" href="xl__sdk_8h.html#ab4945351c507c135224bfb0482c587af">xl_sdk_create_bt_task</a>(<span class="keywordtype">short</span> *<a class="code" href="struct__torrent__info.html">torrent</a>, <span class="keywordtype">short</span> *path, <span class="keywordtype">char</span> *<a class="code" href="struct__list.html">list</a>,</div>
+<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;                          <span class="keywordtype">int</span> announce_count, <span class="keywordtype">short</span> *announce, <span class="keywordtype">int</span> announce_len,</div>
+<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;                          <span class="keywordtype">int</span> *taskid);</div>
+<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;</div>
+<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;<span class="keywordtype">int</span> <a class="code" href="xl__sdk_8h.html#ab66b38e807e695c349f6c68fc22b78cc">xl_sdk_start_download_file</a>(<span class="keywordtype">int</span> taskid, <span class="keywordtype">int</span> task_type);</div>
+<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;</div>
+<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;<span class="keywordtype">int</span> <a class="code" href="xl__sdk_8h.html#a7bc17aa4f506632c613fcaf3fe5ae8bc">xl_sdk_stop_download_file</a>(<span class="keywordtype">int</span> taskid);</div>
+<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;</div>
+<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;<span class="keywordtype">int</span> <a class="code" href="xl__sdk_8h.html#a5031b352c6bcd7f4364f46408b3484fe">xl_sdk_get_task_info</a>(<span class="keywordtype">int</span> taskid, <span class="keywordtype">unsigned</span> __int64 *size, <span class="keywordtype">unsigned</span> __int64 *down, <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> *time);</div>
+<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;</div>
+<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="ttc" id="xl__sdk_8h_html_a56b2ce7bcca14b781b95d3dabe1acdca"><div class="ttname"><a href="xl__sdk_8h.html#a56b2ce7bcca14b781b95d3dabe1acdca">xl_sdk_create_url_task</a></div><div class="ttdeci">int xl_sdk_create_url_task(short *url, short *path, int *taskid, short *task_name)</div><div class="ttdoc">创建下载URL文件任务 </div><div class="ttdef"><b>Definition:</b> xl_sdk.c:1074</div></div>
+<div class="ttc" id="xl__sdk_8h_html_ae91ce2d17be054f243174343558d0f5b"><div class="ttname"><a href="xl__sdk_8h.html#ae91ce2d17be054f243174343558d0f5b">xl_sdk_create_magnet_task</a></div><div class="ttdeci">int xl_sdk_create_magnet_task(short *magnet, short *path, int *taskid, short *task_name)</div><div class="ttdoc">创建下载种子文件任务 </div><div class="ttdef"><b>Definition:</b> xl_sdk.c:945</div></div>
+<div class="ttc" id="struct__list_html"><div class="ttname"><a href="struct__list.html">_list</a></div><div class="ttdoc">链表 </div><div class="ttdef"><b>Definition:</b> xt_list.h:15</div></div>
+<div class="ttc" id="struct__torrent__info_html"><div class="ttname"><a href="struct__torrent__info.html">_torrent_info</a></div><div class="ttdoc">种子信息 </div><div class="ttdef"><b>Definition:</b> torrent.h:28</div></div>
+<div class="ttc" id="xl__sdk_8h_html_a385c44f6fb256e5716a2302a5b940388a93a6aaa8dc7c7f4e6cbc0cb28700bd3b"><div class="ttname"><a href="xl__sdk_8h.html#a385c44f6fb256e5716a2302a5b940388a93a6aaa8dc7c7f4e6cbc0cb28700bd3b">TASK_URL</a></div><div class="ttdoc">普通文件 </div><div class="ttdef"><b>Definition:</b> xl_sdk.h:17</div></div>
+<div class="ttc" id="xl__sdk_8h_html_a385c44f6fb256e5716a2302a5b940388a2ab906bb5b71afb4e071c2f34d2860ca"><div class="ttname"><a href="xl__sdk_8h.html#a385c44f6fb256e5716a2302a5b940388a2ab906bb5b71afb4e071c2f34d2860ca">TASK_BT</a></div><div class="ttdoc">BT下载 </div><div class="ttdef"><b>Definition:</b> xl_sdk.h:16</div></div>
+<div class="ttc" id="xl__sdk_8h_html_a7bc17aa4f506632c613fcaf3fe5ae8bc"><div class="ttname"><a href="xl__sdk_8h.html#a7bc17aa4f506632c613fcaf3fe5ae8bc">xl_sdk_stop_download_file</a></div><div class="ttdeci">int xl_sdk_stop_download_file(int taskid)</div><div class="ttdoc">停止下载文件 </div><div class="ttdef"><b>Definition:</b> xl_sdk.c:1234</div></div>
+<div class="ttc" id="xl__sdk_8h_html_a385c44f6fb256e5716a2302a5b940388a1c5eb12bc4f835ffb7ae2dfc1676f872"><div class="ttname"><a href="xl__sdk_8h.html#a385c44f6fb256e5716a2302a5b940388a1c5eb12bc4f835ffb7ae2dfc1676f872">TASK_MAGNET</a></div><div class="ttdoc">磁力 </div><div class="ttdef"><b>Definition:</b> xl_sdk.h:15</div></div>
+<div class="ttc" id="xl__sdk_8h_html_a5031b352c6bcd7f4364f46408b3484fe"><div class="ttname"><a href="xl__sdk_8h.html#a5031b352c6bcd7f4364f46408b3484fe">xl_sdk_get_task_info</a></div><div class="ttdeci">int xl_sdk_get_task_info(int taskid, unsigned __int64 *size, unsigned __int64 *down, unsigned int *time)</div><div class="ttdoc">得到下载任务信息 </div><div class="ttdef"><b>Definition:</b> xl_sdk.c:1268</div></div>
+<div class="ttc" id="xl__sdk_8h_html_ab4945351c507c135224bfb0482c587af"><div class="ttname"><a href="xl__sdk_8h.html#ab4945351c507c135224bfb0482c587af">xl_sdk_create_bt_task</a></div><div class="ttdeci">int xl_sdk_create_bt_task(short *torrent, short *path, char *list, int announce_count, short *announce, int announce_len, int *taskid)</div><div class="ttdoc">创建下载BT文件任务 </div><div class="ttdef"><b>Definition:</b> xl_sdk.c:1006</div></div>
+<div class="ttc" id="xl__sdk_8h_html_a55f62d7a5212379a08fd38ae43f606d4"><div class="ttname"><a href="xl__sdk_8h.html#a55f62d7a5212379a08fd38ae43f606d4">xl_sdk_add_bt_tracker</a></div><div class="ttdeci">int xl_sdk_add_bt_tracker(int taskid, int count, void *data, int data_len)</div><div class="ttdoc">添加服务器 </div><div class="ttdef"><b>Definition:</b> xl_sdk.c:909</div></div>
+<div class="ttc" id="xl__sdk_8h_html_a1cdf21a13b1d57f98425187ca33f4b4e"><div class="ttname"><a href="xl__sdk_8h.html#a1cdf21a13b1d57f98425187ca33f4b4e">xl_sdk_init</a></div><div class="ttdeci">int xl_sdk_init()</div><div class="ttdoc">初始化SDK </div><div class="ttdef"><b>Definition:</b> xl_sdk.c:818</div></div>
+<div class="ttc" id="xl__sdk_8h_html_ab66b38e807e695c349f6c68fc22b78cc"><div class="ttname"><a href="xl__sdk_8h.html#ab66b38e807e695c349f6c68fc22b78cc">xl_sdk_start_download_file</a></div><div class="ttdeci">int xl_sdk_start_download_file(int taskid, int task_type)</div><div class="ttdoc">开始下载文件 </div><div class="ttdef"><b>Definition:</b> xl_sdk.c:1145</div></div>
+</div><!-- fragment --></div><!-- contents -->
+<!-- start footer part -->
+<hr class="footer"/><address class="footer"><small>
+制作者 &#160;<a href="http://www.doxygen.org/index.html">
+<img class="footer" src="doxygen.png" alt="doxygen"/>
+</a> 1.8.10
+</small></address>
+</body>
+</html>

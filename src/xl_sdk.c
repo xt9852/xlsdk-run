@@ -3,8 +3,8 @@
  *\file         xl_sdk.c
  *\author       xt
  *\version      1.0.0
- *\date         2022-02-08
- *\brief        迅雷接口实现,UTF-8(No BOM)
+ *\date         2022.02.08
+ *\brief        迅雷SDK实现,UTF-8(No BOM)
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -182,7 +182,7 @@ const short *g_track[] = {
 };
 
 /// SDK函数ID
-enum    
+enum
 {
     /* 1*/ XL_Init = 1,
     /* 2*/ XL_UnInit,
