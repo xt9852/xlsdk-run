@@ -8,18 +8,27 @@
  */
 #ifndef _CONFIG_H_
 #define _CONFIG_H_
+#include "xt_log.h"
+
+/// 配置数据
+typedef struct _config
+{
+    char    log_filename[512];  ///< 日志文件名
+    int     log_level;          ///< 日志级别(调试,信息,警告,错误)
+    int     log_cycle;          ///< 日志文件保留周期(时,天,周)
+    int     log_backup;         ///< 日志文件保留数量
+    bool    log_clean;          ///< 首次打开日志文件时是否清空文件内容
+
+    char    download_path[512]; ///< 下载路径
+
+} config, *p_config;            ///< 配置数据指针
 
 /**
  *\brief        初始化配置
  *\param[in]    filename    配置文件名
+ *\param[out]   config      配置数据
  *\return       0           成功
  */
-int config_init(const char *filename);
-
-/**
- *\brief        得到下载路径
- *\return       下载路径
- */
-const char * config_get_download_path();
+int config_init(const char *filename, p_config config);
 
 #endif

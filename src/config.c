@@ -10,10 +10,7 @@
 #include <stdlib.h>
 #include <sys/stat.h>
 #include "config.h"
-#include "xt_log.h"
 #include "cJSON.h"
-
-static char g_config_download_path[512];    ///< 下载路径
 
 /**
  *\brief        得到文件大小
@@ -64,11 +61,12 @@ int get_config_data(const char *filename, char *buf, int len)
 /**
  *\brief        初始化配置
  *\param[in]    filename    配置文件名
+ *\param[out]   config      配置数据
  *\return       0           成功
  */
-int config_init(const char *filename)
+int config_init(const char *filename, p_config config)
 {
-    if (NULL == filename)
+    if (NULL == filename || NULL == config)
     {
         printf("%s|filename is null\n", __FUNCTION__);
         return -1;
@@ -116,34 +114,100 @@ int config_init(const char *filename)
         return -6;
     }
 
-    ret = xt_log_init(".\\", log);
+    cJSON *name = cJSON_GetObjectItem(log, "name");
 
-    if (ret != 0)
+    if (NULL == name)
     {
-        printf("%s|log init fail:%d\n", __FUNCTION__, ret);
+        printf("%s|config json no log.name node\n", __FUNCTION__);
         return -7;
     }
 
+    strncpy_s(config->log_filename, sizeof(config->log_filename), name->valuestring, sizeof(config->log_filename) - 1);
+
+    cJSON *level = cJSON_GetObjectItem(log, "level");
+
+    if (NULL == level)
+    {
+        printf("%s|config json no log.level node\n", __FUNCTION__);
+        return -8;
+    }
+
+    if (0 == strcmp(level->valuestring, "debug"))
+    {
+        config->log_level = LOG_LEVEL_DEBUG;
+    }
+    else if (0 == strcmp(level->valuestring, "info"))
+    {
+        config->log_level = LOG_LEVEL_INFO;
+    }
+    else if (0 == strcmp(level->valuestring, "warn"))
+    {
+        config->log_level = LOG_LEVEL_WARN;
+    }
+    else if (0 == strcmp(level->valuestring, "error"))
+    {
+        config->log_level = LOG_LEVEL_ERROR;
+    }
+    else
+    {
+        printf("%s|config json no log.level value error\n", __FUNCTION__);
+        return -9;
+    }
+
+    cJSON *cycle = cJSON_GetObjectItem(log, "cycle");
+
+    if (NULL == cycle)
+    {
+        printf("%s|config json no log.cycle node\n", __FUNCTION__);
+        return -10;
+    }
+
+    if (0 == strcmp(cycle->valuestring, "minute"))
+    {
+        config->log_cycle = LOG_CYCLE_MINUTE;
+    }
+    else if (0 == strcmp(cycle->valuestring, "hour"))
+    {
+        config->log_cycle = LOG_CYCLE_HOUR;
+    }
+    else if (0 == strcmp(cycle->valuestring, "day"))
+    {
+        config->log_cycle = LOG_CYCLE_DAY;
+    }
+    else if (0 == strcmp(cycle->valuestring, "week"))
+    {
+        config->log_cycle = LOG_CYCLE_WEEK;
+    }
+    else
+    {
+        printf("%s|config no log.cycle value error\n", __FUNCTION__);
+        return -11;
+    }
+
+    cJSON *backup = cJSON_GetObjectItem(log, "backup");
+
+    if (NULL == backup)
+    {
+        printf("%s|config no log.backup value error\n", __FUNCTION__);
+        return -12;
+    }
+
+    config->log_backup = backup->valueint;
+
+    cJSON *clean = cJSON_GetObjectItem(log, "clean");
+
+    config->log_clean = (NULL != clean) ? clean->valueint : false;
 
     cJSON *path = cJSON_GetObjectItem(root, "path");
 
     if (NULL == path)
     {
-        DBG("config json no path node\n");
-        return -8;
+        printf("%s|config json no path node\n", __FUNCTION__);
+        return -13;
     }
 
-    strcpy_s(g_config_download_path, sizeof(g_config_download_path), path->valuestring);
+    strcpy_s(config->download_path, sizeof(config->download_path), path->valuestring);
 
-    DBG("ok");
+    printf("%s|config ok\n", __FUNCTION__);
     return 0;
-}
-
-/**
- *\brief      得到下载路径
- *\return     下载路径
- */
-const char * config_get_download_path()
-{
-    return g_config_download_path;
 }

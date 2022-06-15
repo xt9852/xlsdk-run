@@ -13,40 +13,33 @@
 #include "xl_sdk.h"
 #include "xt_log.h"
 
-#define SIZEOF(x)               sizeof(x)/sizeof(x[0])
 #define FLAG                    "BDAF7A63-568C-43ab-9406-D145CF03B08C"
 
 /// 参数头
-typedef struct _arg_head
+typedef struct _xl_arg_head
 {
     DWORD               len;                ///< 参数长度
 
     char                data[1];            ///< 参数
 
-}arg_head, *p_arg_head;                     ///< 参数头节点
+}xl_arg_head, *p_xl_arg_head;               ///< 参数头节点
 
 /// 数据头
-typedef struct _data_head
+typedef struct _xl_data_head
 {
     DWORD               len;                ///< 数据长度(不包含本身4字节)
 
     DWORD               func_id;            ///< 函数ID
 
     union {
-    arg_head            arg1;               ///< 参数1头节点
+
+    xl_arg_head         arg1;               ///< 参数1头节点
 
     DWORD               data[1];            ///< 参数1整数
+
     };
 
-}data_head, *p_data_head;                   ///< 数据包头节点
-
-typedef struct _task_info
-{
-    unsigned __int64    down;               ///< 已经下载的数量
-
-    unsigned int        time;               ///< 用时秒数
-
-}task_info, *p_task_info;
+}xl_data_head, *p_xl_data_head;             ///< 数据包头节点
 
 int    g_cur_process_id         = 0;        ///< 本进程ID
 int    g_sdk_process_id         = 0;        ///< SDK进程ID
@@ -258,7 +251,7 @@ enum
 };
 
 /// 函数名称
-const char * SDK_FUNC_NAME[] =
+const char *XL_SDK_FUNC_NAME[] =
 {
     /* 1*/ "XL_Init",
     /* 2*/ "XL_UnInit",
@@ -341,17 +334,17 @@ int xl_sdk_call_sdk_func()
 {
     WaitForSingleObject(g_recvBufferEmptyEvent, INFINITE);  // 等待对方准备好接收数据信号
 
-    p_data_head p = (p_data_head)g_recv_tmp;
+    p_xl_data_head p = (p_xl_data_head)g_recv_tmp;
     memcpy(g_recv, g_recv_tmp, p->len + 4);                 // 复制数据到对方缓冲区
 
     ResetEvent(g_recvBufferEmptyEvent);                     // 清空对方准备好接收数据信号
     SetEvent(g_recvBufferFullEvent);                        // 设置对方接收数据信号
 
-    DBG("send %s len:%d", SDK_FUNC_NAME[p->func_id], p->len);
+    DBG("send %s len:%d", XL_SDK_FUNC_NAME[p->func_id], p->len);
 
     WaitForSingleObject(g_sendBufferFullEvent, INFINITE);   // 等待对方已经发送数据信号
 
-    p = (p_data_head)g_send;
+    p = (p_xl_data_head)g_send;
     memcpy(g_send_tmp, g_send, p->len + 4);                 // 将对方数据复制到自己的缓冲区
 
     ResetEvent(g_sendBufferFullEvent);                      // 清空对方已经发送数据信号
@@ -361,11 +354,11 @@ int xl_sdk_call_sdk_func()
 
     if (0 != head[2])                                       // 返回值:0-成功
     {
-        ERR("recv %s len:%d ret:%d", SDK_FUNC_NAME[p->func_id], head[2]);
+        ERR("recv %s len:%d ret:%d", XL_SDK_FUNC_NAME[p->func_id], head[2]);
         return head[2];
     }
 
-    DBG("recv %s len:%d ret:0", SDK_FUNC_NAME[p->func_id], p->len);
+    DBG("recv %s len:%d ret:0", XL_SDK_FUNC_NAME[p->func_id], p->len);
     return 0;
 }
 
@@ -676,13 +669,13 @@ int xl_sdk_call_get_share_memory_id()
  */
 int xl_sdk_call_sdk_init()
 {
-    p_data_head p = (p_data_head)g_recv_tmp;
+    p_xl_data_head p = (p_xl_data_head)g_recv_tmp;
 
     // 调用函数XL_Init,格式:数据总长(不包含本身4字节),函数ID,参数1长度,参数1,...
     strcpy_s(p->arg1.data, 100, "xzcGMudGh1bmRlclg7MA^^SDK==edee53fd0b15e8d65dbfe7824f5f^a23");
     p->arg1.len = 59;
 
-    p_arg_head arg2 = (p_arg_head)(p->arg1.data + p->arg1.len);
+    p_xl_arg_head arg2 = (p_xl_arg_head)(p->arg1.data + p->arg1.len);
     arg2->len = 0x28;
     arg2->data[0] = 0xff;
     arg2->data[1] = 0xff;
@@ -910,7 +903,7 @@ int xl_sdk_add_bt_tracker(int taskid, int count, void *data, int data_len)
 {
     int cnt = SIZEOF(g_track);
 
-    p_data_head p = (p_data_head)g_recv_tmp;
+    p_xl_data_head p = (p_xl_data_head)g_recv_tmp;
     p->func_id = XL_BatchAddBTTracker;
     p->data[0] = taskid;
     p->data[1] = count + g_track_count;
@@ -964,12 +957,12 @@ int xl_sdk_create_magnet_task(short *magnet, short *path, int *taskid, short *ta
 
     // 参数1,磁力连接URL
     int len = wcslen(magnet);
-    p_data_head p = (p_data_head)g_recv_tmp;
+    p_xl_data_head p = (p_xl_data_head)g_recv_tmp;
     memcpy(p->arg1.data, magnet, len * 2);
     p->arg1.len = len;
 
     // 参数2,本地文件名
-    p_arg_head arg2 = (p_arg_head)(p->arg1.data + p->arg1.len * 2);
+    p_xl_arg_head arg2 = (p_xl_arg_head)(p->arg1.data + p->arg1.len * 2);
     short *fullname = (short*)arg2->data;
     arg2->len = swprintf_s(fullname, MAX_PATH, L"%s\\%s.torrent", path, id);
 
@@ -1019,19 +1012,19 @@ int xl_sdk_create_bt_task(short *torrent, short *path, char *list, int announce_
 
     // 参数1,本地种子文件全名
     int len = wcslen(torrent);
-    p_data_head p = (p_data_head)g_recv_tmp;
+    p_xl_data_head p = (p_xl_data_head)g_recv_tmp;
     memcpy(p->arg1.data, torrent, len * 2);
     p->arg1.len = len;
 
     // 参数2,本地下载目录
     len = wcslen(path);
-    p_arg_head arg2 = (p_arg_head)(p->arg1.data + p->arg1.len * 2);
+    p_xl_arg_head arg2 = (p_xl_arg_head)(p->arg1.data + p->arg1.len * 2);
     memcpy(arg2->data, path, len * 2);
     arg2->len = len;
 
     // 参数3,下载列表,1-下载,0-不下载
     len = strlen(list);
-    p_arg_head arg3 = (p_arg_head)(arg2->data + arg2->len * 2);
+    p_xl_arg_head arg3 = (p_xl_arg_head)(arg2->data + arg2->len * 2);
     memcpy(arg3->data, list, len);
     arg3->len = len;
 
@@ -1094,7 +1087,7 @@ int xl_sdk_create_url_task(short *url, short *path, int *taskid, short *task_nam
 
     // 参数1,URL地址
     int len = wcslen(url);
-    p_data_head p = (p_data_head)g_recv_tmp;
+    p_xl_data_head p = (p_xl_data_head)g_recv_tmp;
     memcpy(p->arg1.data, url, len * 2);
     p->arg1.len = len;
 
@@ -1104,13 +1097,13 @@ int xl_sdk_create_url_task(short *url, short *path, int *taskid, short *task_nam
 
     // 参数3,本地下载目录
     len = wcslen(path);
-    p_arg_head arg3 = (p_arg_head)(arg2 + 8);
+    p_xl_arg_head arg3 = (p_xl_arg_head)(arg2 + 8);
     memcpy(arg3->data, path, len * 2);
     arg3->len = len;
 
     // 参数4,文件名称
     len = wcslen(filename);
-    p_arg_head arg4 = (p_arg_head)(arg3->data + arg3->len * 2);
+    p_xl_arg_head arg4 = (p_xl_arg_head)(arg3->data + arg3->len * 2);
     memcpy(arg4->data, filename, len * 2);
     arg4->len = len;
 
@@ -1144,7 +1137,7 @@ int xl_sdk_create_url_task(short *url, short *path, int *taskid, short *task_nam
  */
 int xl_sdk_start_download_file(int taskid, int task_type)
 {
-    p_data_head p = (p_data_head)g_recv_tmp;
+    p_xl_data_head p = (p_xl_data_head)g_recv_tmp;
     p->func_id = XL_SetTaskStrategy;
     p->data[0] = taskid;
     p->data[1] = 7;
@@ -1233,7 +1226,7 @@ int xl_sdk_start_download_file(int taskid, int task_type)
  */
 int xl_sdk_stop_download_file(int taskid)
 {
-    p_data_head p = (p_data_head)g_recv_tmp;
+    p_xl_data_head p = (p_xl_data_head)g_recv_tmp;
     p->func_id = XL_StopTask;
     p->data[0] = taskid;
     p->len = 0x08;
@@ -1272,7 +1265,7 @@ int xl_sdk_get_task_info(int taskid, unsigned __int64 *size, unsigned __int64 *d
         return -1;
     }
 
-    p_data_head p = (p_data_head)g_recv_tmp;
+    p_xl_data_head p = (p_xl_data_head)g_recv_tmp;
     p->func_id = XL_QueryTaskInfo;
     p->data[0] = taskid;
     p->len = 0x08;

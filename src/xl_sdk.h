@@ -12,10 +12,20 @@
 /// 任务类型
 enum
 {
-    TASK_MAGNET,    ///< 磁力
-    TASK_BT,        ///< BT下载
-    TASK_URL        ///< 普通文件
+    TASK_MAGNET,                            ///< 磁力
+    TASK_BT,                                ///< BT下载
+    TASK_URL                                ///< 普通文件
 };
+
+typedef struct _xl_task
+{
+    unsigned __int64    down;               ///< 已经下载的数量
+
+    unsigned int        time;               ///< 用时秒数
+
+    unsigned int        show_size;          ///< 是否已经显示大小
+
+}xl_task, *p_xl_task;
 
 /**
  *\brief   初始化SDK

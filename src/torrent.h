@@ -9,8 +9,8 @@
 #ifndef _TORRENT_H_
 #define _TORRENT_H_
 
-/// 种子中文件信息
-typedef struct _file_info
+/// 种子中的文件信息
+typedef struct _bt_torrent_file
 {
     unsigned int        name_len;               ///< 文件名长度,utf8
 
@@ -22,13 +22,13 @@ typedef struct _file_info
 
     unsigned __int64    len;                    ///< 文件长
 
-}file_info, *p_file_info;                       ///< 种子内包含的文件信息
+} bt_torrent_file, *p_bt_torrent_file;          ///< 种子内包含的文件信息
 
 /// 种子信息
-typedef struct _torrent_info
+typedef struct _bt_torrent
 {
     int                 count;                  ///< 种子内包含的文件数量
-    file_info           file[512];              ///< 种子内包含的文件信息
+    bt_torrent_file     file[512];              ///< 种子内包含的文件信息
 
     int                 announce_len;           ///< 数据长
     int                 announce_count;         ///< 服务器列表数量
@@ -38,15 +38,15 @@ typedef struct _torrent_info
     char               *name_tail;              ///< 指向当是文件名结尾
     short              *announce_tail;          ///< 指向服务器列表结尾
 
-}torrent, *p_torrent;                           ///< 种子文件信息
+} bt_torrent, *p_bt_torrent;                    ///< 种子文件信息
 
 
 /**
  *\brief        解析种子文件
  *\param[in]    filename    种子文件名
- *\param[out]   info        种子信息
+ *\param[out]   torrent     种子数据
  *\return       0           成功
  */
-int get_torrent_info(const char *filename, p_torrent info);
+int get_torrent_info(const char *filename, p_bt_torrent torrent);
 
 #endif

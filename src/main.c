@@ -11,72 +11,54 @@
 #include <tchar.h>
 #include <Windows.h>
 #include <CommCtrl.h>
-#include "xt_log.h"
-#include "xt_http.h"
-#include "config.h"
 #include "resource.h"
-#include "torrent.h"
-#include "xl_sdk.h"
-#include "xt_memory_pool.h"
-#include "xt_base64.h"
+#include "config.h"
+#include "xt_log.h"
 #include "xt_md5.h"
+#include "xt_base64.h"
+#include "xt_pinyin.h"
 #include "xt_timer.h"
 #include "xt_thread_pool.h"
+#include "xt_memory_pool.h"
+#include "xt_http.h"
+#include "torrent.h"
+#include "xl_sdk.h"
 
-#define SIZEOF(x)   sizeof(x)/sizeof(x[0])
-#define SP(...)     _stprintf_s(info, SIZEOF(info), __VA_ARGS__)
-
-#ifndef TRUE
-#define TRUE 1
-#endif
-
-#ifndef FALSE
-#define FALSE 0
-#endif
+#define TITLE "DownloadSDKServerStart"          ///< 标题
 
 /// 任务列表控件列ID
 enum
 {
-    LIST_TASK,  ///< 任务ID
-    LIST_FILE,  ///< 文件名
-    LIST_SIZE,  ///< 文件大小
-    LIST_SPEE,  ///< 下载速度
-    LIST_PROG,  ///< 下载进度
-    LIST_TIME   ///< 下载用时
+    LIST_TASK,                                  ///< 任务ID
+    LIST_FILE,                                  ///< 文件名
+    LIST_SIZE,                                  ///< 文件大小
+    LIST_SPEE,                                  ///< 下载速度
+    LIST_PROG,                                  ///< 下载进度
+    LIST_TIME                                   ///< 下载用时
 };
 
 /// 种子列表控件列ID
 enum
 {
-    TORR_SIZE,  ///< 文件大小
-    TORR_FILE   ///< 文件名
+    TORR_SIZE,                                  ///< 文件大小
+    TORR_FILE                                   ///< 文件名
 };
 
-/// 任务信息
-typedef struct _task_info {
+HWND                    g_wnd;                  ///< 主窗体句柄
+HWND                    g_edit;                 ///< 输入框
+HWND                    g_down;                 ///< "下载"按钮
+HWND                    g_list;                 ///< 下在下载的文件列表控件
+HWND                    g_torr;                 ///< 种子文件信息列表控件
+HMENU                   g_menu;                 ///< 系统托盘菜单
+NOTIFYICONDATA          g_nid           = {0};  ///< 任务栏图标数据结构
 
-    unsigned __int64    down;               ///< 已经下载的数量
+bt_torrent              g_torrent       = {0};  ///< 种子文件信息
 
-    unsigned int        time;               ///< 用时秒数
+xl_task                 g_task[128]     = {0};  ///< 当前正在下载的任务信息
 
-    unsigned int        show_size;          ///< 是否已经显示大小
+xt_log                  g_log           = {0};  ///< 日志数据
 
-}task_info, *p_task_info;
-
-HWND                    g_wnd;              ///< 主窗体句柄
-HWND                    g_edit;
-HWND                    g_down;
-HWND                    g_list;
-HWND                    g_torr;
-HMENU                   g_menu;
-
-torrent                 g_torrent       = {0};                              ///< 种子文件信息
-
-task_info               g_task[128]     = {0};                              ///< 当前正在下载的任务信息
-
-NOTIFYICONDATA          g_nid           = {0};                              ///< 任务栏图标数据结构
-
-static const TCHAR     *g_title         = _T("DownloadSDKServerStart.exe"); ///< 标题
+xt_log                  g_test          = {0};  ///< 多日志测试
 
 /**
  * \brief       HTTP服务回调
@@ -177,7 +159,7 @@ int get_select_list(int list_size, char *list, short *filename)
  *\return                   无
  */
 void btn_download(HWND wnd)
-{
+{/*
     int     ret;
     TCHAR   info[128];
 
@@ -253,7 +235,7 @@ void btn_download(HWND wnd)
 
     ShowWindow(g_list, SW_SHOW);
     ShowWindow(g_torr, SW_HIDE);
-    return;
+*/
 }
 
 /**
@@ -262,7 +244,7 @@ void btn_download(HWND wnd)
  *\return                   无
  */
 void on_timer(HWND wnd)
-{
+{/*
     if (!IsWindowVisible(g_list))
     {
         return;
@@ -347,6 +329,7 @@ void on_timer(HWND wnd)
         SP(_T("%d"), time);
         ListView_SetItemText(g_list, i, LIST_TIME, info);
     }
+*/
 }
 
 /**
@@ -356,7 +339,7 @@ void on_timer(HWND wnd)
  *\return                   无
  */
 void on_dropfiles(HWND wnd, WPARAM w)
-{
+{/*
     HDROP drop = (HDROP)w;
 
     // iFile:0-只取第1个,0xFFFFFFFF-返回拖拽文件个数
@@ -401,7 +384,7 @@ void on_dropfiles(HWND wnd, WPARAM w)
     ShowWindow(g_list, SW_HIDE);
     ShowWindow(g_torr, SW_SHOW);
 
-    DBG(filename);
+    DBG(filename);*/
 }
 
 /**
@@ -608,7 +591,7 @@ void on_close(HWND wnd)
     {
         ListView_GetItemText(g_list, i, 0, info, SIZEOF(info));
 
-        xl_sdk_stop_download_file(_ttoi(info));
+        //xl_sdk_stop_download_file(_ttoi(info));
     }
 
     DestroyWindow(wnd);
@@ -636,7 +619,7 @@ void on_exit(HWND wnd)
     {
         ListView_GetItemText(g_list, i, 0, info, SIZEOF(info));
 
-        xl_sdk_stop_download_file(_ttoi(info));
+        //xl_sdk_stop_download_file(_ttoi(info));
     }
 }
 
@@ -724,84 +707,85 @@ void timer_callback(void *param)
  */
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
-    TCHAR info[MAX_PATH];
+    char m[MAX_PATH];
 
-    int ret = config_init("DownloadSDKServerStart.json");
+    config cfg = {0};
 
-    if (ret != 0)
-    {
-        SP(_T("config init fail %d"), ret);
-        MessageBox(NULL, info, g_title, MB_OK);
-        return -1;
-    }
-
-    DBG("config init ok, download path:%s", config_get_download_path());
-
-    ret = http_init(80, http_process_callback);
+    int ret = config_init(TITLE".json", &cfg);
 
     if (ret != 0)
     {
-        ERR("http init fail %d", ret);
-        return -2;
+        sprintf_s(m, sizeof(m), "init config fail %d", ret);
+        MessageBoxA(NULL, m, TITLE, MB_OK);
+        return -10;
     }
 
-    DBG("http init ok");
+    strncpy_s(g_log.filename, sizeof(g_log.filename), cfg.log_filename, sizeof(g_log.filename) - 1);
+    g_log.level  = cfg.log_level;
+    g_log.cycle  = cfg.log_cycle;
+    g_log.backup = cfg.log_backup;
+    g_log.clean  = cfg.log_clean;
 
-    // 初始化SDK
-    ret = xl_sdk_init();
+    ret = log_init(&g_log);
 
-    if (0 != ret)
+    if (ret != 0)
     {
-        ERR("init error:%d", ret);
-        return -3;
+        sprintf_s(m, sizeof(m), "init log fail %d", ret);
+        MessageBoxA(NULL, m, TITLE, MB_OK);
+        return -20;
     }
 
-    DBG("sdk init ok");
+    DBG("g_log init ok");
 
-    memory_pool pool;
+    strncpy_s(g_test.filename, sizeof(g_test.filename), "DownloadSDKServerStart-test", sizeof(g_test.filename) - 1);
+    g_test.level  = cfg.log_level;
+    g_test.cycle  = cfg.log_cycle;
+    g_test.backup = cfg.log_backup;
+    g_test.clean  = cfg.log_clean;
 
-    memory_pool_init(&pool, 1024, 100);
+    ret = log_init(&g_test);
 
-    void *mem = NULL;
-
-    for (int i = 0; i < 2000; i++)
+    if (ret != 0)
     {
-        ret = memory_pool_get(&pool, &mem);
-
-        DBG("memory_pool_get ret:%d count:%d list-size:%d count:%d head:%d tail:%d", ret, pool.count,
-        pool.free.size, pool.free.count, pool.free.head, pool.free.tail);
+        ERR("init log test fail %d", ret);
+        return -21;
     }
 
-    ret = memory_pool_put(&pool, mem);
+    DBG("g_log init ok");
+    DBG("g_log init ok");
+    DBG("g_log init ok");
+    DBG("g_log init ok");
 
-    ERR("memory_pool_put ret:%d memory-pool-count:%d list-size:%d count:%d head:%d tail:%d", ret, pool.count,
-        pool.free.size, pool.free.count, pool.free.head, pool.free.tail);
+    D(&g_test, "g_test init ok");
+    D(&g_test, "g_test init ok");
+    D(&g_test, "g_test init ok");
+    D(&g_test, "g_test init ok");
+    D(&g_test, "g_test init ok");
 
-    memory_pool_uninit(&pool);
+    DBG("--------------------------------------------------------------------");
 
-    int len;
-    char base64[64];
-    char output[64];
-    char data[][10] = { "1", "12", "123", "1234" };
+    xt_md5 md5;
+    char   md5_out[128];
+    char  *md5_in = "1234567890";
 
-    for (int i = 0; i < 4; i++)
+    ret = md5_get(md5_in, strlen(md5_in), &md5);
+
+    if (ret != 0)
     {
-        len = 64;
-        base64_to(data[i], strlen(data[i]), base64, &len);
-        DBG("data:%s base64:%s len:%d", data[i], base64, len);
-
-        base64_from(base64, len, output, &len);
-        DBG("base64:%s data:%s len:%d", base64, output, len);
+        ERR("init log test fail %d", ret);
+        return -30;
     }
 
-    md5_info md5;
-    char     md5_out[128];
-    char    *md5_in = "1234567890";
-
-    md5_get(md5_in, strlen(md5_in), &md5);
     DBG("md5.A:%x B:%x C:%x D:%x", md5.A, md5.B, md5.C, md5.D);
 
-    md5_get_str(md5_in, strlen(md5_in), md5_out);
+    ret = md5_get_str(md5_in, strlen(md5_in), md5_out);
+
+    if (ret != 0)
+    {
+        ERR("init log test fail %d", ret);
+        return -31;
+    }
+
     DBG("md5=%s", md5_out);
 
     md5_in = "1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890"\
@@ -811,30 +795,192 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
              "1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890"\
              "1234567890";
 
-    md5_get_str(md5_in, strlen(md5_in), md5_out);
+    ret = md5_get_str(md5_in, strlen(md5_in), md5_out);
+
+    if (ret != 0)
+    {
+        ERR("init log test fail %d", ret);
+        return -32;
+    }
+
     DBG("md5=%s", md5_out);
 
-    thread_pool task_pool;
+    DBG("--------------------------------------------------------------------");
 
-    ret = thread_pool_init(&task_pool, 10);
+    int len;
+    char base64[64];
+    char output[64];
+    char data[][10] = { "1", "12", "123", "1234" };
+
+    for (int i = 0; i < 4; i++)
+    {
+        len = sizeof(base64);
+
+        ret = base64_to(data[i], strlen(data[i]), base64, &len);
+
+        if (ret != 0)
+        {
+            ERR("init log test fail %d", ret);
+            return -40;
+        }
+
+        DBG("data:%s base64:%s len:%d", data[i], base64, len);
+
+        ret = base64_from(base64, len, output, &len);
+
+        if (ret != 0)
+        {
+            ERR("init log test fail %d", ret);
+            return -41;
+        }
+
+        DBG("base64:%s data:%s len:%d", base64, output, len);
+    }
+
+    DBG("--------------------------------------------------------------------");
+
+    ret = pinyin_init_res("PINYIN", IDR_PINYIN);
+
+    if (ret != 0)
+    {
+        ERR("init pinyin fail %d", ret);
+        return -50;
+    }
+
+    DBG("--------------------------------------------------------------------");
+
+    xt_memory_pool mem_pool;
+
+    ret = memory_pool_init(&mem_pool, 1024, 100);
+
+    if (ret != 0)
+    {
+        ERR("init pinyin fail %d", ret);
+        return -60;
+    }
+
+    void *mem = NULL;
+
+    for (int i = 0; i < 2000; i++)
+    {
+        ret = memory_pool_get(&mem_pool, &mem);
+
+        if (ret != 0)
+        {
+            ERR("memory_pool_get fail %d", ret);
+            return -61;
+        }
+
+        DBG("memory_pool_get ret:%d count:%d list-size:%d count:%d head:%d tail:%d", ret, mem_pool.count,
+        mem_pool.free.size, mem_pool.free.count, mem_pool.free.head, mem_pool.free.tail);
+    }
+
+    ret = memory_pool_put(&mem_pool, mem);
+
+    if (ret != 0)
+    {
+        ERR("memory_pool_put fail %d", ret);
+        return -62;
+    }
+
+    ERR("memory_pool_put ret:%d memory-pool-count:%d list-size:%d count:%d head:%d tail:%d", ret, mem_pool.count,
+        mem_pool.free.size, mem_pool.free.count, mem_pool.free.head, mem_pool.free.tail);
+
+    ret = memory_pool_uninit(&mem_pool);
+
+    if (ret != 0)
+    {
+        ERR("memory_pool_uninit fail %d", ret);
+        return -63;
+    }
+
+    DBG("--------------------------------------------------------------------");
+
+    xt_thread_pool thread_pool;
+
+    ret = thread_pool_init(&thread_pool, 10);
+
+    if (ret != 0)
+    {
+        ERR("memory_pool_uninit fail %d", ret);
+        return -70;
+    }
 
     DBG("thread_pool_init=%d", ret);
 
-    ret = timer_init();
+    DBG("--------------------------------------------------------------------");
+
+    xt_timer_manager manager;
+
+    ret = timer_init(&manager);
+
+    if (ret != 0)
+    {
+        ERR("memory_pool_uninit fail %d", ret);
+        return -80;
+    }
 
     DBG("timer_init=%d", ret);
 
-    ret = timer_add_cycle("timer_0",  5, &task_pool, timer_callback, "timer_0_param");
+    ret = timer_add_cycle(&manager, "timer_0",  5, &thread_pool, timer_callback, "timer_0_param");
+
+    if (ret != 0)
+    {
+        ERR("memory_pool_uninit fail %d", ret);
+        return -81;
+    }
 
     DBG("timer_add_cycle=%d", ret);
 
-    ret = timer_add_cycle("timer_1", 10, &task_pool, timer_callback, "timer_1_param");
+    ret = timer_add_cycle(&manager, "timer_1", 10, &thread_pool, timer_callback, "timer_1_param");
+
+    if (ret != 0)
+    {
+        ERR("memory_pool_uninit fail %d", ret);
+        return -82;
+    }
 
     DBG("timer_add_cycle=%d", ret);
 
-    ret = timer_add_cron("timer_2", TIMER_CRON_MINUTE, 0, 0, 0, 0, 0, 0, 0, &task_pool, timer_callback, "timer_2_param");
+    ret = timer_add_cron(&manager, "timer_2", TIMER_CRON_MINUTE, 0, 0, 0, 0, 0, 0, 0, &thread_pool, timer_callback, "timer_2_param");
+
+    if (ret != 0)
+    {
+        ERR("memory_pool_uninit fail %d", ret);
+        return -83;
+    }
 
     DBG("timer_add_cron=%d", ret);
+
+    DBG("--------------------------------------------------------------------");
+
+    xt_http http;
+    http.port = 80;
+    http.run  = true;
+    http.proc = http_process_callback;
+
+    ret = http_init(&http);
+
+    if (ret != 0)
+    {
+        ERR("http init fail %d", ret);
+        return -90;
+    }
+
+    DBG("http init ok");
+
+    DBG("--------------------------------------------------------------------");
+
+    // 初始化SDK
+    ret = xl_sdk_init();
+
+    if (0 != ret)
+    {
+        ERR("init error:%d", ret);
+        return -100;
+    }
+
+    DBG("sdk init ok");
 
 /*
     int error;
@@ -903,7 +1049,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     // 创建窗体
     g_wnd = CreateWindow(wc.lpszClassName,              // 类名称
-                         g_title,                       // 窗体名称
+                         _T(TITLE),                     // 窗体名称
                          WS_OVERLAPPEDWINDOW,           // 窗体属性
                          x,  y,                         // 窗体位置
                          cx, cy,                        // 窗体大小
