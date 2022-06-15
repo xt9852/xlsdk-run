@@ -55,7 +55,7 @@
 </div><!--header-->
 <div class="contents">
 
-<p>日志模块接口定义,UTF-8(No BOM)  
+<p>日志模块定义,UTF-8(No BOM)  
 <a href="#details">更多...</a></p>
 
 <p><a href="xt__log_8h_source.html">浏览源代码.</a></p>
@@ -66,16 +66,16 @@
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>PATH_SEGM</b>&#160;&#160;&#160;'/'</td></tr>
 <tr class="separator:a7c8e07049d2cd7ed09007b3e9ae94175"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a49606be7356624568932ec81c0d429f4"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a49606be7356624568932ec81c0d429f4"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>DBG</b>&#160;&#160;&#160;(args...) <a class="el" href="xt__log_8h.html#ad0a7f5106be5205eabb45edd69ab5529">xt_log_write</a>(__FILE__, __FUNCTION__, __LINE__, <a class="el" href="xt__log_8h.html#a05589fbab0657f08285ebdfe93f5ec9ea538b2b6e011479d408ecd2be0f6d6177">LOG_LEVEL_DEBUG</a>, ##args)</td></tr>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>DBG</b>&#160;&#160;&#160;(args...)   <a class="el" href="xt__log_8h.html#af7e82306e2b38ddc0e9d88994f70a51e">xt_log_write</a>(__FILE__, __FUNCTION__, __LINE__, <a class="el" href="xt__log_8h.html#a05589fbab0657f08285ebdfe93f5ec9ea538b2b6e011479d408ecd2be0f6d6177">LOG_LEVEL_DEBUG</a>, ##args)</td></tr>
 <tr class="separator:a49606be7356624568932ec81c0d429f4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0c719c414608ef14852670b063876c07"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0c719c414608ef14852670b063876c07"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>MSG</b>&#160;&#160;&#160;(args...) <a class="el" href="xt__log_8h.html#ad0a7f5106be5205eabb45edd69ab5529">xt_log_write</a>(__FILE__, __FUNCTION__, __LINE__, <a class="el" href="xt__log_8h.html#a05589fbab0657f08285ebdfe93f5ec9eaedee1e3159bfe7d918b6e29873c5aee4">LOG_LEVEL_INFO</a>,  ##args)</td></tr>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>MSG</b>&#160;&#160;&#160;(args...)   <a class="el" href="xt__log_8h.html#af7e82306e2b38ddc0e9d88994f70a51e">xt_log_write</a>(__FILE__, __FUNCTION__, __LINE__, <a class="el" href="xt__log_8h.html#a05589fbab0657f08285ebdfe93f5ec9eaedee1e3159bfe7d918b6e29873c5aee4">LOG_LEVEL_INFO</a>,  ##args)</td></tr>
 <tr class="separator:a0c719c414608ef14852670b063876c07"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9423380a92639b296ea0a984ea7e1c6b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9423380a92639b296ea0a984ea7e1c6b"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>WAR</b>&#160;&#160;&#160;(args...) <a class="el" href="xt__log_8h.html#ad0a7f5106be5205eabb45edd69ab5529">xt_log_write</a>(__FILE__, __FUNCTION__, __LINE__, <a class="el" href="xt__log_8h.html#a05589fbab0657f08285ebdfe93f5ec9ea99c1e5c8e6d557f3993b9ab54a0107f4">LOG_LEVEL_WARN</a>,  ##args)</td></tr>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>WAR</b>&#160;&#160;&#160;(args...)   <a class="el" href="xt__log_8h.html#af7e82306e2b38ddc0e9d88994f70a51e">xt_log_write</a>(__FILE__, __FUNCTION__, __LINE__, <a class="el" href="xt__log_8h.html#a05589fbab0657f08285ebdfe93f5ec9ea99c1e5c8e6d557f3993b9ab54a0107f4">LOG_LEVEL_WARN</a>,  ##args)</td></tr>
 <tr class="separator:a9423380a92639b296ea0a984ea7e1c6b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a735563036dced0b7d6cc98f97ea4978b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a735563036dced0b7d6cc98f97ea4978b"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>ERR</b>&#160;&#160;&#160;(args...) <a class="el" href="xt__log_8h.html#ad0a7f5106be5205eabb45edd69ab5529">xt_log_write</a>(__FILE__, __FUNCTION__, __LINE__, <a class="el" href="xt__log_8h.html#a05589fbab0657f08285ebdfe93f5ec9ea5b40f003febbc3b535649d63f4b8a44f">LOG_LEVEL_ERROR</a>, ##args)</td></tr>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>ERR</b>&#160;&#160;&#160;(args...)   <a class="el" href="xt__log_8h.html#af7e82306e2b38ddc0e9d88994f70a51e">xt_log_write</a>(__FILE__, __FUNCTION__, __LINE__, <a class="el" href="xt__log_8h.html#a05589fbab0657f08285ebdfe93f5ec9ea5b40f003febbc3b535649d63f4b8a44f">LOG_LEVEL_ERROR</a>, ##args)</td></tr>
 <tr class="separator:a735563036dced0b7d6cc98f97ea4978b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:abb452686968e48b67397da5f97445f5b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="abb452686968e48b67397da5f97445f5b"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>bool</b>&#160;&#160;&#160;unsigned char</td></tr>
@@ -92,34 +92,28 @@
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="enum-members"></a>
 枚举</h2></td></tr>
-<tr class="memitem:a05589fbab0657f08285ebdfe93f5ec9e"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom">{ <a class="el" href="xt__log_8h.html#a05589fbab0657f08285ebdfe93f5ec9ea538b2b6e011479d408ecd2be0f6d6177">LOG_LEVEL_DEBUG</a>, 
-<a class="el" href="xt__log_8h.html#a05589fbab0657f08285ebdfe93f5ec9eaedee1e3159bfe7d918b6e29873c5aee4">LOG_LEVEL_INFO</a>, 
-<a class="el" href="xt__log_8h.html#a05589fbab0657f08285ebdfe93f5ec9ea99c1e5c8e6d557f3993b9ab54a0107f4">LOG_LEVEL_WARN</a>, 
-<a class="el" href="xt__log_8h.html#a05589fbab0657f08285ebdfe93f5ec9ea5b40f003febbc3b535649d63f4b8a44f">LOG_LEVEL_ERROR</a>
+<tr class="memitem:a05589fbab0657f08285ebdfe93f5ec9e"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom">{ <a class="el" href="xt__log_8h.html#a05589fbab0657f08285ebdfe93f5ec9ea538b2b6e011479d408ecd2be0f6d6177">LOG_LEVEL_DEBUG</a> = 'D', 
+<a class="el" href="xt__log_8h.html#a05589fbab0657f08285ebdfe93f5ec9eaedee1e3159bfe7d918b6e29873c5aee4">LOG_LEVEL_INFO</a> = 'I', 
+<a class="el" href="xt__log_8h.html#a05589fbab0657f08285ebdfe93f5ec9ea99c1e5c8e6d557f3993b9ab54a0107f4">LOG_LEVEL_WARN</a> = 'W', 
+<a class="el" href="xt__log_8h.html#a05589fbab0657f08285ebdfe93f5ec9ea5b40f003febbc3b535649d63f4b8a44f">LOG_LEVEL_ERROR</a> = 'E'
  }<tr class="memdesc:a05589fbab0657f08285ebdfe93f5ec9e"><td class="mdescLeft">&#160;</td><td class="mdescRight">日志级别  <a href="xt__log_8h.html#a05589fbab0657f08285ebdfe93f5ec9e">更多...</a><br /></td></tr>
 <tr class="separator:a05589fbab0657f08285ebdfe93f5ec9e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 函数</h2></td></tr>
-<tr class="memitem:a3296410c3931875d4d9f894eddb30de1"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="xt__log_8h.html#a3296410c3931875d4d9f894eddb30de1">xt_log_parse_config</a> (const char *path, void *json)</td></tr>
-<tr class="memdesc:a3296410c3931875d4d9f894eddb30de1"><td class="mdescLeft">&#160;</td><td class="mdescRight">加载配置文件  <a href="#a3296410c3931875d4d9f894eddb30de1">更多...</a><br /></td></tr>
-<tr class="separator:a3296410c3931875d4d9f894eddb30de1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a72159295009e6f9947ab7361f5dacaa0"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="xt__log_8h.html#a72159295009e6f9947ab7361f5dacaa0">xt_log_init</a> ()</td></tr>
-<tr class="memdesc:a72159295009e6f9947ab7361f5dacaa0"><td class="mdescLeft">&#160;</td><td class="mdescRight">初始化日志  <a href="#a72159295009e6f9947ab7361f5dacaa0">更多...</a><br /></td></tr>
-<tr class="separator:a72159295009e6f9947ab7361f5dacaa0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a12d2e484b33bf21e07d7406c4cc13592"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="xt__log_8h.html#a12d2e484b33bf21e07d7406c4cc13592">xt_log_init</a> (const char *path, void *json)</td></tr>
+<tr class="memdesc:a12d2e484b33bf21e07d7406c4cc13592"><td class="mdescLeft">&#160;</td><td class="mdescRight">初始化日志  <a href="#a12d2e484b33bf21e07d7406c4cc13592">更多...</a><br /></td></tr>
+<tr class="separator:a12d2e484b33bf21e07d7406c4cc13592"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a219ef156e7f54dfe0ca01af115788047"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="xt__log_8h.html#a219ef156e7f54dfe0ca01af115788047">xt_log_uninit</a> ()</td></tr>
 <tr class="memdesc:a219ef156e7f54dfe0ca01af115788047"><td class="mdescLeft">&#160;</td><td class="mdescRight">反初始化日志  <a href="#a219ef156e7f54dfe0ca01af115788047">更多...</a><br /></td></tr>
 <tr class="separator:a219ef156e7f54dfe0ca01af115788047"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad0a7f5106be5205eabb45edd69ab5529"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="xt__log_8h.html#ad0a7f5106be5205eabb45edd69ab5529">xt_log_write</a> (const char *file, const char *func, int line, int level, const char *fmt,...)</td></tr>
-<tr class="memdesc:ad0a7f5106be5205eabb45edd69ab5529"><td class="mdescLeft">&#160;</td><td class="mdescRight">写日志不带锁  <a href="#ad0a7f5106be5205eabb45edd69ab5529">更多...</a><br /></td></tr>
-<tr class="separator:ad0a7f5106be5205eabb45edd69ab5529"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1214bf7d8a4f2de1cde5f7af973ae404"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="xt__log_8h.html#a1214bf7d8a4f2de1cde5f7af973ae404">xt_log_write_lock</a> (const char *file, const char *func, int line, int level, const char *fmt,...)</td></tr>
-<tr class="memdesc:a1214bf7d8a4f2de1cde5f7af973ae404"><td class="mdescLeft">&#160;</td><td class="mdescRight">写日志带锁  <a href="#a1214bf7d8a4f2de1cde5f7af973ae404">更多...</a><br /></td></tr>
-<tr class="separator:a1214bf7d8a4f2de1cde5f7af973ae404"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af7e82306e2b38ddc0e9d88994f70a51e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="xt__log_8h.html#af7e82306e2b38ddc0e9d88994f70a51e">xt_log_write</a> (const char *file, const char *func, int line, char level, const char *fmt,...)</td></tr>
+<tr class="memdesc:af7e82306e2b38ddc0e9d88994f70a51e"><td class="mdescLeft">&#160;</td><td class="mdescRight">写日志不带锁  <a href="#af7e82306e2b38ddc0e9d88994f70a51e">更多...</a><br /></td></tr>
+<tr class="separator:af7e82306e2b38ddc0e9d88994f70a51e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">详细描述</h2>
-<div class="textblock"><p>日志模块接口定义,UTF-8(No BOM) </p>
+<div class="textblock"><p>日志模块定义,UTF-8(No BOM) </p>
 <dl class="section copyright"><dt>版权所有</dt><dd>XT Tech. Co., Ltd.</dd></dl>
 <dl class="section author"><dt>作者</dt><dd>xt </dd></dl>
 <dl class="section version"><dt>版本</dt><dd>1.0.0 </dd></dl>
@@ -154,38 +148,12 @@
 </div>
 </div>
 <h2 class="groupheader">函数说明</h2>
-<a class="anchor" id="a72159295009e6f9947ab7361f5dacaa0"></a>
+<a class="anchor" id="a12d2e484b33bf21e07d7406c4cc13592"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
           <td class="memname">int xt_log_init </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>初始化日志 </p>
-<dl class="params"><dt>参数</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">info</td><td>信息 </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>返回</dt><dd>0 成功</dd>
-<dd>
-0 成功 </dd></dl>
-
-</div>
-</div>
-<a class="anchor" id="a3296410c3931875d4d9f894eddb30de1"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">int xt_log_parse_config </td>
           <td>(</td>
           <td class="paramtype">const char *&#160;</td>
           <td class="paramname"><em>path</em>, </td>
@@ -204,7 +172,7 @@
       </table>
 </div><div class="memdoc">
 
-<p>加载配置文件 </p>
+<p>初始化日志 </p>
 <dl class="params"><dt>参数</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">path</td><td>日志文件所在目录 </td></tr>
@@ -234,7 +202,7 @@
 
 </div>
 </div>
-<a class="anchor" id="ad0a7f5106be5205eabb45edd69ab5529"></a>
+<a class="anchor" id="af7e82306e2b38ddc0e9d88994f70a51e"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -259,7 +227,7 @@
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">int&#160;</td>
+          <td class="paramtype">char&#160;</td>
           <td class="paramname"><em>level</em>, </td>
         </tr>
         <tr>
@@ -283,69 +251,6 @@
 </div><div class="memdoc">
 
 <p>写日志不带锁 </p>
-<dl class="params"><dt>参数</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">file</td><td>文件名 </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">func</td><td>函数名 </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">line</td><td>行号 </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">level</td><td>日志级别 </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">fmt</td><td>日志内容 </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>返回</dt><dd>无 </dd></dl>
-
-</div>
-</div>
-<a class="anchor" id="a1214bf7d8a4f2de1cde5f7af973ae404"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void xt_log_write_lock </td>
-          <td>(</td>
-          <td class="paramtype">const char *&#160;</td>
-          <td class="paramname"><em>file</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const char *&#160;</td>
-          <td class="paramname"><em>func</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>line</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>level</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const char *&#160;</td>
-          <td class="paramname"><em>fmt</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">&#160;</td>
-          <td class="paramname"><em>...</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>写日志带锁 </p>
 <dl class="params"><dt>参数</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">file</td><td>文件名 </td></tr>

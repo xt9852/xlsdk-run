@@ -51,26 +51,26 @@
 </div><!--header-->
 <div class="contents">
 <a href="xt__list_8h.html">浏览该文件的文档.</a><div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;</div>
-<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;<span class="preprocessor">#ifndef _XT_LIST_STACK_H_</span></div>
-<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;<span class="preprocessor">#define _XT_LIST_STACK_H_</span></div>
+<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;<span class="preprocessor">#ifndef _XT_LIST_H_</span></div>
+<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;<span class="preprocessor">#define _XT_LIST_H_</span></div>
 <div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;</div>
 <div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;<span class="preprocessor">#include &lt;pthread.h&gt;</span></div>
 <div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;</div>
 <div class="line"><a name="l00015"></a><span class="lineno"><a class="line" href="struct__list.html">   15</a></span>&#160;<span class="keyword">typedef</span> <span class="keyword">struct </span><a class="code" href="struct__list.html">_list</a></div>
 <div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;{</div>
-<div class="line"><a name="l00017"></a><span class="lineno"><a class="line" href="struct__list.html#af00cdd742d205932a8309628d39efd5e">   17</a></span>&#160;    <span class="keywordtype">void</span>          **<a class="code" href="struct__list.html#af00cdd742d205932a8309628d39efd5e">data</a>;   </div>
+<div class="line"><a name="l00017"></a><span class="lineno"><a class="line" href="struct__list.html#af00cdd742d205932a8309628d39efd5e">   17</a></span>&#160;    <span class="keywordtype">void</span>          **<a class="code" href="struct__list.html#af00cdd742d205932a8309628d39efd5e">data</a>;       </div>
 <div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;</div>
-<div class="line"><a name="l00019"></a><span class="lineno"><a class="line" href="struct__list.html#a439227feff9d7f55384e8780cfc2eb82">   19</a></span>&#160;    <span class="keywordtype">int</span>             <a class="code" href="struct__list.html#a439227feff9d7f55384e8780cfc2eb82">size</a>;   </div>
+<div class="line"><a name="l00019"></a><span class="lineno"><a class="line" href="struct__list.html#a439227feff9d7f55384e8780cfc2eb82">   19</a></span>&#160;    <span class="keywordtype">int</span>             <a class="code" href="struct__list.html#a439227feff9d7f55384e8780cfc2eb82">size</a>;       </div>
 <div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;</div>
-<div class="line"><a name="l00021"></a><span class="lineno"><a class="line" href="struct__list.html#ad43c3812e6d13e0518d9f8b8f463ffcf">   21</a></span>&#160;    <span class="keywordtype">int</span>             <a class="code" href="struct__list.html#ad43c3812e6d13e0518d9f8b8f463ffcf">count</a>;  </div>
+<div class="line"><a name="l00021"></a><span class="lineno"><a class="line" href="struct__list.html#ad43c3812e6d13e0518d9f8b8f463ffcf">   21</a></span>&#160;    <span class="keywordtype">int</span>             <a class="code" href="struct__list.html#ad43c3812e6d13e0518d9f8b8f463ffcf">count</a>;      </div>
 <div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;</div>
-<div class="line"><a name="l00023"></a><span class="lineno"><a class="line" href="struct__list.html#a20358970b1abaf992eb85e071e454653">   23</a></span>&#160;    <span class="keywordtype">int</span>             <a class="code" href="struct__list.html#a20358970b1abaf992eb85e071e454653">head</a>;   </div>
+<div class="line"><a name="l00023"></a><span class="lineno"><a class="line" href="struct__list.html#a20358970b1abaf992eb85e071e454653">   23</a></span>&#160;    <span class="keywordtype">int</span>             <a class="code" href="struct__list.html#a20358970b1abaf992eb85e071e454653">head</a>;       </div>
 <div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;</div>
-<div class="line"><a name="l00025"></a><span class="lineno"><a class="line" href="struct__list.html#aff39d864a6594bc5f4a5e365282e00fe">   25</a></span>&#160;    <span class="keywordtype">int</span>             <a class="code" href="struct__list.html#aff39d864a6594bc5f4a5e365282e00fe">tail</a>;   </div>
+<div class="line"><a name="l00025"></a><span class="lineno"><a class="line" href="struct__list.html#aff39d864a6594bc5f4a5e365282e00fe">   25</a></span>&#160;    <span class="keywordtype">int</span>             <a class="code" href="struct__list.html#aff39d864a6594bc5f4a5e365282e00fe">tail</a>;       </div>
 <div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;</div>
-<div class="line"><a name="l00027"></a><span class="lineno"><a class="line" href="struct__list.html#a4acff8232e4aec9cd5c6dc200ac55ef3">   27</a></span>&#160;    pthread_mutex_t <a class="code" href="struct__list.html#a4acff8232e4aec9cd5c6dc200ac55ef3">mutex</a>;  </div>
+<div class="line"><a name="l00027"></a><span class="lineno"><a class="line" href="struct__list.html#a4acff8232e4aec9cd5c6dc200ac55ef3">   27</a></span>&#160;    pthread_mutex_t <a class="code" href="struct__list.html#a4acff8232e4aec9cd5c6dc200ac55ef3">mutex</a>;      </div>
 <div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;</div>
-<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;} <a class="code" href="xt__list_8h.html#ac8c8d86985b0bf4a1279d23c29b38eba">list</a>, *<a class="code" href="xt__list_8h.html#ab1d813ddc9cd42d4cff7ee51f27ce229">p_list</a>;            </div>
+<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;} <a class="code" href="xt__list_8h.html#ac8c8d86985b0bf4a1279d23c29b38eba">list</a>, *<a class="code" href="xt__list_8h.html#ab1d813ddc9cd42d4cff7ee51f27ce229">p_list</a>;                </div>
 <div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;</div>
 <div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;<span class="keywordtype">int</span> <a class="code" href="xt__list_8h.html#ae232abf3a87d72d5cd8b2c13414bc53c">list_init</a>(p_list <a class="code" href="struct__list.html">list</a>);</div>
 <div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;</div>

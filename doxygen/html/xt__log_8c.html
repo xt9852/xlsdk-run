@@ -99,7 +99,7 @@ typedef struct <a class="el" href="struct__log__info.html">_log_info</a> *&#160;
 <a class="el" href="xt__log_8c.html#ac36f475ca5b446f4fde4c9b90bec77c8a6887cf4633f47a6cff6ca323ea4b1c17">LOG_CYCLE_HOUR</a>, 
 <a class="el" href="xt__log_8c.html#ac36f475ca5b446f4fde4c9b90bec77c8a9a19795005f360091445d8750405a5f1">LOG_CYCLE_DAY</a>, 
 <a class="el" href="xt__log_8c.html#ac36f475ca5b446f4fde4c9b90bec77c8a1f2be2c383c2a176f0684f33b404fc6c">LOG_CYCLE_WEEK</a>
- }<tr class="memdesc:ac36f475ca5b446f4fde4c9b90bec77c8"><td class="mdescLeft">&#160;</td><td class="mdescRight">日志保留周期  <a href="xt__log_8c.html#ac36f475ca5b446f4fde4c9b90bec77c8">更多...</a><br /></td></tr>
+ }<tr class="memdesc:ac36f475ca5b446f4fde4c9b90bec77c8"><td class="mdescLeft">&#160;</td><td class="mdescRight">日志文件保留周期  <a href="xt__log_8c.html#ac36f475ca5b446f4fde4c9b90bec77c8">更多...</a><br /></td></tr>
 <tr class="separator:ac36f475ca5b446f4fde4c9b90bec77c8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </td></tr>
 </table><table class="memberdecls">
@@ -108,33 +108,27 @@ typedef struct <a class="el" href="struct__log__info.html">_log_info</a> *&#160;
 <tr class="memitem:a0933ee73830108cfb11cecb215cd030a"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="xt__log_8c.html#a0933ee73830108cfb11cecb215cd030a">xt_log_set_filename</a> (time_t timestamp, char *filename, int max)</td></tr>
 <tr class="memdesc:a0933ee73830108cfb11cecb215cd030a"><td class="mdescLeft">&#160;</td><td class="mdescRight">设置日志文件名  <a href="#a0933ee73830108cfb11cecb215cd030a">更多...</a><br /></td></tr>
 <tr class="separator:a0933ee73830108cfb11cecb215cd030a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2c4b7160650403910060a8b8aa1999fc"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="xt__log_8c.html#a2c4b7160650403910060a8b8aa1999fc">xt_log_add_new</a> (int timestamp)</td></tr>
-<tr class="memdesc:a2c4b7160650403910060a8b8aa1999fc"><td class="mdescLeft">&#160;</td><td class="mdescRight">新建日志文件  <a href="#a2c4b7160650403910060a8b8aa1999fc">更多...</a><br /></td></tr>
-<tr class="separator:a2c4b7160650403910060a8b8aa1999fc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a99d7dacfcec74a2a1b926d358df62abd"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="xt__log_8c.html#a99d7dacfcec74a2a1b926d358df62abd">xt_log_add_new</a> (int timestamp, bool clean)</td></tr>
+<tr class="memdesc:a99d7dacfcec74a2a1b926d358df62abd"><td class="mdescLeft">&#160;</td><td class="mdescRight">新建日志文件  <a href="#a99d7dacfcec74a2a1b926d358df62abd">更多...</a><br /></td></tr>
+<tr class="separator:a99d7dacfcec74a2a1b926d358df62abd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac422910e5b6526f0e14caab57a30b32d"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="xt__log_8c.html#ac422910e5b6526f0e14caab57a30b32d">xt_log_del_old</a> (int timestamp)</td></tr>
 <tr class="memdesc:ac422910e5b6526f0e14caab57a30b32d"><td class="mdescLeft">&#160;</td><td class="mdescRight">删除旧日志文件  <a href="#ac422910e5b6526f0e14caab57a30b32d">更多...</a><br /></td></tr>
 <tr class="separator:ac422910e5b6526f0e14caab57a30b32d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8da816b8d4333824578cdba6f4fa6d5a"><td class="memItemLeft" align="right" valign="top">void *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="xt__log_8c.html#a8da816b8d4333824578cdba6f4fa6d5a">xt_log_thread</a> (void *arg)</td></tr>
-<tr class="memdesc:a8da816b8d4333824578cdba6f4fa6d5a"><td class="mdescLeft">&#160;</td><td class="mdescRight">日志后台线程  <a href="#a8da816b8d4333824578cdba6f4fa6d5a">更多...</a><br /></td></tr>
-<tr class="separator:a8da816b8d4333824578cdba6f4fa6d5a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a15013b0730f0ac69baeac83fb1dddc47"><td class="memItemLeft" align="right" valign="top">void *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="xt__log_8c.html#a15013b0730f0ac69baeac83fb1dddc47">xt_log_thread</a> (void *param)</td></tr>
+<tr class="memdesc:a15013b0730f0ac69baeac83fb1dddc47"><td class="mdescLeft">&#160;</td><td class="mdescRight">日志后台线程  <a href="#a15013b0730f0ac69baeac83fb1dddc47">更多...</a><br /></td></tr>
+<tr class="separator:a15013b0730f0ac69baeac83fb1dddc47"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3296410c3931875d4d9f894eddb30de1"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="xt__log_8c.html#a3296410c3931875d4d9f894eddb30de1">xt_log_parse_config</a> (const char *path, void *json)</td></tr>
 <tr class="memdesc:a3296410c3931875d4d9f894eddb30de1"><td class="mdescLeft">&#160;</td><td class="mdescRight">加载配置文件  <a href="#a3296410c3931875d4d9f894eddb30de1">更多...</a><br /></td></tr>
 <tr class="separator:a3296410c3931875d4d9f894eddb30de1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a72159295009e6f9947ab7361f5dacaa0"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="xt__log_8c.html#a72159295009e6f9947ab7361f5dacaa0">xt_log_init</a> ()</td></tr>
-<tr class="memdesc:a72159295009e6f9947ab7361f5dacaa0"><td class="mdescLeft">&#160;</td><td class="mdescRight">初始化日志  <a href="#a72159295009e6f9947ab7361f5dacaa0">更多...</a><br /></td></tr>
-<tr class="separator:a72159295009e6f9947ab7361f5dacaa0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a12d2e484b33bf21e07d7406c4cc13592"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="xt__log_8c.html#a12d2e484b33bf21e07d7406c4cc13592">xt_log_init</a> (const char *path, void *json)</td></tr>
+<tr class="memdesc:a12d2e484b33bf21e07d7406c4cc13592"><td class="mdescLeft">&#160;</td><td class="mdescRight">初始化日志  <a href="#a12d2e484b33bf21e07d7406c4cc13592">更多...</a><br /></td></tr>
+<tr class="separator:a12d2e484b33bf21e07d7406c4cc13592"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a219ef156e7f54dfe0ca01af115788047"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="xt__log_8c.html#a219ef156e7f54dfe0ca01af115788047">xt_log_uninit</a> ()</td></tr>
 <tr class="memdesc:a219ef156e7f54dfe0ca01af115788047"><td class="mdescLeft">&#160;</td><td class="mdescRight">反初始化日志  <a href="#a219ef156e7f54dfe0ca01af115788047">更多...</a><br /></td></tr>
 <tr class="separator:a219ef156e7f54dfe0ca01af115788047"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa92ff36ea3dcc967a6b7bc461cd55c77"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="xt__log_8c.html#aa92ff36ea3dcc967a6b7bc461cd55c77">xt_log</a> (const char *file, const char *func, int line, int level, const char *fmt, va_list arg)</td></tr>
-<tr class="memdesc:aa92ff36ea3dcc967a6b7bc461cd55c77"><td class="mdescLeft">&#160;</td><td class="mdescRight">写日志  <a href="#aa92ff36ea3dcc967a6b7bc461cd55c77">更多...</a><br /></td></tr>
-<tr class="separator:aa92ff36ea3dcc967a6b7bc461cd55c77"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad0a7f5106be5205eabb45edd69ab5529"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="xt__log_8c.html#ad0a7f5106be5205eabb45edd69ab5529">xt_log_write</a> (const char *file, const char *func, int line, int level, const char *fmt,...)</td></tr>
-<tr class="memdesc:ad0a7f5106be5205eabb45edd69ab5529"><td class="mdescLeft">&#160;</td><td class="mdescRight">写日志不带锁  <a href="#ad0a7f5106be5205eabb45edd69ab5529">更多...</a><br /></td></tr>
-<tr class="separator:ad0a7f5106be5205eabb45edd69ab5529"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1214bf7d8a4f2de1cde5f7af973ae404"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="xt__log_8c.html#a1214bf7d8a4f2de1cde5f7af973ae404">xt_log_write_lock</a> (const char *file, const char *func, int line, int level, const char *fmt,...)</td></tr>
-<tr class="memdesc:a1214bf7d8a4f2de1cde5f7af973ae404"><td class="mdescLeft">&#160;</td><td class="mdescRight">写日志带锁  <a href="#a1214bf7d8a4f2de1cde5f7af973ae404">更多...</a><br /></td></tr>
-<tr class="separator:a1214bf7d8a4f2de1cde5f7af973ae404"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af7e82306e2b38ddc0e9d88994f70a51e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="xt__log_8c.html#af7e82306e2b38ddc0e9d88994f70a51e">xt_log_write</a> (const char *file, const char *func, int line, char level, const char *fmt,...)</td></tr>
+<tr class="memdesc:af7e82306e2b38ddc0e9d88994f70a51e"><td class="mdescLeft">&#160;</td><td class="mdescRight">写日志不带锁  <a href="#af7e82306e2b38ddc0e9d88994f70a51e">更多...</a><br /></td></tr>
+<tr class="separator:af7e82306e2b38ddc0e9d88994f70a51e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">详细描述</h2>
 <div class="textblock"><p>日志模块实现,UTF-8(No BOM) </p>
@@ -153,7 +147,7 @@ typedef struct <a class="el" href="struct__log__info.html">_log_info</a> *&#160;
       </table>
 </div><div class="memdoc">
 
-<p>日志保留周期 </p>
+<p>日志文件保留周期 </p>
 <table class="fieldtable">
 <tr><th colspan="2">枚举值</th></tr><tr><td class="fieldname"><a class="anchor" id="ac36f475ca5b446f4fde4c9b90bec77c8a4557ca1c4976e3f0975985a781e45e2c"></a>LOG_CYCLE_MINUTE&#160;</td><td class="fielddoc">
 <p>分钟 </p>
@@ -172,45 +166,21 @@ typedef struct <a class="el" href="struct__log__info.html">_log_info</a> *&#160;
 </div>
 </div>
 <h2 class="groupheader">函数说明</h2>
-<a class="anchor" id="aa92ff36ea3dcc967a6b7bc461cd55c77"></a>
+<a class="anchor" id="a99d7dacfcec74a2a1b926d358df62abd"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">void xt_log </td>
+          <td class="memname">void xt_log_add_new </td>
           <td>(</td>
-          <td class="paramtype">const char *&#160;</td>
-          <td class="paramname"><em>file</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const char *&#160;</td>
-          <td class="paramname"><em>func</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
           <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>line</em>, </td>
+          <td class="paramname"><em>timestamp</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>level</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const char *&#160;</td>
-          <td class="paramname"><em>fmt</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">va_list&#160;</td>
-          <td class="paramname"><em>arg</em>&#160;</td>
+          <td class="paramtype">bool&#160;</td>
+          <td class="paramname"><em>clean</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -220,39 +190,11 @@ typedef struct <a class="el" href="struct__log__info.html">_log_info</a> *&#160;
       </table>
 </div><div class="memdoc">
 
-<p>写日志 </p>
-<dl class="params"><dt>参数</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">file</td><td>文件名 </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">func</td><td>函数名 </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">line</td><td>行号 </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">level</td><td>日志级别 </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">fmt</td><td>日志内容 </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>返回</dt><dd>无 </dd></dl>
-
-</div>
-</div>
-<a class="anchor" id="a2c4b7160650403910060a8b8aa1999fc"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void xt_log_add_new </td>
-          <td>(</td>
-          <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>timestamp</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
 <p>新建日志文件 </p>
 <dl class="params"><dt>参数</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">timestamp</td><td>时间戳 </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">clean</td><td>是否清空文件内容 </td></tr>
   </table>
   </dd>
 </dl>
@@ -285,20 +227,38 @@ typedef struct <a class="el" href="struct__log__info.html">_log_info</a> *&#160;
 
 </div>
 </div>
-<a class="anchor" id="a72159295009e6f9947ab7361f5dacaa0"></a>
+<a class="anchor" id="a12d2e484b33bf21e07d7406c4cc13592"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
           <td class="memname">int xt_log_init </td>
           <td>(</td>
-          <td class="paramname"></td><td>)</td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>path</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
           <td></td>
+          <td class="paramtype">void *&#160;</td>
+          <td class="paramname"><em>json</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
         </tr>
       </table>
 </div><div class="memdoc">
 
 <p>初始化日志 </p>
+<dl class="params"><dt>参数</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">path</td><td>日志文件所在目录 </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">json</td><td>配置文件json根 </td></tr>
+  </table>
+  </dd>
+</dl>
 <dl class="section return"><dt>返回</dt><dd>0 成功 </dd></dl>
 
 </div>
@@ -382,7 +342,7 @@ typedef struct <a class="el" href="struct__log__info.html">_log_info</a> *&#160;
 
 </div>
 </div>
-<a class="anchor" id="a8da816b8d4333824578cdba6f4fa6d5a"></a>
+<a class="anchor" id="a15013b0730f0ac69baeac83fb1dddc47"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -390,7 +350,7 @@ typedef struct <a class="el" href="struct__log__info.html">_log_info</a> *&#160;
           <td class="memname">void* xt_log_thread </td>
           <td>(</td>
           <td class="paramtype">void *&#160;</td>
-          <td class="paramname"><em>arg</em></td><td>)</td>
+          <td class="paramname"><em>param</em></td><td>)</td>
           <td></td>
         </tr>
       </table>
@@ -419,7 +379,7 @@ typedef struct <a class="el" href="struct__log__info.html">_log_info</a> *&#160;
 
 </div>
 </div>
-<a class="anchor" id="ad0a7f5106be5205eabb45edd69ab5529"></a>
+<a class="anchor" id="af7e82306e2b38ddc0e9d88994f70a51e"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -444,7 +404,7 @@ typedef struct <a class="el" href="struct__log__info.html">_log_info</a> *&#160;
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">int&#160;</td>
+          <td class="paramtype">char&#160;</td>
           <td class="paramname"><em>level</em>, </td>
         </tr>
         <tr>
@@ -468,69 +428,6 @@ typedef struct <a class="el" href="struct__log__info.html">_log_info</a> *&#160;
 </div><div class="memdoc">
 
 <p>写日志不带锁 </p>
-<dl class="params"><dt>参数</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">file</td><td>文件名 </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">func</td><td>函数名 </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">line</td><td>行号 </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">level</td><td>日志级别 </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">fmt</td><td>日志内容 </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>返回</dt><dd>无 </dd></dl>
-
-</div>
-</div>
-<a class="anchor" id="a1214bf7d8a4f2de1cde5f7af973ae404"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void xt_log_write_lock </td>
-          <td>(</td>
-          <td class="paramtype">const char *&#160;</td>
-          <td class="paramname"><em>file</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const char *&#160;</td>
-          <td class="paramname"><em>func</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>line</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>level</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const char *&#160;</td>
-          <td class="paramname"><em>fmt</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">&#160;</td>
-          <td class="paramname"><em>...</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>写日志带锁 </p>
 <dl class="params"><dt>参数</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">file</td><td>文件名 </td></tr>
