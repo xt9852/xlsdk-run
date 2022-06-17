@@ -197,13 +197,23 @@ int config_init(const char *filename, p_config config)
     cJSON *clean = cJSON_GetObjectItem(log, "clean");
 
     config->log_clean = (NULL != clean) ? clean->valueint : false;
-
-    cJSON *path = cJSON_GetObjectItem(root, "path");
+    
+    cJSON *path = cJSON_GetObjectItem(root, "http-path");
 
     if (NULL == path)
     {
-        printf("%s|config json no path node\n", __FUNCTION__);
+        printf("%s|config json no http-path node\n", __FUNCTION__);
         return -13;
+    }
+
+    strcpy_s(config->http_path, sizeof(config->http_path), path->valuestring);
+
+    path = cJSON_GetObjectItem(root, "down-path");
+
+    if (NULL == path)
+    {
+        printf("%s|config json no down-path node\n", __FUNCTION__);
+        return -14;
     }
 
     strcpy_s(config->download_path, sizeof(config->download_path), path->valuestring);

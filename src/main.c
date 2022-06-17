@@ -56,11 +56,13 @@ HWND                    g_torr;                 ///< 种子文件信息列表控
 HMENU                   g_menu;                 ///< 系统托盘菜单
 NOTIFYICONDATA          g_nid           = {0};  ///< 任务栏图标数据结构
 
-bt_torrent              g_torrent       = {0};  ///< 种子文件信息
-xl_task                 g_task[128]     = {0};  ///< 当前正在下载的任务信息
+config                  g_cfg           = {0};  ///< 配置数据
 
 xt_log                  g_log           = {0};  ///< 日志数据
 xt_log                  g_test          = {0};  ///< 多日志测试
+
+bt_torrent              g_torrent       = {0};  ///< 种子文件信息
+xl_task                 g_task[128]     = {0};  ///< 当前正在下载的任务信息
 
 /**
  *\brief        得到exe中图标数据
@@ -135,6 +137,89 @@ void update_icon_data(char *content, char *group_data, int group_size)
 }
 
 /**
+ *\brief        http回调函数,/favicon.ico
+ *\param[out]   content_type    返回内容类型
+ *\param[out]   content         返回内容
+ *\param[out]   content_len     返回内容长度
+ *\return       0               成功
+ */
+int http_process_icon(int *content_type, char *content, int *content_len)
+{
+    HRSRC    group_res  = FindResourceA(NULL, MAKEINTRESOURCEA(IDI_GREEN), RT_GROUP_ICONA);
+    HGLOBAL  group_load = LoadResource(NULL, group_res);
+    char    *group_data = LockResource(group_load);
+    int      group_size = SizeofResource(NULL, group_res);
+
+    update_icon_data(content, group_data, group_size);
+
+    group_size += 8;
+    content += group_size;
+    *content_len = group_size;
+    DBG("group size:%d", group_size);
+
+    for (int i = 1; i < group_data[4] + 1; i++)
+    {
+        content += get_icon_data(i, content, content_len);
+    }
+
+    *content_type = HTTP_TYPE_ICON;
+    return 0;
+}
+
+/**
+ *\brief        http回调函数,主页
+ *\param[out]   content_type    返回内容类型
+ *\param[out]   content         返回内容
+ *\param[out]   content_len     返回内容长度
+ *\return       0               成功
+ */
+int http_process_index(int *content_type, char *content, int *content_len)
+{
+    strcpy_s(content, *content_len, "200");
+    *content_type = HTTP_TYPE_HTML;
+    *content_len = 3;
+    return 0;
+}
+
+/**
+ *\brief        http回调函数,文件
+ *\param[in]    uri             URI地址
+ *\param[out]   content_type    返回内容类型
+ *\param[out]   content         返回内容
+ *\param[out]   content_len     返回内容长度
+ *\return       0               成功
+ */
+int http_process_file(const char *uri, int *content_type, char *content, int *content_len)
+{
+    char filename[512];
+    sprintf_s(filename, sizeof(filename), "%s%s", g_cfg.http_path, uri);
+
+    FILE *fp;
+    fopen_s(&fp, filename, "rb");
+
+    if (NULL == fp)
+    {
+        ERR("open %s fail", filename);
+        return 404;
+    }
+
+    fseek(fp, 0, SEEK_END);
+
+    *content_len = ftell(fp);
+
+    fseek(fp, 0, SEEK_SET);
+
+    fread(content, 1, *content_len, fp);
+
+    fclose(fp);
+
+    DBG("%s size:%d", filename, *content_len);
+
+    *content_type = HTTP_TYPE_HTML;
+    return 0;
+}
+
+/**
  *\brief        http回调函数
  *\param[in]    uri             URI地址
  *\param[in]    arg_name        URI的参数名称
@@ -148,41 +233,22 @@ void update_icon_data(char *content, char *group_data, int group_size)
 int http_process_callback(const char *uri, const char **arg_name, const char **arg_data, int arg_count,
                           int *content_type, char *content, int *content_len)
 {
-    DBG("uri:%s", uri);
-
     for (int i = 0; i < arg_count; i++)
     {
         DBG("arg[%d]:%s:%s", i, arg_name[i], arg_data[i]);
     }
 
-    if (0 == strcmp(uri, "/favicon.ico"))
+    if (0 == strcmp(uri, "/"))
     {
-        HRSRC    group_res  = FindResourceA(NULL, MAKEINTRESOURCEA(IDI_GREEN), RT_GROUP_ICONA);
-        HGLOBAL  group_load = LoadResource(NULL, group_res);
-        char    *group_data = LockResource(group_load);
-        int      group_size = SizeofResource(NULL, group_res);
-
-        update_icon_data(content, group_data, group_size);
-
-        group_size += 8;
-        content += group_size;
-        *content_len = group_size;
-        DBG("group size:%d", group_size);
-
-        for (int i = 1; i < group_data[4] + 1; i++)
-        {
-            content += get_icon_data(i, content, content_len);
-        }
-
-        *content_type = HTTP_TYPE_ICON;
-        return 0;
+        return http_process_index(content_type, content, content_len);
+    }
+    else if (0 == strcmp(uri, "/favicon.ico"))
+    {
+        return http_process_icon(content_type, content, content_len);
     }
     else
     {
-        strcpy_s(content, *content_len, "200");
-        *content_type = HTTP_TYPE_HTML;
-        *content_len = 3;
-        return 0;
+        return http_process_file(uri, content_type, content, content_len);
     }
 
     return 404;
@@ -826,9 +892,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 {
     char m[MAX_PATH];
 
-    config cfg = {0};
-
-    int ret = config_init(TITLE".json", &cfg);
+    int ret = config_init(TITLE".json", &g_cfg);
 
     if (ret != 0)
     {
@@ -837,11 +901,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         return -10;
     }
 
-    strncpy_s(g_log.filename, sizeof(g_log.filename), cfg.log_filename, sizeof(g_log.filename) - 1);
-    g_log.level  = cfg.log_level;
-    g_log.cycle  = cfg.log_cycle;
-    g_log.backup = cfg.log_backup;
-    g_log.clean  = cfg.log_clean;
+    strncpy_s(g_log.filename, sizeof(g_log.filename), g_cfg.log_filename, sizeof(g_log.filename) - 1);
+    g_log.level  = g_cfg.log_level;
+    g_log.cycle  = g_cfg.log_cycle;
+    g_log.backup = g_cfg.log_backup;
+    g_log.clean  = g_cfg.log_clean;
 
     ret = log_init(&g_log);
 
@@ -854,11 +918,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     DBG("g_log init ok");
 
-    strncpy_s(g_test.filename, sizeof(g_test.filename), "DownloadSDKServerStart-test", sizeof(g_test.filename) - 1);
-    g_test.level  = cfg.log_level;
-    g_test.cycle  = cfg.log_cycle;
-    g_test.backup = cfg.log_backup;
-    g_test.clean  = cfg.log_clean;
+    strncpy_s(g_test.filename, sizeof(g_test.filename), TITLE".test", sizeof(g_test.filename) - 1);
+    g_test.level  = g_cfg.log_level;
+    g_test.cycle  = g_cfg.log_cycle;
+    g_test.backup = g_cfg.log_backup;
+    g_test.clean  = g_cfg.log_clean;
 
     ret = log_init(&g_test);
 
@@ -1000,7 +1064,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         return -62;
     }
 
-    ERR("memory_pool_put ret:%d memory-pool-count:%d list-size:%d count:%d head:%d tail:%d", ret, mem_pool.count,
+    DBG("memory_pool_put ret:%d memory-pool-count:%d list-size:%d count:%d head:%d tail:%d", ret, mem_pool.count,
         mem_pool.free.size, mem_pool.free.count, mem_pool.free.head, mem_pool.free.tail);
 
     ret = memory_pool_uninit(&mem_pool);
