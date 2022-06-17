@@ -928,12 +928,12 @@ int xl_sdk_add_bt_tracker(int taskid, int count, void *data, int data_len)
 }
 
 /**
- * \brief       创建下载种子文件任务
- * \param[in]   magnet      magnet磁力URL,UNICODE
- * \param[in]   path        本地存储路径,UNICODE
- * \param[out]  taskid      任务ID
- * \param[out]  task_name   任务名称
- * \return      0           成功
+ *\brief        创建下载种子文件任务
+ *\param[in]    magnet      magnet磁力URL,UNICODE
+ *\param[in]    path        本地存储路径,UNICODE
+ *\param[out]   taskid      任务ID
+ *\param[out]   task_name   任务名称
+ *\return       0           成功
  */
 int xl_sdk_create_magnet_task(short *magnet, short *path, int *taskid, short *task_name)
 {
@@ -985,16 +985,16 @@ int xl_sdk_create_magnet_task(short *magnet, short *path, int *taskid, short *ta
 }
 
 /**
- * \brief       创建下载BT文件任务
- * \param[in]   torrent         种子文件全名
- * \param[in]   path            本地下载目录
- * \param[in]   list            文件下载列表,例:"001",0-不下载,1-下载,文件按拼音顺序排列
- * \param[in]   announce_count  tracker服务器数量
- * \param[in]   announce        tracker服务器数据
- * \param[in]   announce_len    tracker服务器数据长度
- * \param[out]  taskid          任务ID
- * \param[out]  task_name       任务名称
- * \return      0               成功
+ *\brief        创建下载BT文件任务
+ *\param[in]    torrent         种子文件全名
+ *\param[in]    path            本地下载目录
+ *\param[in]    list            文件下载列表,例:"001",0-不下载,1-下载,文件按拼音顺序排列
+ *\param[in]    announce_count  tracker服务器数量
+ *\param[in]    announce        tracker服务器数据
+ *\param[in]    announce_len    tracker服务器数据长度
+ *\param[out]   taskid          任务ID
+ *\param[out]   task_name       任务名称
+ *\return       0               成功
  */
 int xl_sdk_create_bt_task(short *torrent, short *path, char *list, int announce_count, short *announce, int announce_len, int *taskid)
 {
@@ -1057,12 +1057,12 @@ int xl_sdk_create_bt_task(short *torrent, short *path, char *list, int announce_
 }
 
 /**
- * \brief       创建下载URL文件任务
- * \param[in]   url             URL地址
- * \param[in]   path            本地下载目录
- * \param[out]  taskid          任务ID
- * \param[out]  task_name       任务名称
- * \return      0               成功
+ *\brief        创建下载URL文件任务
+ *\param[in]    url             URL地址
+ *\param[in]    path            本地下载目录
+ *\param[out]   taskid          任务ID
+ *\param[out]   task_name       任务名称
+ *\return       0               成功
  */
 int xl_sdk_create_url_task(short *url, short *path, int *taskid, short *task_name)
 {
@@ -1130,10 +1130,10 @@ int xl_sdk_create_url_task(short *url, short *path, int *taskid, short *task_nam
 }
 
 /**
- * \brief       开始下载文件
- * \param[in]   taski           任务ID
- * \param[in]   task_type       任务类型
- * \return      0               成功
+ *\brief        开始下载文件
+ *\param[in]    taski           任务ID
+ *\param[in]    task_type       任务类型
+ *\return       0               成功
  */
 int xl_sdk_start_download_file(int taskid, int task_type)
 {
@@ -1220,9 +1220,9 @@ int xl_sdk_start_download_file(int taskid, int task_type)
 }
 
 /**
- * \brief       停止下载文件
- * \param[in]   taskid          任务ID
- * \return      0               成功
+ *\brief        停止下载文件
+ *\param[in]    taskid          任务ID
+ *\return       0               成功
  */
 int xl_sdk_stop_download_file(int taskid)
 {
@@ -1251,12 +1251,12 @@ int xl_sdk_stop_download_file(int taskid)
 }
 
 /**
- * \brief       得到下载任务信息
- * \param[in]   taskid          任务ID
- * \param[out]  size            下载的数据总大小
- * \param[out]  down            已经下载的数据总大小
- * \param[out]  time            本次下载任务用时单位秒
- * \return      0               成功
+ *\brief        得到下载任务信息
+ *\param[in]    taskid          任务ID
+ *\param[out]   size            下载的数据总大小
+ *\param[out]   down            已经下载的数据总大小
+ *\param[out]   time            本次下载任务用时单位秒
+ *\return       0               成功
  */
 int xl_sdk_get_task_info(int taskid, unsigned __int64 *size, unsigned __int64 *down, unsigned int *time)
 {

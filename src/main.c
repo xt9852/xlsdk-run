@@ -9,8 +9,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <tchar.h>
-#include <Windows.h>
-#include <CommCtrl.h>
+#include <windows.h>
+#include <winuser.h>
+#include <commctrl.h>
 #include "resource.h"
 #include "config.h"
 #include "xt_log.h"
@@ -23,6 +24,9 @@
 #include "xt_http.h"
 #include "torrent.h"
 #include "xl_sdk.h"
+
+#define RT_ICONA         MAKEINTRESOURCEA(3)
+#define RT_GROUP_ICONA   MAKEINTRESOURCEA((ULONG_PTR)(RT_ICON) + DIFFERENCE)
 
 #define TITLE "DownloadSDKServerStart"          ///< 标题
 
@@ -53,35 +57,143 @@ HMENU                   g_menu;                 ///< 系统托盘菜单
 NOTIFYICONDATA          g_nid           = {0};  ///< 任务栏图标数据结构
 
 bt_torrent              g_torrent       = {0};  ///< 种子文件信息
-
 xl_task                 g_task[128]     = {0};  ///< 当前正在下载的任务信息
 
 xt_log                  g_log           = {0};  ///< 日志数据
-
 xt_log                  g_test          = {0};  ///< 多日志测试
 
 /**
- * \brief       HTTP服务回调
- * \param[in]   uri         URI地址
- * \param[in]   arg         URL参数
- * \param[out]  content     返回内容
- * \param[out]  content_len 返回内容长度
- * \return      200         成功 \n
-                404         没有找文件
+ *\brief        得到exe中图标数据
+ *\param[in]    id              图片在图标中的id
+ *\param[out]   content         图标数据
+ *\param[out]   content_len     图标数据长
+ *\return                       图标数据长
  */
-int http_process_callback(const char *uri, const char *arg, int arg_count, char *content, int *content_len)
+int get_icon_data(int id, char *content, int *content_len)
 {
-    strcpy_s(content, *content_len, "200");
-    *content_len = 3;
-    return 200;
+    HRSRC    icon_res  = FindResourceA(NULL, MAKEINTRESOURCEA(id), RT_ICONA);
+    HGLOBAL  icon_load = LoadResource(NULL, icon_res);
+    char    *icon_data = LockResource(icon_load);
+    int      icon_size = SizeofResource(NULL, icon_res);
+
+    DBG("id:%d size:%d", id, icon_size);
+
+    memcpy(content, icon_data, icon_size);
+
+    *content_len += icon_size;
+
+    return icon_size;
+}
+
+/**
+ *\brief        exe中的图标和实际图标有差异,这个是通过BeyondCompare比较得到的数据
+ *\param[out]   content         图标数据
+ *\param[out]   group_data      图标组数据
+ *\param[out]   group_size      图标组数据长
+ *\return                       无
+ */
+void update_icon_data(char *content, char *group_data, int group_size)
+{
+    for (int i = 0, j = 0; i < group_size; i++, j++)
+        {
+            switch (i)
+            {
+                case 0x12:
+                {
+                    content[j++] = 0x46;
+                    content[j++] = 0x00;
+                    content[j]   = 0x00;
+                    break;
+                }
+                case 0x20:
+                {
+                    content[j++] = 0x6E;
+                    content[j++] = 0x01;
+                    content[j]   = 0x00;
+                    break;
+                }
+                case 0x2E:
+                {
+                    content[j++] = 0xD6;
+                    content[j++] = 0x06;
+                    content[j]   = 0x00;
+                    break;
+                }
+                case 0x3C:
+                {
+                    content[j++] = 0x3E;
+                    content[j++] = 0x0A;
+                    content[j]   = 0x00;
+                    break;
+                }
+                default:
+                {
+                    content[j] = group_data[i];
+                }
+            }
+        }
+}
+
+/**
+ *\brief        http回调函数
+ *\param[in]    uri             URI地址
+ *\param[in]    arg_name        URI的参数名称
+ *\param[in]    arg_data        URI的参数数据
+ *\param[in]    arg_count       URI的参数数量
+ *\param[out]   content_type    返回内容类型
+ *\param[out]   content         返回内容
+ *\param[out]   content_len     返回内容长度
+ *\return       0               成功
+ */
+int http_process_callback(const char *uri, const char **arg_name, const char **arg_data, int arg_count,
+                          int *content_type, char *content, int *content_len)
+{
+    DBG("uri:%s", uri);
+
+    for (int i = 0; i < arg_count; i++)
+    {
+        DBG("arg[%d]:%s:%s", i, arg_name[i], arg_data[i]);
+    }
+
+    if (0 == strcmp(uri, "/favicon.ico"))
+    {
+        HRSRC    group_res  = FindResourceA(NULL, MAKEINTRESOURCEA(IDI_GREEN), RT_GROUP_ICONA);
+        HGLOBAL  group_load = LoadResource(NULL, group_res);
+        char    *group_data = LockResource(group_load);
+        int      group_size = SizeofResource(NULL, group_res);
+
+        update_icon_data(content, group_data, group_size);
+
+        group_size += 8;
+        content += group_size;
+        *content_len = group_size;
+        DBG("group size:%d", group_size);
+
+        for (int i = 1; i < group_data[4] + 1; i++)
+        {
+            content += get_icon_data(i, content, content_len);
+        }
+
+        *content_type = HTTP_TYPE_ICON;
+        return 0;
+    }
+    else
+    {
+        strcpy_s(content, *content_len, "200");
+        *content_type = HTTP_TYPE_HTML;
+        *content_len = 3;
+        return 0;
+    }
+
+    return 404;
 }
 
 /**
  *\brief        得到格式化后的信息
- *\param[in]    data        数据
- *\param[in]    unit        单位
- *\param[out]   info        信息
- *\return                  无
+ *\param[in]    data            数据
+ *\param[in]    unit            单位
+ *\param[out]   info            信息
+ *\return                       无
  */
 void format_data(unsigned __int64 data, TCHAR *info)
 {
@@ -109,10 +221,10 @@ void format_data(unsigned __int64 data, TCHAR *info)
 
 /**
  *\brief        得到格式化后的信息
- *\param[in]    list_size   列表空间
- *\param[out]   list        列表
- *\param[out]   filename    最后一个选中的文件
- *\return       0           成功
+ *\param[in]    list_size       列表空间
+ *\param[out]   list            列表
+ *\param[out]   filename        最后一个选中的文件
+ *\return       0               成功
  */
 int get_select_list(int list_size, char *list, short *filename)
 {
@@ -155,8 +267,8 @@ int get_select_list(int list_size, char *list, short *filename)
 
 /**
  *\brief        下载按钮
- *\param[in]    wnd         窗体句柄
- *\return                   无
+ *\param[in]    wnd             窗体句柄
+ *\return                       无
  */
 void btn_download(HWND wnd)
 {/*
@@ -240,8 +352,8 @@ void btn_download(HWND wnd)
 
 /**
  *\brief        定时任务
- *\param[in]    wnd         窗体句柄
- *\return                   无
+ *\param[in]    wnd             窗体句柄
+ *\return                       无
  */
 void on_timer(HWND wnd)
 {/*
@@ -334,9 +446,9 @@ void on_timer(HWND wnd)
 
 /**
  *\brief        拖拽文件
- *\param[in]    wnd         窗体句柄
- *\param[in]    w           拖拽句柄
- *\return                   无
+ *\param[in]    wnd             窗体句柄
+ *\param[in]    w               拖拽句柄
+ *\return                       无
  */
 void on_dropfiles(HWND wnd, WPARAM w)
 {/*
@@ -389,9 +501,9 @@ void on_dropfiles(HWND wnd, WPARAM w)
 
 /**
  *\brief        系统托盘消息处理函数
- *\param[in]    wnd         窗体句柄
- *\param[in]    l           操作
- *\return                   无
+ *\param[in]    wnd             窗体句柄
+ *\param[in]    l               操作
+ *\return                       无
  */
 void on_sys_notify(HWND wnd, LPARAM l)
 {
@@ -406,8 +518,8 @@ void on_sys_notify(HWND wnd, LPARAM l)
 
 /**
  *\brief        改变大小消息处理函数
- *\param[in]    l           窗体s宽高
- *\return                   无
+ *\param[in]    l               窗体s宽高
+ *\return                       无
  */
 void on_size(LPARAM l)
 {
@@ -453,8 +565,8 @@ void on_size(LPARAM l)
 
 /**
  *\brief        创建消息处理函数
- *\param[in]    wnd         窗体句柄
- *\return                   无
+ *\param[in]    wnd             窗体句柄
+ *\return                       无
  */
 void on_create(HWND wnd, LPARAM l)
 {
@@ -580,8 +692,8 @@ void on_create(HWND wnd, LPARAM l)
                 系统发出WM_CLOSE消息,自己执行DestroyWindow关闭窗口 \n
                 然后发送WM_DESTROY消息,自己执行PostQuitMessage关闭应用程序 \n
                 最后发出WM_QUIT消息来关闭消息循环
- *\param[in]    wnd         窗体句柄
- *\return                   无
+ *\param[in]    wnd             窗体句柄
+ *\return                       无
  */
 void on_close(HWND wnd)
 {
@@ -599,8 +711,8 @@ void on_close(HWND wnd)
 
 /**
  *\brief        窗体关闭处理函数
- *\param[in]    wnd         窗体句柄
- *\return                   无
+ *\param[in]    wnd             窗体句柄
+ *\return                       无
  */
 void on_exit(HWND wnd)
 {
@@ -625,8 +737,8 @@ void on_exit(HWND wnd)
 
 /**
  *\brief        窗体消毁处理函数
- *\param[in]    wnd         窗体句柄
- *\return                   无
+ *\param[in]    wnd             窗体句柄
+ *\return                       无
  */
 void on_destory(HWND wnd)
 {
@@ -636,8 +748,8 @@ void on_destory(HWND wnd)
 
 /**
  *\brief        窗体显示函数
- *\param[in]    wnd         窗体句柄
- *\return                   无
+ *\param[in]    wnd             窗体句柄
+ *\return                       无
  */
 void on_show(HWND wnd)
 {
@@ -646,9 +758,9 @@ void on_show(HWND wnd)
 
 /**
  *\brief        命令消息处理函数,菜单,按钮都会发此消息
- *\param[in]    wnd         窗体句柄
- *\param[in]    w           消息参数
- *\return                   无
+ *\param[in]    wnd             窗体句柄
+ *\param[in]    w               消息参数
+ *\return                       无
  */
 void on_command(HWND wnd, WPARAM w)
 {
@@ -664,12 +776,12 @@ void on_command(HWND wnd, WPARAM w)
 }
 
 /**
- * \brief   窗体类消息处理回调函数
- * \param   [in]  HWND   wnd    窗体句柄
- * \param   [in]  UINT   msg    消息ID
- * \param   [in]  WPARAM w      消息参数
- * \param   [in]  LPARAM l      消息参数
- * \return  LRESULT 消息处理结果，它与发送的消息有关
+ *\brief        窗体类消息处理回调函数
+ *\param[in]    wnd             窗体句柄
+ *\param[in]    msg             消息ID
+ *\param[in]    w               消息参数
+ *\param[in]    l               消息参数
+ *\return                       消息处理结果,它与发送的消息有关
  */
 LRESULT CALLBACK window_proc(HWND wnd, UINT msg, WPARAM w, LPARAM l)
 {
@@ -692,6 +804,11 @@ LRESULT CALLBACK window_proc(HWND wnd, UINT msg, WPARAM w, LPARAM l)
     return DefWindowProc(wnd, msg, w, l);
 }
 
+/**
+ *\brief    定时器任务回调
+ *\param    [in]  param         自定义参数
+ *\return                       无
+ */
 void timer_callback(void *param)
 {
     DBG("param:%s", (char*)param);
