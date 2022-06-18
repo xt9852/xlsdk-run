@@ -21,6 +21,7 @@
 #include "xt_timer.h"
 #include "xt_thread_pool.h"
 #include "xt_memory_pool.h"
+#include "xt_character_set.h"
 #include "xt_http.h"
 #include "torrent.h"
 #include "xl_sdk.h"
@@ -29,6 +30,11 @@
 #define RT_GROUP_ICONA   MAKEINTRESOURCEA((ULONG_PTR)(RT_ICON) + DIFFERENCE)
 
 #define TITLE "DownloadSDKServerStart"          ///< 标题
+
+#define INDEX_FORM "<meta charset='utf-8'><form action='/'><input name='file'/><input type='submit' value='download'/></form>"
+#define INDEX_TAB0 "<table border='1' style='border-collapse:collapse;'><tr><th>大小</th><th>文件</th></tr>"
+#define INDEX_TAB1 "<table border='1' style='border-collapse:collapse;'><tr><th>任务</th><th>种子</th><th>文件</th><th>大小</th><th>速度</th><th>进度</th><th>用时</th></tr>"
+#define INDEX_END  "</table>"
 
 /// 任务列表控件列ID
 enum
@@ -63,6 +69,40 @@ xt_log                  g_test          = {0};  ///< 多日志测试
 
 bt_torrent              g_torrent       = {0};  ///< 种子文件信息
 xl_task                 g_task[128]     = {0};  ///< 当前正在下载的任务信息
+
+int                     g_task_count    = 0;
+
+/**
+ *\brief        得到格式化后的信息
+ *\param[in]    data            数据
+ *\param[in]    unit            单位
+ *\param[out]   info            信息
+ *\param[in]    info_size       缓冲区大小
+ *\return                       无
+ */
+void format_data(unsigned __int64 data, char *info, int info_size)
+{
+    double g = data / 1024.0 / 1024.0 / 1024.0;
+    double m = data / 1024.0 / 1024.0;
+    double k = data / 1024.0;
+
+    if (g > 1.0)
+    {
+        snprintf(info, info_size, "%.2fG", g);
+    }
+    else if (m > 1.0)
+    {
+        snprintf(info, info_size, "%.2fM", m);
+    }
+    else if (k > 1.0)
+    {
+        snprintf(info, info_size, "%.2fK", k);
+    }
+    else
+    {
+        snprintf(info, info_size, "%I64u", data);
+    }
+}
 
 /**
  *\brief        得到exe中图标数据
@@ -167,17 +207,176 @@ int http_process_icon(int *content_type, char *content, int *content_len)
 }
 
 /**
+ *\brief        下载文件
+ *\param[in]    filename        文件地址
+ *\param[in]    list            下载BT文件时选中的要下载的文件,如:"10100",1-选中,0-末选
+ *\return       0               成功
+ */
+int http_download(const char *filename, const char *list)
+{
+    short   url[MAX_PATH];
+    short   path[MAX_PATH];
+    short   task_name[MAX_PATH];
+    int     ret;
+    int     task_id;
+    int     task_type;
+    int     url_len = sizeof(url);
+    int     path_len = sizeof(path);
+    int     filename_len;
+
+    if (NULL == filename || 0 == strcmp(filename, ""))
+    {
+        DBG("filename:null or \"\"", filename);
+        return 0;
+    }
+
+    filename_len = strlen(filename);
+
+    DBG("filename:%s list:%s", filename, list);
+
+    if (0 != utf8_unicode(filename, filename_len, url, &url_len))
+    {
+        ERR("utf8 to unicode error %s", filename);
+        return 404;
+    }
+
+    if (0 != utf8_unicode(g_cfg.download_path, strlen(g_cfg.download_path), path, &path_len))
+    {
+        ERR("utf8 to unicode error %s", filename);
+        return 404;
+    }
+
+    if (0 == strncmp(filename, "magnet:?", 8))   // 磁力连接URL
+    {
+        task_type = TASK_MAGNET;
+
+        ret = xl_sdk_create_magnet_task(url, path, &task_id, task_name);
+    }
+    else if (0 == strcmp(filename + filename_len - 8, ".torrent"))
+    {
+		task_type = TASK_BT;
+
+        ret = xl_sdk_create_bt_task(url, path, list, g_torrent.announce_count, g_torrent.announce, g_torrent.announce_len, &task_id);
+    }
+    else
+    {
+        task_type = TASK_URL;
+
+        ret = xl_sdk_create_url_task(url, path, &task_id, task_name);
+
+        DBG("url:%s", filename);
+    }
+
+    if (0 != ret)
+    {
+        ERR("create task %s error:%d", filename, ret);
+        return 404;
+    }
+
+    ret = xl_sdk_start_download_file(task_id, task_type);
+
+    if (0 != ret)
+    {
+        ERR("download start %s error:%d", filename, ret);
+        return 404;
+    }
+
+    ret = xl_sdk_get_task_info(task_id, &g_task[g_task_count].size, &g_task[g_task_count].down, &g_task[g_task_count].time);
+
+    if (0 != ret)
+    {
+        ERR("get task info error:%d", ret);
+        return 404;
+    }
+
+    char size[16];
+    format_data(g_task[g_task_count].size, size, sizeof(size));
+
+    DBG("task:%d size:%s", task_id, size);
+
+    g_task[g_task_count].id = task_id;
+    g_task_count++;
+
+    return 0;
+}
+
+/**
  *\brief        http回调函数,主页
+ *\param[in]    filename        文件地址
+ *\param[in]    list            下载BT文件时选中的要下载的文件,如:"10100",1-选中,0-末选
  *\param[out]   content_type    返回内容类型
  *\param[out]   content         返回内容
  *\param[out]   content_len     返回内容长度
  *\return       0               成功
  */
-int http_process_index(int *content_type, char *content, int *content_len)
+int http_process_index(const char *filename, const char *list, int *content_type, char *content, int *content_len)
 {
-    strcpy_s(content, *content_len, "200");
+    if (0 != http_download(filename, list))
+    {
+        return 404;
+    }
+
+    DBG("1.filename:%s %d", filename, *content_len);
+
+    char data[16];
+
+    int pos = 0;
+    int len = sizeof(INDEX_FORM) - 1;
+
+    strcpy_s(content, *content_len, INDEX_FORM);
+
+    DBG("2.filename:%s", filename);
+
+    pos += len;
+    len = sizeof(INDEX_TAB0) - 1;
+    strcpy_s(content + pos, *content_len - pos, INDEX_TAB0);
+
+    DBG("3.filename:%s", filename);
+
+    for (int i = 0; i < g_torrent.count; i++)
+    {
+        format_data(g_torrent.file[i].len, data, sizeof(data));
+
+        pos += len;
+        len = snprintf(content + pos, *content_len - pos, "<tr><td>%s</td><td>%s</td></tr>", data, g_torrent.file[i].name);
+    }
+
+    DBG("4.filename:%s", filename);
+
+    pos += len;
+    len = sizeof(INDEX_END) - 1;
+    strcpy_s(content + pos, *content_len - pos, INDEX_END);
+
+    DBG("5.filename:%s", filename);
+
+    pos += len;
+    len = sizeof(INDEX_TAB1) - 1;
+    strcpy_s(content + pos, *content_len - pos, INDEX_TAB1);
+
+    DBG("6.filename:%s", filename);
+
+    for (int i = 0; i < g_task_count; i++)
+    {
+        format_data(g_task[i].size, data, sizeof(data));
+
+        pos += len;
+        len = snprintf(content + pos, *content_len - pos, "<tr><td>%d</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%u</td></tr>",
+                g_task[i].id, "", filename, data, "", "", g_task[i].time);
+    }
+
+    DBG("7.filename:%s", filename);
+
+    pos += len;
+    len = sizeof(INDEX_END) - 1;
+    strcpy_s(content + pos, *content_len - pos, INDEX_END);
+
+    DBG("8.filename:%s", filename);
+
     *content_type = HTTP_TYPE_HTML;
-    *content_len = 3;
+    *content_len = pos + len;
+
+    DBG("9.filename:%s", filename);
+
     return 0;
 }
 
@@ -235,12 +434,14 @@ int http_process_callback(const char *uri, const char **arg_name, const char **a
 {
     for (int i = 0; i < arg_count; i++)
     {
-        DBG("arg[%d]:%s:%s", i, arg_name[i], arg_data[i]);
+        DBG("arg[%d] %s:%s", i, arg_name[i], arg_data[i]);
     }
 
     if (0 == strcmp(uri, "/"))
     {
-        return http_process_index(content_type, content, content_len);
+        const char *file = (arg_count >= 1 && 0 == strcmp(arg_name[0], "file")) ? arg_data[0] : NULL;
+        const char *list = (arg_count >= 2 && 0 == strcmp(arg_name[1], "list")) ? arg_data[1] : NULL;
+        return http_process_index(file, list, content_type, content, content_len);
     }
     else if (0 == strcmp(uri, "/favicon.ico"))
     {
@@ -252,37 +453,6 @@ int http_process_callback(const char *uri, const char **arg_name, const char **a
     }
 
     return 404;
-}
-
-/**
- *\brief        得到格式化后的信息
- *\param[in]    data            数据
- *\param[in]    unit            单位
- *\param[out]   info            信息
- *\return                       无
- */
-void format_data(unsigned __int64 data, TCHAR *info)
-{
-    double g = data / 1024.0 / 1024.0 / 1024.0;
-    double m = data / 1024.0 / 1024.0;
-    double k = data / 1024.0;
-
-    if (g > 1.0)
-    {
-        _stprintf_s(info, 16, _T("%.2fG"), g);
-    }
-    else if (m > 1.0)
-    {
-        _stprintf_s(info, 16, _T("%.2fM"), m);
-    }
-    else if (k > 1.0)
-    {
-        _stprintf_s(info, 16, _T("%.2fK"), k);
-    }
-    else
-    {
-        _stprintf_s(info, 16, _T("%I64u"), data);
-    }
 }
 
 /**
@@ -953,7 +1123,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     if (ret != 0)
     {
-        ERR("init log test fail %d", ret);
+        ERR("get md5 fail %d", ret);
         return -30;
     }
 
@@ -963,7 +1133,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     if (ret != 0)
     {
-        ERR("init log test fail %d", ret);
+        ERR("get md5 str fail %d", ret);
         return -31;
     }
 
@@ -980,7 +1150,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     if (ret != 0)
     {
-        ERR("init log test fail %d", ret);
+        ERR("get md5 str fail %d", ret);
         return -32;
     }
 
@@ -1001,7 +1171,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
         if (ret != 0)
         {
-            ERR("init log test fail %d", ret);
+            ERR("get base64 str fail %d", ret);
             return -40;
         }
 
@@ -1011,7 +1181,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
         if (ret != 0)
         {
-            ERR("init log test fail %d", ret);
+            ERR("from base64 get data fail %d", ret);
             return -41;
         }
 
@@ -1036,7 +1206,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     if (ret != 0)
     {
-        ERR("init pinyin fail %d", ret);
+        ERR("init memory pool fail %d", ret);
         return -60;
     }
 
@@ -1048,7 +1218,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
         if (ret != 0)
         {
-            ERR("memory_pool_get fail %d", ret);
+            ERR("memory pool get fail %d", ret);
             return -61;
         }
 
@@ -1060,7 +1230,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     if (ret != 0)
     {
-        ERR("memory_pool_put fail %d", ret);
+        ERR("memory pool put fail %d", ret);
         return -62;
     }
 
@@ -1071,7 +1241,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     if (ret != 0)
     {
-        ERR("memory_pool_uninit fail %d", ret);
+        ERR("memory pool uninit fail %d", ret);
         return -63;
     }
 
@@ -1083,11 +1253,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     if (ret != 0)
     {
-        ERR("memory_pool_uninit fail %d", ret);
+        ERR("thread pool init fail %d", ret);
         return -70;
     }
-
-    DBG("thread_pool_init=%d", ret);
 
     DBG("--------------------------------------------------------------------");
 
@@ -1097,46 +1265,38 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     if (ret != 0)
     {
-        ERR("memory_pool_uninit fail %d", ret);
+        ERR("timer init fail %d", ret);
         return -80;
     }
-
-    DBG("timer_init=%d", ret);
 
     ret = timer_add_cycle(&manager, "timer_0",  5, &thread_pool, timer_callback, "timer_0_param");
 
     if (ret != 0)
     {
-        ERR("memory_pool_uninit fail %d", ret);
+        ERR("add cycle timer fail %d", ret);
         return -81;
     }
-
-    DBG("timer_add_cycle=%d", ret);
 
     ret = timer_add_cycle(&manager, "timer_1", 10, &thread_pool, timer_callback, "timer_1_param");
 
     if (ret != 0)
     {
-        ERR("memory_pool_uninit fail %d", ret);
+        ERR("add cycle timer fail %d", ret);
         return -82;
     }
-
-    DBG("timer_add_cycle=%d", ret);
 
     ret = timer_add_cron(&manager, "timer_2", TIMER_CRON_MINUTE, 0, 0, 0, 0, 0, 0, 0, &thread_pool, timer_callback, "timer_2_param");
 
     if (ret != 0)
     {
-        ERR("memory_pool_uninit fail %d", ret);
+        ERR("add cron timer fail %d", ret);
         return -83;
     }
-
-    DBG("timer_add_cron=%d", ret);
 
     DBG("--------------------------------------------------------------------");
 
     xt_http http;
-    http.port = 80;
+    http.port = g_cfg.http_port;
     http.run  = true;
     http.proc = http_process_callback;
 
@@ -1147,8 +1307,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         ERR("http init fail %d", ret);
         return -90;
     }
-
-    DBG("http init ok");
 
     DBG("--------------------------------------------------------------------");
 
@@ -1161,7 +1319,15 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         return -100;
     }
 
-    DBG("sdk init ok");
+    DBG("--------------------------------------------------------------------");
+
+    ret = get_torrent_info("D:\\5.downloads\\bt\\7097B42EEBC037482B69056276858599ED9605B5.torrent", &g_torrent);
+
+    if (0 != ret)
+    {
+        ERR("init error:%d", ret);
+        return -110;
+    }
 
 /*
     int error;

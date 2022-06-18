@@ -17,7 +17,7 @@
  *\param[in]    filename    文件名
  *\return       文件大小,小于0时失败
  */
-int get_file_size(const char *filename)
+int config_get_size(const char *filename)
 {
     struct _stat buf;
 
@@ -31,7 +31,7 @@ int get_file_size(const char *filename)
  *\param[in]    len         数据长度
  *\return       0           成功
  */
-int get_config_data(const char *filename, char *buf, int len)
+int config_get_data(const char *filename, char *buf, int len)
 {
     if (NULL == filename || NULL == buf)
     {
@@ -59,20 +59,19 @@ int get_config_data(const char *filename, char *buf, int len)
 }
 
 /**
- *\brief        初始化配置
- *\param[in]    filename    配置文件名
- *\param[out]   config      配置数据
+ *\brief        得到JSON数据指针
+ *\param[in]    filename    文件名
+ *\param[out]   root        JSON数据指针
  *\return       0           成功
  */
-int config_init(const char *filename, p_config config)
+int config_get_json(const char *filename, cJSON **root)
 {
-    if (NULL == filename || NULL == config)
+    if (NULL == filename)
     {
-        printf("%s|filename is null\n", __FUNCTION__);
         return -1;
     }
 
-    int size = get_file_size(filename);
+    int size = config_get_size(filename);
 
     if (size <= 0)
     {
@@ -88,30 +87,40 @@ int config_init(const char *filename, p_config config)
         return -3;
     }
 
-    int ret = get_config_data(filename, buff, size);
+    int ret = config_get_data(filename, buff, size);
 
-    if (ret != 0)
-    {
-        printf("%s|get config %s data fail\n", __FUNCTION__, filename);
-        free(buff);
-        return -4;
-    }
+    *root = (0 == ret) ? cJSON_Parse(buff) : NULL;
 
-    cJSON *root = cJSON_Parse(buff);
+    free(buff);
 
-    if (NULL == root)
+    if (NULL == *root)
     {
         printf("%s|parse json fail\n", __FUNCTION__);
-        free(buff);
         return -5;
+    }
+
+    return 0;
+}
+
+/**
+ *\brief        解析log节点数据
+ *\param[in]    filename    文件名
+ *\param[out]   config      配置数据
+ *\return       0           成功
+ */
+int config_log(cJSON *root, p_config config)
+{
+    if (NULL == root || NULL == config)
+    {
+        return -1;
     }
 
     cJSON *log = cJSON_GetObjectItem(root, "log");
 
     if (NULL == log)
     {
-        printf("%s|config json no log.file node\n", __FUNCTION__);
-        return -6;
+        printf("%s|config json no log node\n", __FUNCTION__);
+        return -2;
     }
 
     cJSON *name = cJSON_GetObjectItem(log, "name");
@@ -119,7 +128,7 @@ int config_init(const char *filename, p_config config)
     if (NULL == name)
     {
         printf("%s|config json no log.name node\n", __FUNCTION__);
-        return -7;
+        return -3;
     }
 
     strncpy_s(config->log_filename, sizeof(config->log_filename), name->valuestring, sizeof(config->log_filename) - 1);
@@ -129,7 +138,7 @@ int config_init(const char *filename, p_config config)
     if (NULL == level)
     {
         printf("%s|config json no log.level node\n", __FUNCTION__);
-        return -8;
+        return -4;
     }
 
     if (0 == strcmp(level->valuestring, "debug"))
@@ -151,7 +160,7 @@ int config_init(const char *filename, p_config config)
     else
     {
         printf("%s|config json no log.level value error\n", __FUNCTION__);
-        return -9;
+        return -5;
     }
 
     cJSON *cycle = cJSON_GetObjectItem(log, "cycle");
@@ -159,7 +168,7 @@ int config_init(const char *filename, p_config config)
     if (NULL == cycle)
     {
         printf("%s|config json no log.cycle node\n", __FUNCTION__);
-        return -10;
+        return -6;
     }
 
     if (0 == strcmp(cycle->valuestring, "minute"))
@@ -181,7 +190,7 @@ int config_init(const char *filename, p_config config)
     else
     {
         printf("%s|config no log.cycle value error\n", __FUNCTION__);
-        return -11;
+        return -7;
     }
 
     cJSON *backup = cJSON_GetObjectItem(log, "backup");
@@ -189,34 +198,137 @@ int config_init(const char *filename, p_config config)
     if (NULL == backup)
     {
         printf("%s|config no log.backup value error\n", __FUNCTION__);
-        return -12;
+        return -8;
     }
 
     config->log_backup = backup->valueint;
 
-    cJSON *clean = cJSON_GetObjectItem(log, "clean");
+    cJSON *clean = cJSON_GetObjectItem(log, "clean");   // 可以为空
 
     config->log_clean = (NULL != clean) ? clean->valueint : false;
-    
-    cJSON *path = cJSON_GetObjectItem(root, "http-path");
+
+    return 0;
+}
+
+/**
+ *\brief        解析http节点数据
+ *\param[in]    filename    文件名
+ *\param[out]   config      配置数据
+ *\return       0           成功
+ */
+int config_http(cJSON *root, p_config config)
+{
+    if (NULL == root || NULL == config)
+    {
+        return -1;
+    }
+
+    cJSON *http = cJSON_GetObjectItem(root, "http");
+
+    if (NULL == http)
+    {
+        printf("%s|config json no http node\n", __FUNCTION__);
+        return -2;
+    }
+
+    cJSON *port = cJSON_GetObjectItem(http, "port");
+
+    if (NULL == port)
+    {
+        printf("%s|config json no http.port node\n", __FUNCTION__);
+        return -3;
+    }
+
+    config->http_port = port->valueint;
+
+    cJSON *path = cJSON_GetObjectItem(http, "path");
 
     if (NULL == path)
     {
-        printf("%s|config json no http-path node\n", __FUNCTION__);
-        return -13;
+        printf("%s|config json no http.path node\n", __FUNCTION__);
+        return -4;
     }
 
     strcpy_s(config->http_path, sizeof(config->http_path), path->valuestring);
 
-    path = cJSON_GetObjectItem(root, "down-path");
+    return 0;
+}
+
+/**
+ *\brief        解析download节点数据
+ *\param[in]    filename    文件名
+ *\param[out]   config      配置数据
+ *\return       0           成功
+ */
+int config_download(cJSON *root, p_config config)
+{
+    if (NULL == root || NULL == config)
+    {
+        return -1;
+    }
+
+    cJSON *download = cJSON_GetObjectItem(root, "download");
+
+    if (NULL == download)
+    {
+        printf("%s|config json no download node\n", __FUNCTION__);
+        return -2;
+    }
+
+    cJSON *path = cJSON_GetObjectItem(download, "path");
 
     if (NULL == path)
     {
-        printf("%s|config json no down-path node\n", __FUNCTION__);
-        return -14;
+        printf("%s|config json no download.path node\n", __FUNCTION__);
+        return -3;
     }
 
     strcpy_s(config->download_path, sizeof(config->download_path), path->valuestring);
+
+    return 0;
+}
+
+/**
+ *\brief        初始化配置
+ *\param[in]    filename    配置文件名
+ *\param[out]   config      配置数据
+ *\return       0           成功
+ */
+int config_init(const char *filename, p_config config)
+{
+    if (NULL == filename || NULL == config)
+    {
+        printf("%s|filename is null\n", __FUNCTION__);
+        return -1;
+    }
+
+    cJSON *root;
+
+    int ret = config_get_json(filename, &root);
+
+    if (0 != ret)
+    {
+        printf("%s|get config %s data fail\n", __FUNCTION__, filename);
+        return -2;
+    }
+
+    if (0 != config_log(root, config))
+    {
+        printf("%s|config json log node error\n", __FUNCTION__);
+        return -3;
+    }
+
+    if (0 != config_http(root, config))
+    {
+        printf("%s|config json http node error\n", __FUNCTION__);
+        return -4;
+    }
+
+    if (0 != config_download(root, config))
+    {
+        printf("%s|config json download node error\n", __FUNCTION__);
+        return -5;
+    }
 
     printf("%s|config ok\n", __FUNCTION__);
     return 0;

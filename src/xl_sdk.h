@@ -19,11 +19,15 @@ enum
 
 typedef struct _xl_task
 {
+    unsigned int        id;                 ///< 任务ID
+
+    unsigned __int64    size;               ///< 已经下载的数量
+
     unsigned __int64    down;               ///< 已经下载的数量
 
     unsigned int        time;               ///< 用时秒数
 
-    unsigned int        show_size;          ///< 是否已经显示大小
+    char               *filename[512];      ///< 文件名
 
 }xl_task, *p_xl_task;
 
@@ -41,7 +45,7 @@ int xl_sdk_init();
  *\param[in]    data_len    数据长度
  *\return       0           成功
  */
-int xl_sdk_add_bt_tracker(int taskid, int count, void *data, int data_len);
+int xl_sdk_add_bt_tracker(int taskid, int count, const short *data, int data_len);
 
 /**
  *\brief        创建下载URL文件任务
@@ -51,7 +55,7 @@ int xl_sdk_add_bt_tracker(int taskid, int count, void *data, int data_len);
  *\param[out]   task_name   任务名称
  *\return       0           成功
  */
-int xl_sdk_create_url_task(short *url, short *path, int *taskid, short *task_name);
+int xl_sdk_create_url_task(const short *url, const short *path, int *taskid, short *task_name);
 
 /**
  *\brief        创建下载种子文件任务
@@ -61,7 +65,7 @@ int xl_sdk_create_url_task(short *url, short *path, int *taskid, short *task_nam
  *\param[out]   task_name   任务名称
  *\return       0           成功
  */
-int xl_sdk_create_magnet_task(short *magnet, short *path, int *taskid, short *task_name);
+int xl_sdk_create_magnet_task(const short *magnet, const short *path, int *taskid, short *task_name);
 
 /**
  *\brief        创建下载BT文件任务
@@ -75,8 +79,8 @@ int xl_sdk_create_magnet_task(short *magnet, short *path, int *taskid, short *ta
  *\param[out]   task_name       任务名称
  *\return       0               成功
  */
-int xl_sdk_create_bt_task(short *torrent, short *path, char *list,
-                          int announce_count, short *announce, int announce_len,
+int xl_sdk_create_bt_task(const short *torrent, const short *path, const char *list,
+                          int announce_count, const short *announce, int announce_len,
                           int *taskid);
 
 /**

@@ -899,7 +899,7 @@ int xl_sdk_init()
  *\param[in]    data_len    数据长度
  *\return       0           成功
  */
-int xl_sdk_add_bt_tracker(int taskid, int count, void *data, int data_len)
+int xl_sdk_add_bt_tracker(int taskid, int count, const short *data, int data_len)
 {
     int cnt = SIZEOF(g_track);
 
@@ -935,7 +935,7 @@ int xl_sdk_add_bt_tracker(int taskid, int count, void *data, int data_len)
  *\param[out]   task_name   任务名称
  *\return       0           成功
  */
-int xl_sdk_create_magnet_task(short *magnet, short *path, int *taskid, short *task_name)
+int xl_sdk_create_magnet_task(const short *magnet, const short *path, int *taskid, short *task_name)
 {
     if (NULL == magnet || NULL == path || NULL == taskid || NULL == task_name)
     {
@@ -996,7 +996,7 @@ int xl_sdk_create_magnet_task(short *magnet, short *path, int *taskid, short *ta
  *\param[out]   task_name       任务名称
  *\return       0               成功
  */
-int xl_sdk_create_bt_task(short *torrent, short *path, char *list, int announce_count, short *announce, int announce_len, int *taskid)
+int xl_sdk_create_bt_task(const short *torrent, const short *path, const char *list, int announce_count, const short *announce, int announce_len, int *taskid)
 {
     if (NULL == torrent || NULL == path || NULL == list ||
         NULL == announce || announce_count < 0 || announce_len < 0 ||
@@ -1064,7 +1064,7 @@ int xl_sdk_create_bt_task(short *torrent, short *path, char *list, int announce_
  *\param[out]   task_name       任务名称
  *\return       0               成功
  */
-int xl_sdk_create_url_task(short *url, short *path, int *taskid, short *task_name)
+int xl_sdk_create_url_task(const short *url, const short *path, int *taskid, short *task_name)
 {
     if (NULL == url || NULL == path || NULL == taskid || NULL == task_name)
     {
@@ -1084,6 +1084,11 @@ int xl_sdk_create_url_task(short *url, short *path, int *taskid, short *task_nam
     }
 
     filename++;
+
+    if (0 == wcscmp(filename, L""))
+    {
+        filename = L"index.html";
+    }
 
     // 参数1,URL地址
     int len = wcslen(url);
@@ -1116,15 +1121,13 @@ int xl_sdk_create_url_task(short *url, short *path, int *taskid, short *task_nam
     if (0 != ret)
     {
         swprintf_s(task_name, MAX_PATH, L"ret:%d taskname:%s\\%s", ret, path, filename);
-        MessageBox(NULL, task_name, L"error", MB_OK);
+        MessageBoxW(NULL, task_name, L"error", MB_OK);
         return -4;
     }
 
     *taskid = *(int*)(g_send_tmp + 12);
 
     swprintf_s(task_name, MAX_PATH, L"%s\\%s", path, filename);
-
-    MessageBox(NULL, task_name, L"", MB_OK);
 
     return 0;
 }
