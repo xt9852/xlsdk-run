@@ -33,7 +33,7 @@ enum
 int bencode_dict(const char *s, unsigned int len, p_bt_torrent torrent);
 
 /**
- *\brief        解析bencode编码的字符串,格式:<字符串长度>字符串
+ *\brief        解析bencode编码的字符串,格式:<字符串长度>字符串,utf8
  *\param[in]    s           数据
  *\param[in]    len         数据长
  *\param[out]   torrent     种子数据
@@ -404,20 +404,6 @@ int get_torrent_info(const char *filename, p_bt_torrent torrent)
         else
         {
             i++;
-        }
-    }
-
-    unsigned int len;
-
-    for (int i = 0; i < torrent->count; i++)
-    {
-        len = 512;
-
-        // 列表控件要使用
-        if (0 != utf8_unicode(torrent->file[i].name, torrent->file[i].name_len, torrent->file[i].name_unicode, &len))
-        {
-            ERR("utf8 to unicode fail");
-            return -5;
         }
     }
 

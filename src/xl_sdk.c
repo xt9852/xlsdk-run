@@ -12,6 +12,7 @@
 #include <Windows.h>
 #include "xl_sdk.h"
 #include "xt_log.h"
+#include "xt_character_set.h"
 
 #define FLAG                    "BDAF7A63-568C-43ab-9406-D145CF03B08C"
 
@@ -253,6 +254,7 @@ enum
 /// 函数名称
 const char *XL_SDK_FUNC_NAME[] =
 {
+    "",
     /* 1*/ "XL_Init",
     /* 2*/ "XL_UnInit",
     /* 3*/ "XL_SetDownloadSpeedLimit",
@@ -928,105 +930,60 @@ int xl_sdk_add_bt_tracker(int taskid, int count, const short *data, int data_len
 }
 
 /**
- *\brief        创建下载种子文件任务
- *\param[in]    magnet      magnet磁力URL,UNICODE
- *\param[in]    path        本地存储路径,UNICODE
- *\param[out]   taskid      任务ID
- *\param[out]   task_name   任务名称
- *\return       0           成功
- */
-int xl_sdk_create_magnet_task(const short *magnet, const short *path, int *taskid, short *task_name)
-{
-    if (NULL == magnet || NULL == path || NULL == taskid || NULL == task_name)
-    {
-        return -1;
-    }
-
-    if (!g_init)
-    {
-        return -2;
-    }
-
-    if (0 != wcsncmp(magnet, L"magnet:?", 8))   // 不是磁力连接URL
-    {
-        return -3;
-    }
-
-    short id[128];
-    wcsncpy_s(id, sizeof(id), magnet + 20, 40); // 取得magnet中的id
-
-    // 参数1,磁力连接URL
-    int len = wcslen(magnet);
-    p_xl_data_head p = (p_xl_data_head)g_recv_tmp;
-    memcpy(p->arg1.data, magnet, len * 2);
-    p->arg1.len = len;
-
-    // 参数2,本地文件名
-    p_xl_arg_head arg2 = (p_xl_arg_head)(p->arg1.data + p->arg1.len * 2);
-    short *fullname = (short*)arg2->data;
-    arg2->len = swprintf_s(fullname, MAX_PATH, L"%s\\%s.torrent", path, id);
-
-    // 创建下载种子文件任务
-    p->func_id = XL_CreateMagnetTask;
-    p->len = 8 + p->arg1.len * 2 + 4 + arg2->len * 2;
-
-    int ret = xl_sdk_call_sdk_func();
-
-    if (0 != ret)
-    {
-        return -4;
-    }
-
-    *taskid = *(int*)(g_send_tmp + 12);
-
-    wcscpy_s(task_name, MAX_PATH, fullname);
-
-    return 0;
-}
-
-/**
  *\brief        创建下载BT文件任务
  *\param[in]    torrent         种子文件全名
  *\param[in]    path            本地下载目录
  *\param[in]    list            文件下载列表,例:"001",0-不下载,1-下载,文件按拼音顺序排列
- *\param[in]    announce_count  tracker服务器数量
- *\param[in]    announce        tracker服务器数据
- *\param[in]    announce_len    tracker服务器数据长度
  *\param[out]   taskid          任务ID
  *\param[out]   task_name       任务名称
+ *\param[in]    task_name_size  任务名称缓冲区大小
  *\return       0               成功
  */
-int xl_sdk_create_bt_task(const short *torrent, const short *path, const char *list, int announce_count, const short *announce, int announce_len, int *taskid)
+int xl_sdk_create_bt_task(const char *torrent, const char *path, const char *list, int *taskid, char *task_name, int task_name_size)
 {
-    if (NULL == torrent || NULL == path || NULL == list ||
-        NULL == announce || announce_count < 0 || announce_len < 0 ||
-        NULL == taskid)
+    if (!g_init || NULL == torrent || NULL == path || NULL == list || NULL == taskid || NULL == task_name || task_name_size <= 0)
     {
         return -1;
     }
 
-    if (!g_init)
+    DBG("torrent:%s path:%s list:%s", torrent, path, list);
+
+    short torrent_short[MAX_PATH];
+    int   torrent_len  = strlen(torrent);
+    int   torrent_size = SIZEOF(torrent_short);
+
+    short path_short[MAX_PATH];
+    int   path_len  = strlen(path);
+    int   path_size = SIZEOF(path_short);
+
+    int   list_len  = strlen(list);
+
+    if (0 != utf8_unicode(torrent, torrent_len, torrent_short, &torrent_size))
     {
+        ERR("utf8 to unicode error %s", torrent);
         return -2;
     }
 
-    // 参数1,本地种子文件全名
-    int len = wcslen(torrent);
+    if (0 != utf8_unicode(path, path_len, path_short, &path_size))
+    {
+        ERR("utf8 to unicode error %s", path);
+        return -3;
+    }
+
+    // 参数1,本地种子文件全名,unicode
     p_xl_data_head p = (p_xl_data_head)g_recv_tmp;
-    memcpy(p->arg1.data, torrent, len * 2);
-    p->arg1.len = len;
+    memcpy(p->arg1.data, torrent_short, torrent_len * 2);
+    p->arg1.len = torrent_len;
 
-    // 参数2,本地下载目录
-    len = wcslen(path);
+    // 参数2,本地下载目录,unicode
     p_xl_arg_head arg2 = (p_xl_arg_head)(p->arg1.data + p->arg1.len * 2);
-    memcpy(arg2->data, path, len * 2);
-    arg2->len = len;
+    memcpy(arg2->data, path_short, path_len * 2);
+    arg2->len = path_len;
 
-    // 参数3,下载列表,1-下载,0-不下载
-    len = strlen(list);
+    // 参数3,下载列表,ansi,1-下载,0-不下载
     p_xl_arg_head arg3 = (p_xl_arg_head)(arg2->data + arg2->len * 2);
-    memcpy(arg3->data, list, len);
-    arg3->len = len;
+    memcpy(arg3->data, list, list_len);
+    arg3->len = list_len;
 
     // 创建下载BT文件任务
     p->func_id = XL_CreateBTTask;
@@ -1036,23 +993,13 @@ int xl_sdk_create_bt_task(const short *torrent, const short *path, const char *l
 
     if (0 != ret)
     {
+        ERR("call sdk func fail");
         return -3;
     }
 
     *taskid = *(int*)(g_send_tmp + 12);
 
-    if (announce_count <=0 || announce_len <= 0)
-    {
-        return 0;
-    }
-
-    ret = xl_sdk_add_bt_tracker(*taskid, announce_count, announce, announce_len);
-
-    if (0 != ret)
-    {
-        return -4;
-    }
-
+    DBG("ok");
     return 0;
 }
 
@@ -1062,55 +1009,68 @@ int xl_sdk_create_bt_task(const short *torrent, const short *path, const char *l
  *\param[in]    path            本地下载目录
  *\param[out]   taskid          任务ID
  *\param[out]   task_name       任务名称
+ *\param[in]    task_name_size  任务名称缓冲区大小
  *\return       0               成功
  */
-int xl_sdk_create_url_task(const short *url, const short *path, int *taskid, short *task_name)
+int xl_sdk_create_url_task(const char *url, const char *path, int *taskid, char *task_name, int task_name_size)
 {
-    if (NULL == url || NULL == path || NULL == taskid || NULL == task_name)
+    if (!g_init || NULL == url || NULL == path || NULL == taskid || NULL == task_name || task_name_size <= 0)
     {
         return -1;
     }
 
-    if (!g_init)
+    DBG("url:%s path:%s", url, path);
+
+    short url_short[MAX_PATH];
+    int   url_len  = strlen(url);
+    int   url_size = SIZEOF(url_short);
+
+    short path_short[MAX_PATH];
+    int   path_len  = strlen(path);
+    int   path_size = SIZEOF(path_short);
+
+    if (0 != utf8_unicode(url, url_len, url_short, &url_size))
     {
+        ERR("utf8 to unicode error %s", url);
         return -2;
     }
 
-    short *filename = wcsrchr(url, L'/');
-
-    if (NULL == filename)
+    if (0 != utf8_unicode(path, path_len, path_short, &path_size))
     {
+        ERR("utf8 to unicode error %s", path);
         return -3;
     }
 
-    filename++;
+    short *filename = wcsrchr(url_short, L'/');
 
-    if (0 == wcscmp(filename, L""))
+    if (NULL == filename)
     {
-        filename = L"index.html";
+        ERR("no filename");
+        return -3;
     }
 
-    // 参数1,URL地址
-    int len = wcslen(url);
-    p_xl_data_head p = (p_xl_data_head)g_recv_tmp;
-    memcpy(p->arg1.data, url, len * 2);
-    p->arg1.len = len;
+    filename = (0 == filename[1]) ? L"index.html" : filename + 1;
 
-    // 参数2,8个00
+    int filename_len = wcslen(filename);
+
+    // 参数1,URL地址,unicode
+    p_xl_data_head p = (p_xl_data_head)g_recv_tmp;
+    memcpy(p->arg1.data, url_short, url_len * 2);
+    p->arg1.len = url_len;
+
+    // 参数2,8个0x00
     char *arg2 = p->arg1.data + p->arg1.len * 2;
     memset(arg2, 0, 8);
 
-    // 参数3,本地下载目录
-    len = wcslen(path);
+    // 参数3,本地下载目录,unicode
     p_xl_arg_head arg3 = (p_xl_arg_head)(arg2 + 8);
-    memcpy(arg3->data, path, len * 2);
-    arg3->len = len;
+    memcpy(arg3->data, path_short, path_len * 2);
+    arg3->len = path_len;
 
-    // 参数4,文件名称
-    len = wcslen(filename);
+    // 参数4,文件名称,unicode
     p_xl_arg_head arg4 = (p_xl_arg_head)(arg3->data + arg3->len * 2);
-    memcpy(arg4->data, filename, len * 2);
-    arg4->len = len;
+    memcpy(arg4->data, filename, filename_len * 2);
+    arg4->len = filename_len;
 
     // 创建下载URL文件任务
     p->func_id = XL_CreateP2spTask;
@@ -1120,15 +1080,100 @@ int xl_sdk_create_url_task(const short *url, const short *path, int *taskid, sho
 
     if (0 != ret)
     {
-        swprintf_s(task_name, MAX_PATH, L"ret:%d taskname:%s\\%s", ret, path, filename);
-        MessageBoxW(NULL, task_name, L"error", MB_OK);
+        ERR("call sdk func fail");
         return -4;
     }
 
     *taskid = *(int*)(g_send_tmp + 12);
 
-    swprintf_s(task_name, MAX_PATH, L"%s\\%s", path, filename);
+    strcpy_s(task_name, task_name_size, path);
 
+    task_name[path_len] = '\\';
+
+    int len = task_name_size - path_len - 1;
+
+    if (0 != unicode_ansi(filename, filename_len, task_name + path_len + 1, &len))
+    {
+        ERR("unicode to ansi error");
+        return 0;
+    }
+
+    DBG("ok");
+    return 0;
+}
+
+/**
+ *\brief        创建下载磁力文件任务
+ *\param[in]    magnet          磁力URL
+ *\param[in]    path            本地存储路径
+ *\param[out]   taskid          任务ID
+ *\param[out]   task_name       任务名称
+ *\param[in]    task_name_size  任务名称缓冲区大小
+ *\return       0               成功
+ */
+int xl_sdk_create_magnet_task(const char *magnet, const char *path, int *taskid, char *task_name, int task_name_size)
+{
+    if (!g_init || NULL == magnet || NULL == path || NULL == taskid || NULL == task_name || task_name_size <= 0)
+    {
+        return -1;
+    }
+
+    DBG("magent:%s path:%d", magnet, path);
+
+    short magnet_short[MAX_PATH];
+    int   magnet_len  = strlen(magnet);
+    int   magnet_size = SIZEOF(magnet_short);
+
+    short path_short[MAX_PATH];
+    int   path_len  = strlen(path);
+    int   path_size = SIZEOF(path_short);
+
+    if (0 != utf8_unicode(magnet, magnet_len, magnet_short, &magnet_size))
+    {
+        ERR("utf8 to unicode error %s", magnet);
+        return -2;
+    }
+
+    if (0 != utf8_unicode(path, path_len, path_short, &path_size))
+    {
+        ERR("utf8 to unicode error %s", path);
+        return -3;
+    }
+
+    short id[128];
+    wcsncpy_s(id, sizeof(id), magnet_short + 20, 40); // 取得magnet中的id
+
+    // 参数1,磁力连接URL,unicode
+    p_xl_data_head p = (p_xl_data_head)g_recv_tmp;
+    memcpy(p->arg1.data, magnet_short, magnet_len * 2);
+    p->arg1.len = magnet_len;
+
+    // 参数2,本地文件名,unicode
+    p_xl_arg_head arg2 = (p_xl_arg_head)(p->arg1.data + p->arg1.len * 2);
+    short *filename = (short*)arg2->data;
+    arg2->len = swprintf_s(filename, MAX_PATH, L"%s\\%s.torrent", path_short, id);
+
+    // 创建下载种子文件任务
+    p->func_id = XL_CreateMagnetTask;
+    p->len = 8 + p->arg1.len * 2 + 4 + arg2->len * 2;
+
+    int ret = xl_sdk_call_sdk_func();
+
+    if (0 != ret)
+    {
+        ERR("call sdk func fail");
+        return -4;
+    }
+
+    *taskid = *(int*)(g_send_tmp + 12);
+
+    if (0 != unicode_ansi(id, arg2->len, task_name, &task_name_size))
+    {
+        ERR("unicode to ansi error");
+        return 0;
+    }
+
+    DBG("ok");
     return 0;
 }
 

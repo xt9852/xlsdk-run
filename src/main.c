@@ -21,7 +21,6 @@
 #include "xt_timer.h"
 #include "xt_thread_pool.h"
 #include "xt_memory_pool.h"
-#include "xt_character_set.h"
 #include "xt_http.h"
 #include "torrent.h"
 #include "xl_sdk.h"
@@ -31,10 +30,75 @@
 
 #define TITLE "DownloadSDKServerStart"          ///< 标题
 
-#define INDEX_FORM "<meta charset='utf-8'><form action='/'><input name='file'/><input type='submit' value='download'/></form>"
-#define INDEX_TAB0 "<table border='1' style='border-collapse:collapse;'><tr><th>大小</th><th>文件</th></tr>"
-#define INDEX_TAB1 "<table border='1' style='border-collapse:collapse;'><tr><th>任务</th><th>种子</th><th>文件</th><th>大小</th><th>速度</th><th>进度</th><th>用时</th></tr>"
-#define INDEX_END  "</table>"
+#define INDEX_FORM "<meta charset='utf-8'>\
+<input id='file'/><button onclick='download()'>download</button>\n\
+<script>\n\
+    function download(){\n\
+        file = document.getElementById('file').value;\n\
+        if (file == '') {alert('error');return;}\n\
+        url = '/download?file=' + file\n\
+        req = new XMLHttpRequest();\n\
+        req.open('GET', url);\n\
+        req.send(null);\n\
+        req.onload = function(){\n\
+            console.log(url + ' status:' + req.status);\n\
+            if (req.readyState != 4 || req.status != 200){alert('error');return;}\
+            window.location.reload();\n\
+        }\n\
+    }\n\
+    function download_list(index){\n\
+        console.log('file_' + index);\n\
+        filename = document.getElementById('file_' + index).innerText;\n\
+        if (filename == '') {alert('error');return;}\n\
+        url = '/torrent-list?torrent=' + filename\n\
+        req = new XMLHttpRequest();\n\
+        req.open('GET', url);\n\
+        req.send(null);\n\
+        req.onload = function(){\n\
+            console.log(url + ' status:' + req.status);\n\
+            if (req.readyState != 4 || req.status != 200){alert('error');return;}\n\
+            file_list = document.getElementById('file-list');\n\
+            file_list.style.display = '';\n\
+            count = file_list.childNodes.length - 1;\n\
+            for (var i = 0; i < count; i++){\n\
+                tr = document.getElementById('tr_' + i);\n\
+                file_list.removeChild(tr);\n\
+            }\n\
+            btn = document.getElementById('btn_' + index);\n\
+            btn.style.display = 'none';\n\
+            rp = JSON.parse(req.responseText);\n\
+            for (var i in rp){\n\
+                item = rp[i];\n\
+                console.log('file:' + item['file'] + ' size:' + item['size']);\n\
+                tr = document.createElement('tr');\n\
+                td = document.createElement('td');\n\
+                ip = document.createElement('input');\n\
+                ip.type = 'checkbox';\n\
+                ip.name = 'check';\n\
+                td.appendChild(ip);\n\
+                tr.id = 'tr_' + i;\n\
+                tr.appendChild(td);\n\
+                td = document.createElement('td');\n\
+                td.innerText = item['file'];\n\
+                tr.appendChild(td);\n\
+                td = document.createElement('td');\n\
+                td.innerText = item['size'];\n\
+                tr.appendChild(td);\n\
+                file_list.appendChild(tr);\n\
+            }\n\
+        }\n\
+    }\n\
+    function on_check(checkbox){\n\
+        file_list = document.getElementById('file-list');\n\
+        for (var i = 1; i < file_list.childNodes.length; i++){\n\
+            check = file_list.childNodes[i].childNodes[0].childNodes[0];\n\
+            check.checked = checkbox.checked;\n\
+        }\n\
+    }\n\
+</script>"
+
+#define INDEX_TAB0 "<table border='1' style='border-collapse:collapse;'><tr><th>任务</th><th>种子</th><th>文件</th><th>大小</th><th>速度</th><th>进度</th><th>用时</th><th>操作</th></tr>"
+#define INDEX_TAB1 "</table><table border='1' style='border-collapse:collapse;display:none;' id='file-list'><tr><th><input type='checkbox' name='check' onclick='on_check(this)' /></th><th>大小</th><th>文件</th></tr></table>"
 
 /// 任务列表控件列ID
 enum
@@ -214,57 +278,45 @@ int http_process_icon(int *content_type, char *content, int *content_len)
  */
 int http_download(const char *filename, const char *list)
 {
-    short   url[MAX_PATH];
-    short   path[MAX_PATH];
-    short   task_name[MAX_PATH];
-    int     ret;
-    int     task_id;
-    int     task_type;
-    int     url_len = sizeof(url);
-    int     path_len = sizeof(path);
-    int     filename_len;
+    int ret;
+    int task_id;
+    int task_type;
+    char task_name[MAX_PATH];
 
     if (NULL == filename || 0 == strcmp(filename, ""))
     {
         DBG("filename:null or \"\"", filename);
-        return 0;
-    }
-
-    filename_len = strlen(filename);
-
-    DBG("filename:%s list:%s", filename, list);
-
-    if (0 != utf8_unicode(filename, filename_len, url, &url_len))
-    {
-        ERR("utf8 to unicode error %s", filename);
         return 404;
     }
 
-    if (0 != utf8_unicode(g_cfg.download_path, strlen(g_cfg.download_path), path, &path_len))
+    DBG("task count:%d", g_task_count);
+
+    for (int i = 0; i < g_task_count; i++)
     {
-        ERR("utf8 to unicode error %s", filename);
-        return 404;
+        if (0 == strcmp(filename, g_task[i].filename))  // 已经下载
+        {
+            DBG("have %s", filename);
+            return 0;
+        }
     }
 
-    if (0 == strncmp(filename, "magnet:?", 8))   // 磁力连接URL
-    {
-        task_type = TASK_MAGNET;
-
-        ret = xl_sdk_create_magnet_task(url, path, &task_id, task_name);
-    }
-    else if (0 == strcmp(filename + filename_len - 8, ".torrent"))
+    if (0 == strcmp(filename + strlen(filename) - 8, ".torrent"))   // BT下载
     {
 		task_type = TASK_BT;
 
-        ret = xl_sdk_create_bt_task(url, path, list, g_torrent.announce_count, g_torrent.announce, g_torrent.announce_len, &task_id);
+        ret = xl_sdk_create_bt_task(filename, g_cfg.download_path, list, &task_id, task_name, sizeof(task_name));
     }
-    else
+    else if (0 == strncmp(filename, "magnet:?", 8))                 // 磁力下载
+    {
+        task_type = TASK_MAGNET;
+
+        ret = xl_sdk_create_magnet_task(filename, g_cfg.download_path, &task_id, task_name, sizeof(task_name));
+    }
+    else                                                            // 普通下载
     {
         task_type = TASK_URL;
 
-        ret = xl_sdk_create_url_task(url, path, &task_id, task_name);
-
-        DBG("url:%s", filename);
+        ret = xl_sdk_create_url_task(filename, g_cfg.download_path, &task_id, task_name, sizeof(task_name));
     }
 
     if (0 != ret)
@@ -294,9 +346,63 @@ int http_download(const char *filename, const char *list)
 
     DBG("task:%d size:%s", task_id, size);
 
-    g_task[g_task_count].id = task_id;
+    strcpy_s(g_task[g_task_count].filename, sizeof(g_task[g_task_count].filename), filename);
+    g_task[g_task_count].id   = task_id;
+    g_task[g_task_count].type = task_type;
+    //g_task[g_task_count].size = 0;
+    //g_task[g_task_count].down = 0;
+    //g_task[g_task_count].time = 0;
+
+    //////////////////////////////////// test
+    strcpy_s(g_task[g_task_count].filename, sizeof(g_task[g_task_count].filename), "D:\\5.downloads\\bt\\7097B42EEBC037482B69056276858599ED9605B5.torrent");
+    g_task[g_task_count].type = TASK_MAGNET;
+
     g_task_count++;
 
+    return 0;
+}
+
+/**
+ *\brief        http回调函数,主页
+ *\param[out]   content_type    返回内容类型
+ *\param[out]   content         返回内容
+ *\param[out]   content_len     返回内容长度
+ *\return       0               成功
+ */
+int http_process_index(int *content_type, char *content, int *content_len)
+{
+    char data[16];
+    char oper[256];
+
+    int pos = 0;
+    int len = sizeof(INDEX_FORM) - 1;
+
+    strcpy_s(content, *content_len, INDEX_FORM);
+
+    pos += len;
+    len = sizeof(INDEX_TAB0) - 1;
+    strcpy_s(content + pos, *content_len - pos, INDEX_TAB0);
+
+    for (int i = 0; i < g_task_count; i++)
+    {
+        format_data(g_task[i].size, data, sizeof(data));
+
+        snprintf(oper, sizeof(oper), "<button id='btn_%d' style='display:block;' onclick=\"download_list('%d')\">open</button>", i, i);
+
+        pos += len;
+
+        len = snprintf(content + pos, *content_len - pos,
+               "<tr><td>%d</td><td>%s</td><td id='file_%d'>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%u</td><td>%s</td></tr>",
+               g_task[i].id, "", i, g_task[i].filename, data, "", "", g_task[i].time,
+               (TASK_MAGNET == g_task[i].type) ? oper : "");
+    }
+
+    pos += len;
+    len = sizeof(INDEX_TAB1) - 1;
+    strcpy_s(content + pos, *content_len - pos, INDEX_TAB1);
+
+    *content_type = HTTP_TYPE_HTML;
+    *content_len = pos + len;
     return 0;
 }
 
@@ -309,74 +415,61 @@ int http_download(const char *filename, const char *list)
  *\param[out]   content_len     返回内容长度
  *\return       0               成功
  */
-int http_process_index(const char *filename, const char *list, int *content_type, char *content, int *content_len)
+int http_process_download(const char *filename, const char *list, int *content_type, char *content, int *content_len)
 {
     if (0 != http_download(filename, list))
     {
         return 404;
     }
 
-    DBG("1.filename:%s %d", filename, *content_len);
+    strcpy_s(content, *content_len, "200");
+    *content_type = HTTP_TYPE_HTML;
+    *content_len = 3;
+    return 0;
+}
 
-    char data[16];
-
-    int pos = 0;
-    int len = sizeof(INDEX_FORM) - 1;
-
-    strcpy_s(content, *content_len, INDEX_FORM);
-
-    DBG("2.filename:%s", filename);
-
-    pos += len;
-    len = sizeof(INDEX_TAB0) - 1;
-    strcpy_s(content + pos, *content_len - pos, INDEX_TAB0);
-
-    DBG("3.filename:%s", filename);
-
-    for (int i = 0; i < g_torrent.count; i++)
+/**
+ *\brief        http回调函数,得到种子中文件信息
+ *\param[in]    torrent         种子文件本地地址
+ *\param[out]   content_type    返回内容类型
+ *\param[out]   content         返回内容
+ *\param[out]   content_len     返回内容长度
+ *\return       0               成功
+ */
+int http_process_torrent(const char *torrent, int *content_type, char *content, int *content_len)
+{
+    if (NULL == torrent || 0 == strcmp(torrent, ""))
     {
-        format_data(g_torrent.file[i].len, data, sizeof(data));
-
-        pos += len;
-        len = snprintf(content + pos, *content_len - pos, "<tr><td>%s</td><td>%s</td></tr>", data, g_torrent.file[i].name);
+        DBG("torrent:null or \"\"", torrent);
+        return -1;
     }
 
-    DBG("4.filename:%s", filename);
-
-    pos += len;
-    len = sizeof(INDEX_END) - 1;
-    strcpy_s(content + pos, *content_len - pos, INDEX_END);
-
-    DBG("5.filename:%s", filename);
-
-    pos += len;
-    len = sizeof(INDEX_TAB1) - 1;
-    strcpy_s(content + pos, *content_len - pos, INDEX_TAB1);
-
-    DBG("6.filename:%s", filename);
-
-    for (int i = 0; i < g_task_count; i++)
+    if (0 != get_torrent_info(torrent, &g_torrent))
     {
-        format_data(g_task[i].size, data, sizeof(data));
-
-        pos += len;
-        len = snprintf(content + pos, *content_len - pos, "<tr><td>%d</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%u</td></tr>",
-                g_task[i].id, "", filename, data, "", "", g_task[i].time);
+        ERR("get torrent info error");
+        return 404;
     }
 
-    DBG("7.filename:%s", filename);
+    int pos = 1;
+    int len = 0;
+    char size[16];
+    content[0] = '[';
 
-    pos += len;
-    len = sizeof(INDEX_END) - 1;
-    strcpy_s(content + pos, *content_len - pos, INDEX_END);
+    for (int i = 0; i < g_torrent.count + 10; i++)
+    {
+        format_data(g_torrent.file[0].len, size, sizeof(size));
 
-    DBG("8.filename:%s", filename);
+        DBG("file:%s size:%s", g_torrent.file[0].name, size);
+
+        len = snprintf(content + pos, *content_len - pos, "{\"file\":\"%s\",\"size\":\"%s\"},", g_torrent.file[0].name, size);
+
+        pos += len;
+    }
+
+    content[pos - 1] = ']';
 
     *content_type = HTTP_TYPE_HTML;
-    *content_len = pos + len;
-
-    DBG("9.filename:%s", filename);
-
+    *content_len = pos;
     return 0;
 }
 
@@ -432,16 +525,20 @@ int http_process_file(const char *uri, int *content_type, char *content, int *co
 int http_process_callback(const char *uri, const char **arg_name, const char **arg_data, int arg_count,
                           int *content_type, char *content, int *content_len)
 {
-    for (int i = 0; i < arg_count; i++)
-    {
-        DBG("arg[%d] %s:%s", i, arg_name[i], arg_data[i]);
-    }
-
     if (0 == strcmp(uri, "/"))
+    {
+        return http_process_index(content_type, content, content_len);
+    }
+    else if (0 == strcmp(uri, "/download"))
     {
         const char *file = (arg_count >= 1 && 0 == strcmp(arg_name[0], "file")) ? arg_data[0] : NULL;
         const char *list = (arg_count >= 2 && 0 == strcmp(arg_name[1], "list")) ? arg_data[1] : NULL;
-        return http_process_index(file, list, content_type, content, content_len);
+        return http_process_download(file, list, content_type, content, content_len);
+    }
+    else if (0 == strcmp(uri, "/torrent-list"))
+    {
+        const char *torrent = (arg_count >= 1 && 0 == strcmp(arg_name[0], "torrent")) ? arg_data[0] : NULL;
+        return http_process_torrent(torrent, content_type, content, content_len);
     }
     else if (0 == strcmp(uri, "/favicon.ico"))
     {

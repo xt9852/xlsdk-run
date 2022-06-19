@@ -27,7 +27,9 @@ typedef struct _xl_task
 
     unsigned int        time;               ///< 用时秒数
 
-    char               *filename[512];      ///< 文件名
+    int                 type;               ///< 任务类型
+
+    char                filename[512];      ///< 文件名
 
 }xl_task, *p_xl_task;
 
@@ -39,49 +41,47 @@ int xl_sdk_init();
 
 /**
  *\brief        添加服务器
- *\param[in]    taskid      任务ID
- *\param[in]    count       服务器数量
- *\param[in]    data        服务器数据
- *\param[in]    data_len    数据长度
- *\return       0           成功
+ *\param[in]    taskid          任务ID
+ *\param[in]    count           服务器数量
+ *\param[in]    data            服务器数据
+ *\param[in]    data_len        数据长度
+ *\return       0               成功
  */
 int xl_sdk_add_bt_tracker(int taskid, int count, const short *data, int data_len);
-
-/**
- *\brief        创建下载URL文件任务
- *\param[in]    url         URL地址
- *\param[in]    path        本地下载目录
- *\param[out]   taskid      任务ID
- *\param[out]   task_name   任务名称
- *\return       0           成功
- */
-int xl_sdk_create_url_task(const short *url, const short *path, int *taskid, short *task_name);
-
-/**
- *\brief        创建下载种子文件任务
- *\param[in]    magnet      magnet磁力URL,UNICODE
- *\param[in]    path        本地存储路径,UNICODE
- *\param[out]   taskid      任务ID
- *\param[out]   task_name   任务名称
- *\return       0           成功
- */
-int xl_sdk_create_magnet_task(const short *magnet, const short *path, int *taskid, short *task_name);
 
 /**
  *\brief        创建下载BT文件任务
  *\param[in]    torrent         种子文件全名
  *\param[in]    path            本地下载目录
  *\param[in]    list            文件下载列表,例:"001",0-不下载,1-下载,文件按拼音顺序排列
- *\param[in]    announce_count  tracker服务器数量
- *\param[in]    announce        tracker服务器数据
- *\param[in]    announce_len    tracker服务器数据长度
  *\param[out]   taskid          任务ID
  *\param[out]   task_name       任务名称
+ *\param[in]    task_name_size  任务名称缓冲区大小
  *\return       0               成功
  */
-int xl_sdk_create_bt_task(const short *torrent, const short *path, const char *list,
-                          int announce_count, const short *announce, int announce_len,
-                          int *taskid);
+int xl_sdk_create_bt_task(const char *torrent, const char *path, const char *list, int *taskid, char *task_name, int task_name_size);
+
+/**
+ *\brief        创建下载URL文件任务
+ *\param[in]    url             URL地址
+ *\param[in]    path            本地下载目录
+ *\param[out]   taskid          任务ID
+ *\param[out]   task_name       任务名称
+ *\param[in]    task_name_size  任务名称缓冲区大小
+ *\return       0               成功
+ */
+int xl_sdk_create_url_task(const char *url, const char *path, int *taskid, char *task_name, int task_name_size);
+
+/**
+ *\brief        创建下载磁力文件任务
+ *\param[in]    magnet          磁力URL
+ *\param[in]    path            本地存储路径
+ *\param[out]   taskid          任务ID
+ *\param[out]   task_name       任务名称
+ *\param[in]    task_name_size  任务名称缓冲区大小
+ *\return       0               成功
+ */
+int xl_sdk_create_magnet_task(const char *magnet, const char *path, int *taskid, char *task_name, int task_name_size);
 
 /**
  *\brief        开始下载文件

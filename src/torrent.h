@@ -16,10 +16,6 @@ typedef struct _bt_torrent_file
 
     char                name[512];              ///< 文件名,utf8
 
-    short               name_unicode[512];      ///< 文件名,unicode
-
-    char                name_tmp[512];          ///< 文件名,临时
-
     unsigned __int64    len;                    ///< 文件长
 
 } bt_torrent_file, *p_bt_torrent_file;          ///< 种子内包含的文件信息
