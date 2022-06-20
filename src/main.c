@@ -30,53 +30,95 @@
 
 #define TITLE "DownloadSDKServerStart"          ///< 标题
 
-#define INDEX_FORM "<meta charset='utf-8'>\
-<input id='file'/><button onclick='download()'>download</button>\n\
+#define INDEX_PAGE "<meta charset='utf-8'>\
 <script>\n\
     function download(){\n\
-        file = document.getElementById('file').value;\n\
-        if (file == '') {alert('error');return;}\n\
-        url = '/download?file=' + file\n\
+        filename = document.getElementById('file').value;\n\
+        if (filename == '') {alert('请输入要下载的文件地址');return;}\n\
+        url = '/download?file=' + filename;\n\
+        file_list = document.getElementById('file-list');\n\
+        if (file_list.style.display == '') {\n\
+            list = '';\n\
+            count = file_list.childNodes.length;\n\
+            for (var i = 1; i < count; i++){\n\
+                list = list + (file_list.childNodes[i].childNodes[0].childNodes[0].checked ? '1' : '0');\n\
+            }\n\
+            if (/^0+$/.test(list)) {alert('请选取要下载的文件'); return;}\n\
+            url = url + '&list=' + list ;\n\
+            file_list.style.display = 'none';\n\
+        }\n\
         req = new XMLHttpRequest();\n\
         req.open('GET', url);\n\
         req.send(null);\n\
         req.onload = function(){\n\
             console.log(url + ' status:' + req.status);\n\
-            if (req.readyState != 4 || req.status != 200){alert('error');return;}\
-            window.location.reload();\n\
+            if (req.readyState != 4 || req.status != 200) {alert('http请求失败');return;}\n\
+            rp = JSON.parse(req.responseText);\n\
+            down_list = document.getElementById('down-list');\n\
+            while (down_list.childNodes.length > 1) { down_list.removeChild(down_list.childNodes[1]); }\n\
+            for (var i in rp) {\n\
+                item = rp[i];\n\
+                tr = document.createElement('tr');\n\
+                td = document.createElement('td');\n\
+                td.innerText = item['id'];\n\
+                tr.appendChild(td);\n\
+                td = document.createElement('td');\n\
+                td.innerText = item['torrent'];\n\
+                tr.appendChild(td);\n\
+                td = document.createElement('td');\n\
+                file = decodeURIComponent(atob(item['file']));\n\
+                td.id = 'file_' + i;\n\
+                td.innerText = file;\n\
+                tr.appendChild(td);\n\
+                td = document.createElement('td');\n\
+                td.innerText = item['size'];\n\
+                tr.appendChild(td);\n\
+                td = document.createElement('td');\n\
+                td.innerText = item['speed'];\n\
+                tr.appendChild(td);\n\
+                td = document.createElement('td');\n\
+                td.innerText = item['progress'];\n\
+                tr.appendChild(td);\n\
+                td = document.createElement('td');\n\
+                td.innerText = item['time'];\n\
+                tr.appendChild(td);\n\
+                td = document.createElement('td');\n\
+                if (/\\.torrent$/.test(file)) {\n\
+                    btn = document.createElement('button');\n\
+                    btn.innerText = 'open';\n\
+                    btn.i = i;\n\
+                    btn.id = 'btn_' + i;\n\
+                    btn.style='display:block;';\n\
+                    btn.onclick = show_in_torrent_files;\n\
+                    td.appendChild(btn);\n\
+                }\n\
+                tr.appendChild(td);\n\
+                down_list.appendChild(tr);\n\
+            }\n\
         }\n\
     }\n\
-    function download_list(index){\n\
-        console.log('file_' + index);\n\
-        filename = document.getElementById('file_' + index).innerText;\n\
-        if (filename == '') {alert('error');return;}\n\
+    function show_in_torrent_files(){\n\
+        this.style.display = 'none';\n\
+        filename = document.getElementById('file_' + this.i).innerText;\n\
         url = '/torrent-list?torrent=' + filename\n\
         req = new XMLHttpRequest();\n\
         req.open('GET', url);\n\
         req.send(null);\n\
         req.onload = function(){\n\
             console.log(url + ' status:' + req.status);\n\
-            if (req.readyState != 4 || req.status != 200){alert('error');return;}\n\
+            if (req.readyState != 4 || req.status != 200) {alert('http请求失败');return;}\n\
+            rp = JSON.parse(req.responseText);\n\
+            document.getElementById('file').value = filename;\n\
             file_list = document.getElementById('file-list');\n\
             file_list.style.display = '';\n\
-            count = file_list.childNodes.length - 1;\n\
-            for (var i = 0; i < count; i++){\n\
-                tr = document.getElementById('tr_' + i);\n\
-                file_list.removeChild(tr);\n\
-            }\n\
-            btn = document.getElementById('btn_' + index);\n\
-            btn.style.display = 'none';\n\
-            rp = JSON.parse(req.responseText);\n\
-            for (var i in rp){\n\
+            while (file_list.childNodes.length > 1) { file_list.removeChild(file_list.childNodes[1]); }\n\
+            for (var i in rp) {\n\
                 item = rp[i];\n\
-                console.log('file:' + item['file'] + ' size:' + item['size']);\n\
                 tr = document.createElement('tr');\n\
                 td = document.createElement('td');\n\
                 ip = document.createElement('input');\n\
                 ip.type = 'checkbox';\n\
-                ip.name = 'check';\n\
                 td.appendChild(ip);\n\
-                tr.id = 'tr_' + i;\n\
                 tr.appendChild(td);\n\
                 td = document.createElement('td');\n\
                 td.innerText = item['file'];\n\
@@ -95,10 +137,16 @@
             check.checked = checkbox.checked;\n\
         }\n\
     }\n\
-</script>"
+</script>\n\
+<input id='file'/>\
+<button onclick='download()'>download</button>\
+<table id='file-list' border='1' style='border-collapse:collapse;display:none'>\
+<tr><th><input type='checkbox' name='check' onclick='on_check(this)' /></th><th>大小</th><th>文件</th></tr></table>\
+<table id='down-list' border='1' style='border-collapse:collapse;'>\
+<tr><th>任务</th><th>种子</th><th>文件</th><th>大小</th><th>速度</th><th>进度</th><th>用时</th><th>操作</th></tr>"
 
-#define INDEX_TAB0 "<table border='1' style='border-collapse:collapse;'><tr><th>任务</th><th>种子</th><th>文件</th><th>大小</th><th>速度</th><th>进度</th><th>用时</th><th>操作</th></tr>"
-#define INDEX_TAB1 "</table><table border='1' style='border-collapse:collapse;display:none;' id='file-list'><tr><th><input type='checkbox' name='check' onclick='on_check(this)' /></th><th>大小</th><th>文件</th></tr></table>"
+#define INDEX_END "</table>"
+
 
 /// 任务列表控件列ID
 enum
@@ -371,38 +419,31 @@ int http_download(const char *filename, const char *list)
  */
 int http_process_index(int *content_type, char *content, int *content_len)
 {
-    char data[16];
+    char size[16];
     char oper[256];
+    int len = sizeof(INDEX_PAGE) - 1;
+    int pos = len;
 
-    int pos = 0;
-    int len = sizeof(INDEX_FORM) - 1;
-
-    strcpy_s(content, *content_len, INDEX_FORM);
-
-    pos += len;
-    len = sizeof(INDEX_TAB0) - 1;
-    strcpy_s(content + pos, *content_len - pos, INDEX_TAB0);
+    strcpy_s(content, *content_len, INDEX_PAGE);
 
     for (int i = 0; i < g_task_count; i++)
     {
-        format_data(g_task[i].size, data, sizeof(data));
+        format_data(g_task[i].size, size, sizeof(size));
 
-        snprintf(oper, sizeof(oper), "<button id='btn_%d' style='display:block;' onclick=\"download_list('%d')\">open</button>", i, i);
-
-        pos += len;
+        snprintf(oper, sizeof(oper), "<button id='btn_%d' style='display:block;' onclick=\"show_in_torrent_files('%d')\">open</button>", i, i);
 
         len = snprintf(content + pos, *content_len - pos,
                "<tr><td>%d</td><td>%s</td><td id='file_%d'>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%u</td><td>%s</td></tr>",
-               g_task[i].id, "", i, g_task[i].filename, data, "", "", g_task[i].time,
+               g_task[i].id, "", i, g_task[i].filename, size, "", "", g_task[i].time,
                (TASK_MAGNET == g_task[i].type) ? oper : "");
+
+        pos += len;
     }
 
-    pos += len;
-    len = sizeof(INDEX_TAB1) - 1;
-    strcpy_s(content + pos, *content_len - pos, INDEX_TAB1);
+    strcpy_s(content + pos, *content_len - pos, INDEX_END);
 
     *content_type = HTTP_TYPE_HTML;
-    *content_len = pos + len;
+    *content_len = pos + sizeof(INDEX_END) - 1;
     return 0;
 }
 
@@ -422,9 +463,30 @@ int http_process_download(const char *filename, const char *list, int *content_t
         return 404;
     }
 
-    strcpy_s(content, *content_len, "200");
+    int pos = 1;
+    int len = 0;
+    char size[16];
+    char base64[MAX_PATH];
+    content[0] = '[';
+
+    for (int i = 0; i < g_task_count; i++)
+    {
+        format_data(g_task[i].size, size, sizeof(size));
+
+        len = sizeof(base64);
+
+        base64_to(g_task[i].filename, strlen(g_task[i].filename), base64, &len);
+
+        len = snprintf(content + pos, *content_len - pos, "{\"id\":%d,\"torrent\":\"%s\",\"file\":\"%s\",\"size\":\"%s\",\"speed\":\"%s\",\"progress\":\"%s\",\"time\":%d},",
+                       g_task[i].id, "", base64, size, "1.23M", "12.3", g_task[i].time);
+
+        pos += len;
+    }
+
+    content[pos - 1] = ']';
+
     *content_type = HTTP_TYPE_HTML;
-    *content_len = 3;
+    *content_len = pos;
     return 0;
 }
 
