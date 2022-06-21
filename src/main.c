@@ -23,14 +23,9 @@
 #include "xt_memory_pool.h"
 #include "xt_notify.h"
 #include "xt_http.h"
-#include "torrent.h"
+#include "xt_exe_ico.h"
 #include "xl_sdk.h"
-
-/// 程序图标组
-#define RT_GROUP_ICONA   MAKEINTRESOURCEA((ULONG_PTR)(RT_ICON) + DIFFERENCE)
-
-/// 程序图标
-#define RT_ICONA         MAKEINTRESOURCEA(3)
+#include "torrent.h"
 
 /// 程序标题
 #define TITLE "DownloadSDKServerStart"
@@ -199,125 +194,17 @@ void format_data(unsigned __int64 data, char *info, int info_size)
 }
 
 /**
- *\brief        得到exe中图标数据
- *\param[in]    id              图片在图标中的id
- *\param[out]   content         图标数据
- *\param[out]   content_len     图标数据长
- *\return                       图标数据长
- */
-int get_icon_data(int id, char *content, int *content_len)
-{
-    HRSRC    icon_res  = FindResourceA(NULL, MAKEINTRESOURCEA(id), RT_ICONA);
-    HGLOBAL  icon_load = LoadResource(NULL, icon_res);
-    char    *icon_data = LockResource(icon_load);
-    int      icon_size = SizeofResource(NULL, icon_res);
-
-    DBG("id:%d size:%d", id, icon_size);
-
-    memcpy(content, icon_data, icon_size);
-
-    *content_len += icon_size;
-
-    return icon_size;
-}
-
-/**
- *\brief        exe中的图标和实际图标有差异,这个是通过BeyondCompare比较得到的数据
- *\param[out]   content         图标数据
- *\param[out]   group_data      图标组数据
- *\param[out]   group_size      图标组数据长
- *\return                       无
- */
-void update_icon_data(char *content, char *group_data, int group_size)
-{
-    for (int i = 0, j = 0; i < group_size; i++, j++)
-        {
-            switch (i)
-            {
-                case 0x12:
-                {
-                    content[j++] = 0x46;
-                    content[j++] = 0x00;
-                    content[j]   = 0x00;
-                    break;
-                }
-                case 0x20:
-                {
-                    content[j++] = 0x6E;
-                    content[j++] = 0x01;
-                    content[j]   = 0x00;
-                    break;
-                }
-                case 0x2E:
-                {
-                    content[j++] = 0xD6;
-                    content[j++] = 0x06;
-                    content[j]   = 0x00;
-                    break;
-                }
-                case 0x3C:
-                {
-                    content[j++] = 0x3E;
-                    content[j++] = 0x0A;
-                    content[j]   = 0x00;
-                    break;
-                }
-                default:
-                {
-                    content[j] = group_data[i];
-                }
-            }
-        }
-}
-
-/**
- *\brief        http回调函数,/favicon.ico
- *\param[out]   content_type    返回内容类型
- *\param[out]   content         返回内容
- *\param[out]   content_len     返回内容长度
- *\return       0               成功
- */
-int http_process_icon(int *content_type, char *content, int *content_len)
-{
-    HRSRC    group_res  = FindResourceA(NULL, MAKEINTRESOURCEA(IDI_GREEN), RT_GROUP_ICONA);
-    HGLOBAL  group_load = LoadResource(NULL, group_res);
-    char    *group_data = LockResource(group_load);
-    int      group_size = SizeofResource(NULL, group_res);
-
-    update_icon_data(content, group_data, group_size);
-
-    group_size += 8;
-    content += group_size;
-    *content_len = group_size;
-    DBG("group size:%d", group_size);
-
-    for (int i = 1; i < group_data[4] + 1; i++)
-    {
-        content += get_icon_data(i, content, content_len);
-    }
-
-    *content_type = HTTP_TYPE_ICON;
-    return 0;
-}
-
-/**
  *\brief        下载文件
  *\param[in]    filename        文件地址
  *\param[in]    list            下载BT文件时选中的要下载的文件,如:"10100",1-选中,0-末选
  *\return       0               成功
  */
-int http_download(const char *filename, const char *list)
+int xl_download(const char *filename, const char *list)
 {
     int ret;
     int task_id;
     int task_type;
     char task_name[MAX_PATH];
-
-    if (NULL == filename || 0 == strcmp(filename, ""))
-    {
-        DBG("filename:null or \"\"", filename);
-        return 404;
-    }
 
     DBG("task count:%d", g_task_count);
 
@@ -332,6 +219,11 @@ int http_download(const char *filename, const char *list)
 
     if (0 == strcmp(filename + strlen(filename) - 8, ".torrent"))   // BT下载
     {
+        if (NULL == list)
+        {
+            return -1;
+        }
+
 		task_type = TASK_BT;
 
         ret = xl_sdk_create_bt_task(filename, g_cfg.download_path, list, &task_id, task_name, sizeof(task_name));
@@ -352,7 +244,7 @@ int http_download(const char *filename, const char *list)
     if (0 != ret)
     {
         ERR("create task %s error:%d", filename, ret);
-        return 404;
+        return -2;
     }
 
     ret = xl_sdk_start_download_file(task_id, task_type);
@@ -360,7 +252,7 @@ int http_download(const char *filename, const char *list)
     if (0 != ret)
     {
         ERR("download start %s error:%d", filename, ret);
-        return 404;
+        return -3;
     }
 
     ret = xl_sdk_get_task_info(task_id, &g_task[g_task_count].size, &g_task[g_task_count].down, &g_task[g_task_count].time);
@@ -368,7 +260,7 @@ int http_download(const char *filename, const char *list)
     if (0 != ret)
     {
         ERR("get task info error:%d", ret);
-        return 404;
+        return -4;
     }
 
     char size[16];
@@ -379,11 +271,11 @@ int http_download(const char *filename, const char *list)
     strcpy_s(g_task[g_task_count].filename, sizeof(g_task[g_task_count].filename), filename);
     g_task[g_task_count].id   = task_id;
     g_task[g_task_count].type = task_type;
-    //g_task[g_task_count].size = 0;
-    //g_task[g_task_count].down = 0;
-    //g_task[g_task_count].time = 0;
+    g_task[g_task_count].size = 0;
+    g_task[g_task_count].down = 0;
+    g_task[g_task_count].time = 0;
 
-    //////////////////////////////////// test
+    /* test */
     strcpy_s(g_task[g_task_count].filename, sizeof(g_task[g_task_count].filename), "D:\\5.downloads\\bt\\7097B42EEBC037482B69056276858599ED9605B5.torrent");
     g_task[g_task_count].type = TASK_MAGNET;
 
@@ -393,63 +285,45 @@ int http_download(const char *filename, const char *list)
 }
 
 /**
- *\brief        http回调函数,主页
- *\param[out]   content_type    返回内容类型
+ *\brief        http回调函数,下载接口
+ *\param[in]    arg             URI的参数
  *\param[out]   content         返回内容
- *\param[out]   content_len     返回内容长度
  *\return       0               成功
  */
-int http_process_index(int *content_type, char *content, int *content_len)
+int http_proc_download(const p_xt_http_arg arg, p_xt_http_content content)
 {
-    char size[16];
-    char oper[256];
-    int len = sizeof(INDEX_PAGE) - 1;
-    int pos = len;
-
-    strcpy_s(content, *content_len, INDEX_PAGE);
-
-    for (int i = 0; i < g_task_count; i++)
+    if (arg->count <= 0 || NULL == arg->name[0] || 0 != strcmp(arg->name[0], "file"))
     {
-        format_data(g_task[i].size, size, sizeof(size));
-
-        snprintf(oper, sizeof(oper), "<button id='btn_%d' style='display:block;' onclick=\"show_in_torrent_files('%d')\">open</button>", i, i);
-
-        len = snprintf(content + pos, *content_len - pos,
-               "<tr><td>%d</td><td>%s</td><td id='file_%d'>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%u</td><td>%s</td></tr>",
-               g_task[i].id, "", i, g_task[i].filename, size, "", "", g_task[i].time,
-               (TASK_MAGNET == g_task[i].type) ? oper : "");
-
-        pos += len;
+        return -1;
     }
 
-    strcpy_s(content + pos, *content_len - pos, INDEX_END);
+    const char *file = arg->data[0];
 
-    *content_type = HTTP_TYPE_HTML;
-    *content_len = pos + sizeof(INDEX_END) - 1;
-    return 0;
-}
-
-/**
- *\brief        http回调函数,主页
- *\param[in]    filename        文件地址
- *\param[in]    list            下载BT文件时选中的要下载的文件,如:"10100",1-选中,0-末选
- *\param[out]   content_type    返回内容类型
- *\param[out]   content         返回内容
- *\param[out]   content_len     返回内容长度
- *\return       0               成功
- */
-int http_process_download(const char *filename, const char *list, int *content_type, char *content, int *content_len)
-{
-    if (0 != http_download(filename, list))
+    if (NULL == file || 0 == strcmp(file, ""))
     {
-        return 404;
+        DBG("file:null or \"\"");
+        return -2;
     }
 
-    int pos = 1;
-    int len = 0;
-    char size[16];
-    char base64[MAX_PATH];
-    content[0] = '[';
+    const char *list = NULL;
+
+    if (arg->count >= 1 && NULL != arg->name[1] && 0 == strcmp(arg->name[1], "list"))
+    {
+        list = arg->data[1];
+    }
+
+    if (0 != xl_download(file, list))
+    {
+        return -5;
+    }
+
+    int   pos = 1;
+    int   len;
+    char  size[16];
+    char  base64[MAX_PATH];
+    char *data = content->data;
+
+    data[0] = '[';
 
     for (int i = 0; i < g_task_count; i++)
     {
@@ -459,140 +333,210 @@ int http_process_download(const char *filename, const char *list, int *content_t
 
         base64_to(g_task[i].filename, strlen(g_task[i].filename), base64, &len);
 
-        len = snprintf(content + pos, *content_len - pos, "{\"id\":%d,\"torrent\":\"%s\",\"file\":\"%s\",\"size\":\"%s\",\"speed\":\"%s\",\"progress\":\"%s\",\"time\":%d},",
+        len = snprintf(data + pos, content->len - pos, "{\"id\":%d,\"torrent\":\"%s\",\"file\":\"%s\",\"size\":\"%s\",\"speed\":\"%s\",\"progress\":\"%s\",\"time\":%d},",
                        g_task[i].id, "", base64, size, "1.23M", "12.3", g_task[i].time);
 
         pos += len;
     }
 
-    content[pos - 1] = ']';
+    data[pos - 1] = ']';
 
-    *content_type = HTTP_TYPE_HTML;
-    *content_len = pos;
+    content->type = HTTP_TYPE_HTML;
+    content->len = pos;
     return 0;
 }
 
 /**
  *\brief        http回调函数,得到种子中文件信息
- *\param[in]    torrent         种子文件本地地址
- *\param[out]   content_type    返回内容类型
+ *\param[in]    arg             URI的参数
  *\param[out]   content         返回内容
- *\param[out]   content_len     返回内容长度
  *\return       0               成功
  */
-int http_process_torrent(const char *torrent, int *content_type, char *content, int *content_len)
+int http_proc_torrent(const p_xt_http_arg arg, p_xt_http_content content)
 {
-    if (NULL == torrent || 0 == strcmp(torrent, ""))
+    if (arg->count <= 0 || NULL == arg->name[0] || 0 != strcmp(arg->name[0], "torrent"))
     {
-        DBG("torrent:null or \"\"", torrent);
         return -1;
     }
 
-    if (0 != get_torrent_info(torrent, &g_torrent))
+    const char *file = arg->data[0];
+
+    if (NULL == file || 0 == strcmp(file, ""))
     {
-        ERR("get torrent info error");
-        return 404;
+        DBG("file:null or \"\"");
+        return -2;
     }
 
-    int pos = 1;
-    int len = 0;
-    char size[16];
-    content[0] = '[';
-
-    for (int i = 0; i < g_torrent.count + 10; i++)
+    if (0 != get_torrent_info(file, &g_torrent))
     {
-        format_data(g_torrent.file[0].len, size, sizeof(size));
+        ERR("get torrent:%s info error", file);
+        return -3;
+    }
 
-        DBG("file:%s size:%s", g_torrent.file[0].name, size);
+    int   pos = 1;
+    int   len;
+    char  size[16];
+    char *data = content->data;
 
-        len = snprintf(content + pos, *content_len - pos, "{\"file\":\"%s\",\"size\":\"%s\"},", g_torrent.file[0].name, size);
+    data[0] = '[';
+
+    for (int i = 0; i < g_torrent.count; i++)
+    {
+        format_data(g_torrent.file[i].len, size, sizeof(size));
+
+        DBG("file:%s size:%s", g_torrent.file[i].name, size);
+
+        len = snprintf(data + pos, content->len - pos, "{\"file\":\"%s\",\"size\":\"%s\"},", g_torrent.file[i].name, size);
 
         pos += len;
     }
 
-    content[pos - 1] = ']';
+    data[pos - 1] = ']';
 
-    *content_type = HTTP_TYPE_HTML;
-    *content_len = pos;
+    content->type = HTTP_TYPE_HTML;
+    content->len = pos;
     return 0;
 }
 
 /**
  *\brief        http回调函数,文件
  *\param[in]    uri             URI地址
- *\param[out]   content_type    返回内容类型
  *\param[out]   content         返回内容
- *\param[out]   content_len     返回内容长度
  *\return       0               成功
  */
-int http_process_file(const char *uri, int *content_type, char *content, int *content_len)
+int http_proc_other(const char *uri, p_xt_http_content content)
 {
-    char filename[512];
-    sprintf_s(filename, sizeof(filename), "%s%s", g_cfg.http_path, uri);
+    char file[512];
+    sprintf_s(file, sizeof(file), "%s%s", g_cfg.http_path, uri);
 
     FILE *fp;
-    fopen_s(&fp, filename, "rb");
+    fopen_s(&fp, file, "rb");
 
     if (NULL == fp)
     {
-        ERR("open %s fail", filename);
-        return 404;
+        ERR("open %s fail", file);
+        return -1;
     }
 
     fseek(fp, 0, SEEK_END);
-
-    *content_len = ftell(fp);
+    content->len = ftell(fp);
 
     fseek(fp, 0, SEEK_SET);
-
-    fread(content, 1, *content_len, fp);
-
+    fread(content->data, 1, content->len, fp);
     fclose(fp);
 
-    DBG("%s size:%d", filename, *content_len);
+    DBG("%s size:%d", file, content->len);
 
-    *content_type = HTTP_TYPE_HTML;
+    char *ext = strrchr(file, '.');
+
+    if (NULL == ext)
+    {
+        content->type = HTTP_TYPE_HTML;
+        return 0;
+    }
+
+    if (0 == strcmp(ext, ".co"))
+    {
+        content->type = HTTP_TYPE_ICO;
+    }
+    else if (0 == strcmp(ext, ".png"))
+    {
+        content->type = HTTP_TYPE_PNG;
+    }
+    else if (0 == strcmp(ext, ".jpg"))
+    {
+        content->type = HTTP_TYPE_JPG;
+    }
+    else if (0 == strcmp(ext, ".jpeg"))
+    {
+        content->type = HTTP_TYPE_JPEG;
+    }
+    else
+    {
+        content->type = HTTP_TYPE_HTML;
+    }
+
     return 0;
 }
 
 /**
- *\brief        http回调函数
- *\param[in]    uri             URI地址
- *\param[in]    arg_name        URI的参数名称
- *\param[in]    arg_data        URI的参数数据
- *\param[in]    arg_count       URI的参数数量
- *\param[out]   content_type    返回内容类型
+ *\brief        HTTP回调函数,/favicon.ico
  *\param[out]   content         返回内容
- *\param[out]   content_len     返回内容长度
  *\return       0               成功
  */
-int http_process_callback(const char *uri, const char *arg_name[], const char *arg_data[], int arg_count,
-                          int *content_type, char *content, int *content_len)
+int http_proc_icon(p_xt_http_content content)
+{
+    content->type = HTTP_TYPE_ICO;
+    exe_ico_get_data(IDI_GREEN, content->data, &(content->len));
+    return 0;
+}
+
+/**
+ *\brief        HTTP回调函数,主页
+ *\param[out]   content         返回内容
+ *\return       0               成功
+ */
+int http_proc_index(p_xt_http_content content)
+{
+    char  size[16];
+    char  oper[256];
+    char *data = content->data;
+    int   len  = sizeof(INDEX_PAGE) - 1;
+    int   pos  = len;
+
+    strcpy_s(data, content->len, INDEX_PAGE);
+
+    for (int i = 0; i < g_task_count; i++)
+    {
+        format_data(g_task[i].size, size, sizeof(size));
+
+        snprintf(oper, sizeof(oper), "<button id='btn_%d' style='display:block;' onclick=\"show_in_torrent_files('%d')\">open</button>", i, i);
+
+        len = snprintf(data + pos, content->len - pos,
+               "<tr><td>%d</td><td>%s</td><td id='file_%d'>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%u</td><td>%s</td></tr>",
+               g_task[i].id, "", i, g_task[i].filename, size, "", "", g_task[i].time,
+               (TASK_MAGNET == g_task[i].type) ? oper : "");
+
+        pos += len;
+    }
+
+    strcpy_s(data + pos, content->len - pos, INDEX_END);
+
+    content->type = HTTP_TYPE_HTML;
+    content->len = pos + sizeof(INDEX_END) - 1;
+    return 0;
+}
+
+/**
+ *\brief        HTTP回调函数
+ *\param[in]    uri             URI地址
+ *\param[in]    arg             URI的参数,参数使用的是conten.data指向的内存
+ *\param[out]   content         返回内容
+ *\return       0               成功
+ */
+int http_proc_callback(const char *uri, const p_xt_http_arg arg, p_xt_http_content content)
 {
     DBG("uri:%s", uri);
 
     if (0 == strcmp(uri, "/"))
     {
-        return http_process_index(content_type, content, content_len);
+        return http_proc_index(content);
     }
     else if (0 == strcmp(uri, "/download"))
     {
-        const char *file = (arg_count >= 1 && 0 == strcmp(arg_name[0], "file")) ? arg_data[0] : NULL;
-        const char *list = (arg_count >= 2 && 0 == strcmp(arg_name[1], "list")) ? arg_data[1] : NULL;
-        return http_process_download(file, list, content_type, content, content_len);
+        return http_proc_download(arg, content);
     }
     else if (0 == strcmp(uri, "/torrent-list"))
     {
-        const char *torrent = (arg_count >= 1 && 0 == strcmp(arg_name[0], "torrent")) ? arg_data[0] : NULL;
-        return http_process_torrent(torrent, content_type, content, content_len);
+        return http_proc_torrent(arg, content);
     }
     else if (0 == strcmp(uri, "/favicon.ico"))
     {
-        return http_process_icon(content_type, content, content_len);
+        return http_proc_icon(content);
     }
     else
     {
-        return http_process_file(uri, content_type, content, content_len);
+        return http_proc_other(uri, content);
     }
 
     return 404;
@@ -847,7 +791,7 @@ int init()
 
     g_http.run  = true;
     g_http.port = g_cfg.http_port;
-    g_http.proc = http_process_callback;
+    g_http.proc = http_proc_callback;
 
     ret = http_init(&g_http);
 
