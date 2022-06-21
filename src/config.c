@@ -104,7 +104,7 @@ int config_get_json(const char *filename, cJSON **root)
 
 /**
  *\brief        解析log节点数据
- *\param[in]    filename    文件名
+ *\param[in]    root        JSON根节点
  *\param[out]   config      配置数据
  *\return       0           成功
  */
@@ -212,7 +212,7 @@ int config_log(cJSON *root, p_config config)
 
 /**
  *\brief        解析http节点数据
- *\param[in]    filename    文件名
+ *\param[in]    root        JSON根节点
  *\param[out]   config      配置数据
  *\return       0           成功
  */
@@ -256,7 +256,7 @@ int config_http(cJSON *root, p_config config)
 
 /**
  *\brief        解析download节点数据
- *\param[in]    filename    文件名
+ *\param[in]    root        JSON根节点
  *\param[out]   config      配置数据
  *\return       0           成功
  */

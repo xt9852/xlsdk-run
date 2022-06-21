@@ -17,6 +17,7 @@ enum
     TASK_URL                                ///< 普通文件
 };
 
+/// 任务信息
 typedef struct _xl_task
 {
     unsigned int        id;                 ///< 任务ID
@@ -31,7 +32,7 @@ typedef struct _xl_task
 
     char                filename[512];      ///< 文件名
 
-}xl_task, *p_xl_task;
+}xl_task, *p_xl_task;                       ///< 任务信息指针
 
 /**
  *\brief   初始化SDK
@@ -85,7 +86,7 @@ int xl_sdk_create_magnet_task(const char *magnet, const char *path, int *taskid,
 
 /**
  *\brief        开始下载文件
- *\param[in]    taski       任务ID
+ *\param[in]    taskid      任务ID
  *\param[in]    task_type   任务类型
  *\return       0           成功
  */
@@ -93,7 +94,7 @@ int xl_sdk_start_download_file(int taskid, int task_type);
 
 /**
  *\brief        停止下载文件
- *\param[in]    taski       任务ID
+ *\param[in]    taskid      任务ID
  *\return       0           成功
  */
 int xl_sdk_stop_download_file(int taskid);

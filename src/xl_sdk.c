@@ -14,6 +14,7 @@
 #include "xt_log.h"
 #include "xt_character_set.h"
 
+/// XL下载器ID
 #define FLAG                    "BDAF7A63-568C-43ab-9406-D145CF03B08C"
 
 /// 参数头
@@ -71,6 +72,7 @@ int    g_track_count            = 0;        ///< track数据数量
 
 short *g_track_data[10240]      = {0};      ///< track缓冲区
 
+/// track服务器地址
 const short *g_track[] = {
     L"http://1337.abcvg.info:80/announce",
     L"http://filetracker.xyz:11451/announce",
@@ -895,7 +897,7 @@ int xl_sdk_init()
 
 /**
  *\brief        添加服务器
- *\param[in]    taski       任务ID
+ *\param[in]    taskid      任务ID
  *\param[in]    count       服务器数量
  *\param[in]    data        服务器数据
  *\param[in]    data_len    数据长度
@@ -1179,7 +1181,7 @@ int xl_sdk_create_magnet_task(const char *magnet, const char *path, int *taskid,
 
 /**
  *\brief        开始下载文件
- *\param[in]    taski           任务ID
+ *\param[in]    taskid          任务ID
  *\param[in]    task_type       任务类型
  *\return       0               成功
  */
