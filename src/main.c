@@ -33,20 +33,20 @@
 /// 主页面
 #define INDEX_PAGE "<meta charset='utf-8'>\
 <script>\n\
-    function download(){\n\
+    function download(init){\n\
         filename = document.getElementById('file').value;\n\
-        if (filename == '') {alert('请输入要下载的文件地址');return;}\n\
+        if (filename == '' && !init) {alert('请输入要下载的文件地址');return;}\n\
         url = '/download?file=' + filename;\n\
-        file_list = document.getElementById('file-list');\n\
-        if (file_list.style.display == '') {\n\
+        file_table = document.getElementById('file-list');\n\
+        if (file_table.style.display == '') {\n\
             list = '';\n\
-            count = file_list.childNodes.length;\n\
-            for (var i = 1; i < count; i++){\n\
-                list = list + (file_list.childNodes[i].childNodes[0].childNodes[0].checked ? '1' : '0');\n\
+            file_tbody = file_table.childNodes[0];\n\
+            for (var i = 1; i < file_tbody.childNodes.length; i++){\n\
+                list = list + (file_tbody.childNodes[i].childNodes[0].childNodes[0].checked ? '1' : '0');\n\
             }\n\
             if (/^0+$/.test(list)) {alert('请选取要下载的文件'); return;}\n\
             url = url + '&list=' + list ;\n\
-            file_list.style.display = 'none';\n\
+            file_table.style.display = 'none';\n\
         }\n\
         req = new XMLHttpRequest();\n\
         req.open('GET', url);\n\
@@ -55,8 +55,8 @@
             console.log(url + ' status:' + req.status);\n\
             if (req.readyState != 4 || req.status != 200) {alert('http请求失败');return;}\n\
             rp = JSON.parse(req.responseText);\n\
-            down_list = document.getElementById('down-list');\n\
-            while (down_list.childNodes.length > 1) { down_list.removeChild(down_list.childNodes[1]); }\n\
+            down_tbody = document.getElementById('down-list').childNodes[0];\n\
+            while (down_tbody.childNodes.length > 1) { down_tbody.removeChild(down_tbody.childNodes[1]); }\n\
             for (var i in rp) {\n\
                 item = rp[i];\n\
                 tr = document.createElement('tr');\n\
@@ -94,7 +94,7 @@
                     td.appendChild(btn);\n\
                 }\n\
                 tr.appendChild(td);\n\
-                down_list.appendChild(tr);\n\
+                down_tbody.appendChild(tr);\n\
             }\n\
         }\n\
     }\n\
@@ -110,9 +110,10 @@
             if (req.readyState != 4 || req.status != 200) {alert('http请求失败');return;}\n\
             rp = JSON.parse(req.responseText);\n\
             document.getElementById('file').value = filename;\n\
-            file_list = document.getElementById('file-list');\n\
-            file_list.style.display = '';\n\
-            while (file_list.childNodes.length > 1) { file_list.removeChild(file_list.childNodes[1]); }\n\
+            file_table = document.getElementById('file-list');\n\
+            file_table.style.display = '';\n\
+            file_tbody = file_table.childNodes[0];\n\
+            while (file_tbody.childNodes.length > 1) { file_tbody.removeChild(file_tbody.childNodes[1]); }\n\
             for (var i in rp) {\n\
                 item = rp[i];\n\
                 tr = document.createElement('tr');\n\
@@ -122,33 +123,31 @@
                 td.appendChild(ip);\n\
                 tr.appendChild(td);\n\
                 td = document.createElement('td');\n\
-                td.innerText = item['file'];\n\
+                td.innerText = decodeURIComponent(atob(item['file']));\n\
                 tr.appendChild(td);\n\
                 td = document.createElement('td');\n\
                 td.innerText = item['size'];\n\
                 tr.appendChild(td);\n\
-                file_list.appendChild(tr);\n\
+                file_tbody.appendChild(tr);\n\
             }\n\
         }\n\
     }\n\
     function on_check(checkbox){\n\
-        file_list = document.getElementById('file-list');\n\
-        for (var i = 1; i < file_list.childNodes.length; i++){\n\
-            check = file_list.childNodes[i].childNodes[0].childNodes[0];\n\
-            check.checked = checkbox.checked;\n\
+        file_tbody = document.getElementById('file-list').childNodes[0];\n\
+        for (var i = 1; i < file_tbody.childNodes.length; i++){\n\
+            file_tbody.childNodes[i].childNodes[0].childNodes[0].checked = checkbox.checked;\n\
         }\n\
     }\n\
 </script>\n\
+<body onload='download(true)'>\
 <input id='file'/>\
-<button onclick='download()'>download</button>\
+<button onclick='download(false)'>download</button>\
 <table id='file-list' border='1' style='border-collapse:collapse;display:none'>\
 <tr><th><input type='checkbox' name='check' onclick='on_check(this)' /></th><th>大小</th><th>文件</th></tr></table>\
 <table id='down-list' border='1' style='border-collapse:collapse;'>\
-<tr><th>任务</th><th>种子</th><th>文件</th><th>大小</th><th>速度</th><th>进度</th><th>用时</th><th>操作</th></tr>"
-
-/// 主页面结束
-#define INDEX_END "</table>"
-
+<tr><th>任务</th><th>种子</th><th>文件</th><th>大小</th><th>速度</th><th>进度</th><th>用时</th><th>操作</th></tr>\
+</table>\
+</body>"
 config                  g_cfg           = {0};  ///< 配置数据
 
 xt_log                  g_log           = {0};  ///< 日志数据
@@ -171,19 +170,26 @@ int                     g_task_count    = 0;    ///< 当前正在下载的任务
  */
 void format_data(unsigned __int64 data, char *info, int info_size)
 {
-    double g = data / 1024.0 / 1024.0 / 1024.0;
-    double m = data / 1024.0 / 1024.0;
-    double k = data / 1024.0;
+    double g = (double)data / (1024.0 * 1024 * 1024);
+    double m = (double)data / (1024.0 * 1024);
+    double k = (double)data / (1024.0);
 
-    if (g > 1.0)
+    double g1 = data / 1024.0 / 1024.0 / 1024.0;
+    double m1 = data / 1024.0 / 1024.0;
+    double k1 = data / 1024.0;
+
+    DBG("g:%f m:%f k:%f", g, m, k);
+    DBG("g1:%f m1:%f k1:%f", g1, m1, k1);
+
+    if (g >= 0.9)
     {
         snprintf(info, info_size, "%.2fG", g);
     }
-    else if (m > 1.0)
+    else if (m >= 0.9)
     {
         snprintf(info, info_size, "%.2fM", m);
     }
-    else if (k > 1.0)
+    else if (k >= 0.9)
     {
         snprintf(info, info_size, "%.2fK", k);
     }
@@ -276,8 +282,10 @@ int xl_download(const char *filename, const char *list)
     g_task[g_task_count].time = 0;
 
     /* test */
-    strcpy_s(g_task[g_task_count].filename, sizeof(g_task[g_task_count].filename), "D:\\5.downloads\\bt\\7097B42EEBC037482B69056276858599ED9605B5.torrent");
+    strcpy_s(g_task[g_task_count].filename, sizeof(g_task[g_task_count].filename), "C:\\Program Files\\7-Zip\\1\\DB2FE78374A1A18C1A5EFCC5E961901A1BCACFD2.torrent");
     g_task[g_task_count].type = TASK_MAGNET;
+    g_task[g_task_count].time = 123;
+    g_task[g_task_count].size = 1024*1024*1024 + 235*1024*1024;
 
     g_task_count++;
 
@@ -292,34 +300,31 @@ int xl_download(const char *filename, const char *list)
  */
 int http_proc_download(const p_xt_http_arg arg, p_xt_http_content content)
 {
-    if (arg->count <= 0 || NULL == arg->name[0] || 0 != strcmp(arg->name[0], "file"))
-    {
-        return -1;
-    }
-
-    const char *file = arg->data[0];
-
-    if (NULL == file || 0 == strcmp(file, ""))
-    {
-        DBG("file:null or \"\"");
-        return -2;
-    }
-
+    const char *file = NULL;
     const char *list = NULL;
 
-    if (arg->count >= 1 && NULL != arg->name[1] && 0 == strcmp(arg->name[1], "list"))
+    if (arg->count >= 1 && NULL != arg->name[0] && 0 == strcmp(arg->name[0], "file") && 0 != strcmp(arg->data[0], ""))
+    {
+        file = arg->data[0];
+    }
+
+    if (arg->count >= 2 && NULL != arg->name[1] && 0 == strcmp(arg->name[1], "list") && 0 != strcmp(arg->data[1], ""))
     {
         list = arg->data[1];
     }
 
-    if (0 != xl_download(file, list))
+    if (NULL != file && 0 != xl_download(file, list))
     {
-        return -5;
+        ERR("xl_download fail");
+        return -1;
     }
 
     int   pos = 1;
     int   len;
+    int   encode_len;
+    int   base64_len;
     char  size[16];
+    char  encode[MAX_PATH];
     char  base64[MAX_PATH];
     char *data = content->data;
 
@@ -327,19 +332,28 @@ int http_proc_download(const p_xt_http_arg arg, p_xt_http_content content)
 
     for (int i = 0; i < g_task_count; i++)
     {
+        encode_len = sizeof(encode);
+        base64_len = sizeof(base64);
+
+        uri_encode(g_task[i].filename, strlen(g_task[i].filename), encode, &encode_len); // js的atob不能解码unicode
+        base64_encode(encode, encode_len, base64, &base64_len); // 文件名中可能有json需要转码的字符
         format_data(g_task[i].size, size, sizeof(size));
 
-        len = sizeof(base64);
-
-        base64_to(g_task[i].filename, strlen(g_task[i].filename), base64, &len);
-
-        len = snprintf(data + pos, content->len - pos, "{\"id\":%d,\"torrent\":\"%s\",\"file\":\"%s\",\"size\":\"%s\",\"speed\":\"%s\",\"progress\":\"%s\",\"time\":%d},",
+        len = snprintf(data + pos, content->len - pos,
+                       "{\"id\":%d,\"torrent\":\"%s\",\"file\":\"%s\",\"size\":\"%s\","
+                       "\"speed\":\"%s\",\"progress\":\"%s\",\"time\":%d},",
                        g_task[i].id, "", base64, size, "1.23M", "12.3", g_task[i].time);
-
         pos += len;
     }
 
-    data[pos - 1] = ']';
+    if (g_task_count > 0)
+    {
+        data[pos - 1] = ']';
+    }
+    else
+    {
+        data[pos++] = ']';
+    }
 
     content->type = HTTP_TYPE_HTML;
     content->len = pos;
@@ -375,23 +389,38 @@ int http_proc_torrent(const p_xt_http_arg arg, p_xt_http_content content)
 
     int   pos = 1;
     int   len;
+    int   encode_len;
+    int   base64_len;
     char  size[16];
+    char  encode[MAX_PATH];
+    char  base64[MAX_PATH];
     char *data = content->data;
 
     data[0] = '[';
 
     for (int i = 0; i < g_torrent.count; i++)
     {
-        format_data(g_torrent.file[i].len, size, sizeof(size));
+        encode_len = sizeof(encode);
+        base64_len = sizeof(base64);
 
-        DBG("file:%s size:%s", g_torrent.file[i].name, size);
+        uri_encode(g_torrent.file[i].name, strlen(g_torrent.file[i].name), encode, &encode_len); // js的atob不能解码unicode
+        base64_encode(encode, encode_len, base64, &base64_len); // 文件名中可能有json需要转码的字符
+        format_data(g_torrent.file[i].size, size, sizeof(size));
 
-        len = snprintf(data + pos, content->len - pos, "{\"file\":\"%s\",\"size\":\"%s\"},", g_torrent.file[i].name, size);
+        DBG("i:%d file:%s uri_encode:%s base64(uri_encode):%s", i, g_torrent.file[i].name, encode, base64);
 
+        len = snprintf(data + pos, content->len - pos, "{\"file\":\"%s\",\"size\":\"%s\"},", base64, size);
         pos += len;
     }
 
-    data[pos - 1] = ']';
+    if (g_torrent.count > 0)
+    {
+        data[pos - 1] = ']';
+    }
+    else
+    {
+        data[pos++] = ']';
+    }
 
     content->type = HTTP_TYPE_HTML;
     content->len = pos;
@@ -478,32 +507,9 @@ int http_proc_icon(p_xt_http_content content)
  */
 int http_proc_index(p_xt_http_content content)
 {
-    char  size[16];
-    char  oper[256];
-    char *data = content->data;
-    int   len  = sizeof(INDEX_PAGE) - 1;
-    int   pos  = len;
-
-    strcpy_s(data, content->len, INDEX_PAGE);
-
-    for (int i = 0; i < g_task_count; i++)
-    {
-        format_data(g_task[i].size, size, sizeof(size));
-
-        snprintf(oper, sizeof(oper), "<button id='btn_%d' style='display:block;' onclick=\"show_in_torrent_files('%d')\">open</button>", i, i);
-
-        len = snprintf(data + pos, content->len - pos,
-               "<tr><td>%d</td><td>%s</td><td id='file_%d'>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%u</td><td>%s</td></tr>",
-               g_task[i].id, "", i, g_task[i].filename, size, "", "", g_task[i].time,
-               (TASK_MAGNET == g_task[i].type) ? oper : "");
-
-        pos += len;
-    }
-
-    strcpy_s(data + pos, content->len - pos, INDEX_END);
-
     content->type = HTTP_TYPE_HTML;
-    content->len = pos + sizeof(INDEX_END) - 1;
+    content->len = sizeof(INDEX_PAGE) - 1;
+    strcpy_s(content->data, sizeof(INDEX_PAGE), INDEX_PAGE);
     return 0;
 }
 
@@ -569,13 +575,7 @@ int init()
         return -10;
     }
 
-    strncpy_s(g_log.filename, sizeof(g_log.filename), g_cfg.log_filename, sizeof(g_log.filename) - 1);
-    g_log.level  = g_cfg.log_level;
-    g_log.cycle  = g_cfg.log_cycle;
-    g_log.backup = g_cfg.log_backup;
-    g_log.clean  = g_cfg.log_clean;
-
-    ret = log_init(&g_log);
+    ret = log_init(g_cfg.log_filename, g_cfg.log_level, g_cfg.log_cycle, g_cfg.log_backup, g_cfg.log_clean, 38, &g_log);
 
     if (ret != 0)
     {
@@ -586,13 +586,7 @@ int init()
 
     DBG("g_log init ok");
 
-    strncpy_s(g_test.filename, sizeof(g_test.filename), TITLE".test", sizeof(g_test.filename) - 1);
-    g_test.level  = g_cfg.log_level;
-    g_test.cycle  = g_cfg.log_cycle;
-    g_test.backup = g_cfg.log_backup;
-    g_test.clean  = g_cfg.log_clean;
-
-    ret = log_init(&g_test);
+    ret = log_init(TITLE".test", g_cfg.log_level, g_cfg.log_cycle, g_cfg.log_backup, g_cfg.log_clean, 38, &g_test);
 
     if (ret != 0)
     {
@@ -665,7 +659,7 @@ int init()
     {
         len = sizeof(base64);
 
-        ret = base64_to(data[i], strlen(data[i]), base64, &len);
+        ret = base64_encode(data[i], strlen(data[i]), base64, &len);
 
         if (ret != 0)
         {
@@ -675,7 +669,7 @@ int init()
 
         DBG("data:%s base64:%s len:%d", data[i], base64, len);
 
-        ret = base64_from(base64, len, output, &len);
+        ret = base64_decode(base64, len, output, &len);
 
         if (ret != 0)
         {
@@ -789,11 +783,7 @@ int init()
 
     DBG("--------------------------------------------------------------------");
 
-    g_http.run  = true;
-    g_http.port = g_cfg.http_port;
-    g_http.proc = http_proc_callback;
-
-    ret = http_init(&g_http);
+    ret = http_init(g_cfg.http_port, http_proc_callback, &g_http);
 
     if (ret != 0)
     {

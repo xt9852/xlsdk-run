@@ -12,11 +12,11 @@
 /// 种子中的文件信息
 typedef struct _bt_torrent_file
 {
-    unsigned int        name_len;               ///< 文件名长度,utf8
-
     char                name[512];              ///< 文件名,utf8
 
-    unsigned __int64    len;                    ///< 文件长
+    unsigned __int64    size;                   ///< 文件大小
+
+    unsigned int        name_len;               ///< 文件名长度,utf8
 
 } bt_torrent_file, *p_bt_torrent_file;          ///< 种子内包含的文件信息
 

@@ -155,7 +155,7 @@ int bencode_int(const char *s, unsigned int len, p_bt_torrent torrent)
         {
             if (torrent->last == LENGTH) // 上一个字符串是"length","name"
             {
-                torrent->file[torrent->count].len  = num;
+                torrent->file[torrent->count].size = num;
                 torrent->file[torrent->count].name_len = 0;
                 torrent->name_tail = torrent->file[torrent->count].name;
             }
