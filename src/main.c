@@ -26,6 +26,9 @@
 #include "xt_exe_ico.h"
 #include "xl_sdk.h"
 #include "torrent.h"
+#define PCRE2_STATIC
+#define PCRE2_CODE_UNIT_WIDTH 8
+#include "pcre2.h"
 
 /// 程序标题
 #define TITLE "DownloadSDKServerStart"
@@ -610,15 +613,6 @@ int init()
         return -21;
     }
 
-    D("g_log init ok");
-    D("g_log init ok");
-    D("g_log init ok");
-    D("g_log init ok");
-
-    DD(&g_test, "g_test init ok");
-    DD(&g_test, "g_test init ok");
-    DD(&g_test, "g_test init ok");
-    DD(&g_test, "g_test init ok");
     DD(&g_test, "g_test init ok");
 
     D("--------------------------------------------------------------------");
@@ -809,7 +803,6 @@ int init()
 
     D("--------------------------------------------------------------------");
 
-    // 初始化SDK
     ret = xl_sdk_init();
 
     if (0 != ret)
@@ -828,6 +821,69 @@ int init()
         return -110;
     }
 
+    D("--------------------------------------------------------------------");
+
+    int error;
+    PCRE2_SIZE offset;
+
+    PCRE2_SPTR reg = "[0-9]{5}";
+
+    pcre2_code *pcre_data = pcre2_compile(reg, PCRE2_ZERO_TERMINATED, 0, &error, &offset, NULL);
+
+    if (pcre_data == NULL)
+    {
+        PCRE2_UCHAR info[256];
+        pcre2_get_error_message(error, info, sizeof(info));
+        E("pcre2_compile:fail reg:%s offste:%d error:%d info:%s", reg, offset, error, info);
+        return 0;
+    }
+
+    D("pcre2_compile:ok reg:%s", reg);
+
+    pcre2_match_data *match_data = pcre2_match_data_create_from_pattern(pcre_data, NULL);
+
+    if (NULL == match_data)
+    {
+        PCRE2_UCHAR info[256];
+        pcre2_get_error_message(error, info, sizeof(info));
+        E("pcre2_match_data_create_from_pattern:fail reg:%s", reg);
+        return 0;
+    }
+
+    D("pcre2_match_data_create_from_pattern:ok reg:%s", reg);
+
+    PCRE2_SPTR txt = "abcde12345fghijkl";
+
+    ret = pcre2_match(pcre_data, txt, strlen(txt), 0, 0, match_data, NULL); // <0发生错误，==0没有匹配上，>0返回匹配到的元素数量
+
+    if (ret < 0)
+    {
+        E("pcre2_match:fail txt:%s ret:%d", txt, ret);
+        return 0;
+    }
+    else if (ret == 0)
+    {
+        E("pcre2_match:ok txt:%s ret:%d", txt, ret);
+    }
+    else
+    {
+        E("pcre2_match:ok txt:%s ret:%d", txt, ret);
+
+        int len;
+        char format[512];
+
+        PCRE2_SIZE *ovector = pcre2_get_ovector_pointer(match_data);
+
+        for (int i = 0; i < ret; i++)
+        {
+            len = ovector[2 * i + 1] - ovector[2 * i];
+            sprintf_s(format, sizeof(format), "i:%%d pos:%%d-%%d len:%%d str:%%.%ds", len);
+            D(format, i, ovector[2 * i], ovector[2 * i + 1], len, txt + ovector[2 * i]);
+        }
+    }
+
+    pcre2_match_data_free(match_data);
+    pcre2_code_free(pcre_data);
     return 0;
 }
 
@@ -889,46 +945,3 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     return (int)msg.lParam;
 }
-
-/*
-    int Eor;
-    PCRE2_SIZE offset;
-    PCRE2_SIZE *ovector;
-
-    char *pattern = "{0-9}{5}";
-
-    pcre2_code *pcre_data = pcre2_compile((PCRE2_SPTR)pattern, 0, 0, &Eor, &offset, NULL);
-
-    if (pcre_data == NULL)
-    {
-        PCRE2_UCHAR info[256];
-        //pcre2_get_Eor_message(Eor, info, sizeof(info));
-        E("PCRE init fail pattern:%s offste:%d E:%s", pattern, offset, Eor, info);
-    }
-
-    D("pcre2_compile ok pattern:\"%s\"", pattern);
-
-    char *subject = "abcdefghijkl";
-
-    pcre2_match_data *match_data = pcre2_match_data_create_from_pattern(pcre_data, NULL);
-
-    ret = pcre2_match(pcre_data, (PCRE2_SPTR)subject, strlen(subject), 0, 0, match_data, NULL); // <0发生错误，==0没有匹配上，>0返回匹配到的元素数量
-
-    if (ret > 0)
-    {
-        ovector = pcre2_get_ovector_pointer(match_data);
-
-        for (int i = 0; i < ret; i++)
-        {
-            //int substring_length = ovector[2 * i + 1] - ovector[2 * i];
-            //char* substring_start = subject + ovector[2*i];
-            //D("%d: %d %.*s", i, substring_length, substring_start);
-            D("%d:%d %d", i, ovector[2 * i], ovector[2 * i + 1]);
-        }
-    }
-
-    pcre2_match_data_free(match_data);
-    pcre2_code_free(pcre_data);
-
-    D("pcre2_match subject:\"%s\" ret:%d", subject, ret);
-*/

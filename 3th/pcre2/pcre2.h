@@ -41,10 +41,10 @@ POSSIBILITY OF SUCH DAMAGE.
 
 /* The current PCRE version information. */
 
-#define PCRE2_MAJOR           10            // xt-20220605 @PCRE2_MAJOR@
-#define PCRE2_MINOR           40            // xt-20220605 @PCRE2_MINOR@
-#define PCRE2_PRERELEASE      -RC1          // xt-20220605 @PCRE2_PRERELEASE@
-#define PCRE2_DATE            2021-11-09    // xt-20220605 @PCRE2_DATE@
+#define PCRE2_MAJOR           10
+#define PCRE2_MINOR           39
+#define PCRE2_PRERELEASE      
+#define PCRE2_DATE            2021-10-29
 
 /* When an application links to a PCRE DLL in Windows, the symbols that are
 imported have to be identified as such. When building PCRE2, the appropriate
@@ -916,12 +916,15 @@ prototypes. */
 #define PCRE2_TYPES_STRUCTURES_AND_FUNCTIONS \
 PCRE2_TYPES_LIST \
 PCRE2_STRUCTURE_LIST \
+PCRE2_GENERAL_INFO_FUNCTIONS \
 PCRE2_GENERAL_CONTEXT_FUNCTIONS \
 PCRE2_COMPILE_CONTEXT_FUNCTIONS \
 PCRE2_CONVERT_CONTEXT_FUNCTIONS \
 PCRE2_CONVERT_FUNCTIONS \
 PCRE2_MATCH_CONTEXT_FUNCTIONS \
+PCRE2_COMPILE_FUNCTIONS \
 PCRE2_PATTERN_INFO_FUNCTIONS \
+PCRE2_MATCH_FUNCTIONS \
 PCRE2_SUBSTRING_FUNCTIONS \
 PCRE2_SERIALIZE_FUNCTIONS \
 PCRE2_SUBSTITUTE_FUNCTION \
@@ -962,7 +965,7 @@ PCRE2_TYPES_STRUCTURES_AND_FUNCTIONS
 /* PCRE2_CODE_UNIT_WIDTH must be defined. If it is 8, 16, or 32, redefine
 PCRE2_SUFFIX to use it. If it is 0, undefine the other macros and make
 PCRE2_SUFFIX a no-op. Otherwise, generate an error. */
-#define PCRE2_CODE_UNIT_WIDTH 8
+
 #undef PCRE2_SUFFIX
 #ifndef PCRE2_CODE_UNIT_WIDTH
 #error PCRE2_CODE_UNIT_WIDTH must be defined before including pcre2.h.
