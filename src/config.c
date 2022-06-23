@@ -75,7 +75,7 @@ int config_get_json(const char *filename, cJSON **root)
 
     if (size <= 0)
     {
-        printf("%s|get file %s size error\n", __FUNCTION__, filename);
+        printf("%s|get file %s size Eor\n", __FUNCTION__, filename);
         return -2;
     }
 
@@ -189,7 +189,7 @@ int config_log(cJSON *root, p_config config)
     }
     else
     {
-        printf("%s|config no log.cycle value error\n", __FUNCTION__);
+        printf("%s|config no log.cycle value Eor\n", __FUNCTION__);
         return -7;
     }
 
@@ -197,7 +197,7 @@ int config_log(cJSON *root, p_config config)
 
     if (NULL == backup)
     {
-        printf("%s|config no log.backup value error\n", __FUNCTION__);
+        printf("%s|config no log.backup value Eor\n", __FUNCTION__);
         return -8;
     }
 
@@ -314,19 +314,19 @@ int config_init(const char *filename, p_config config)
 
     if (0 != config_log(root, config))
     {
-        printf("%s|config json log node error\n", __FUNCTION__);
+        printf("%s|config json log node Eor\n", __FUNCTION__);
         return -3;
     }
 
     if (0 != config_http(root, config))
     {
-        printf("%s|config json http node error\n", __FUNCTION__);
+        printf("%s|config json http node Eor\n", __FUNCTION__);
         return -4;
     }
 
     if (0 != config_download(root, config))
     {
-        printf("%s|config json download node error\n", __FUNCTION__);
+        printf("%s|config json download node Eor\n", __FUNCTION__);
         return -5;
     }
 

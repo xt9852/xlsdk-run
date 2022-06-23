@@ -118,12 +118,12 @@ int bencode_str(const char *s, unsigned int len, p_bt_torrent torrent)
         }
         else
         {
-            ERR("string char error");
+            E("string char Eor");
             return -100;
         }
     }
 
-    ERR("string error");
+    E("string Eor");
     return -101;
 }
 
@@ -138,7 +138,7 @@ int bencode_int(const char *s, unsigned int len, p_bt_torrent torrent)
 {
     if (s[0] != 'i')
     {
-        ERR("int flag error");
+        E("int flag Eor");
         return -200;
     }
 
@@ -164,12 +164,12 @@ int bencode_int(const char *s, unsigned int len, p_bt_torrent torrent)
         }
         else
         {
-            ERR("int num error");
+            E("int num Eor");
             return -201;
         }
     }
 
-    ERR("int error");
+    E("int Eor");
     return -202;
 }
 
@@ -184,7 +184,7 @@ int bencode_list(const char *s, unsigned int len, p_bt_torrent torrent)
 {
     if (s[0] != 'l')
     {
-        ERR("list flag error");
+        E("list flag Eor");
         return -300;
     }
 
@@ -245,14 +245,14 @@ int bencode_list(const char *s, unsigned int len, p_bt_torrent torrent)
 
         if (ret <= 0)
         {
-            ERR("list sub item len error");
+            E("list sub item len Eor");
             return -301;
         }
 
         i += ret;
     }
 
-    ERR("list error");
+    E("list Eor");
     return -302;
 }
 
@@ -267,7 +267,7 @@ int bencode_dict(const char *s, unsigned int len, p_bt_torrent torrent)
 {
     if (s[0] != 'd')
     {
-        ERR("dict flag error");
+        E("dict flag Eor");
         return -400;
     }
 
@@ -275,7 +275,7 @@ int bencode_dict(const char *s, unsigned int len, p_bt_torrent torrent)
 
     if (ret <= 0)
     {
-        ERR("dict key len error");
+        E("dict key len Eor");
         return -401;
     }
 
@@ -304,14 +304,14 @@ int bencode_dict(const char *s, unsigned int len, p_bt_torrent torrent)
 
         if (ret <= 0)
         {
-            printf("dict item len error\n");
+            printf("dict item len Eor\n");
             return -402;
         }
 
         i += ret;
     }
 
-    printf("dict error\n");
+    printf("dict Eor\n");
     return -403;
 }
 
@@ -355,7 +355,7 @@ int get_torrent_info(const char *filename, p_bt_torrent torrent)
 {
     if (NULL == filename || NULL == torrent)
     {
-        ERR("filename,torrent is null");
+        E("filename,torrent is null");
         return -1;
     }
 
@@ -363,7 +363,7 @@ int get_torrent_info(const char *filename, p_bt_torrent torrent)
 
     if (0 != strcmp(filename + size - 8, ".torrent"))
     {
-        ERR("isn't torrent %s", filename);
+        E("isn't torrent %s", filename);
         return -2;
     }
 
@@ -371,7 +371,7 @@ int get_torrent_info(const char *filename, p_bt_torrent torrent)
 
     if (0 != load_file_data(filename, &buff, &size)) // malloc buff
     {
-        ERR("load file data fail %s", filename);
+        E("load file data fail %s", filename);
         return -3;
     }
 
@@ -380,7 +380,7 @@ int get_torrent_info(const char *filename, p_bt_torrent torrent)
 
     if (size != bencode_dict(buff, size, torrent))
     {
-        ERR("dict fail %s", filename);
+        E("dict fail %s", filename);
         free(buff);
         return -4;
     }

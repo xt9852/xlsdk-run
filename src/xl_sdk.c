@@ -344,7 +344,7 @@ int xl_sdk_call_sdk_func()
     ResetEvent(g_recvBufferEmptyEvent);                     // 清空对方准备好接收数据信号
     SetEvent(g_recvBufferFullEvent);                        // 设置对方接收数据信号
 
-    DBG("send %s len:%d", XL_SDK_FUNC_NAME[p->func_id], p->len);
+    D("send %s len:%d", XL_SDK_FUNC_NAME[p->func_id], p->len);
 
     WaitForSingleObject(g_sendBufferFullEvent, INFINITE);   // 等待对方已经发送数据信号
 
@@ -358,11 +358,11 @@ int xl_sdk_call_sdk_func()
 
     if (0 != head[2])                                       // 返回值:0-成功
     {
-        ERR("recv %s len:%d ret:%d", XL_SDK_FUNC_NAME[p->func_id], head[2]);
+        E("recv %s len:%d ret:%d", XL_SDK_FUNC_NAME[p->func_id], head[2]);
         return head[2];
     }
 
-    DBG("recv %s len:%d ret:0", XL_SDK_FUNC_NAME[p->func_id], p->len);
+    D("recv %s len:%d ret:0", XL_SDK_FUNC_NAME[p->func_id], p->len);
     return 0;
 }
 
@@ -417,21 +417,21 @@ int xl_sdk_open_share_memory_event(bool reopen)
 
     if (NULL == g_recvShareMemory)
     {
-        ERR("open fail %s", name);
+        E("open fail %s", name);
         return -11;
     }
 
-    DBG(name);
+    D(name);
 
     g_recv = (UCHAR*)MapViewOfFile(g_recvShareMemory, FILE_MAP_ALL_ACCESS, 0, 0, 0x100000);
 
     if (NULL == g_recv)
     {
-        ERR("map fail %s", name);
+        E("map fail %s", name);
         return -12;
     }
 
-    DBG(name);
+    D(name);
 
     sprintf_s(name, sizeof(name), "%s:%d:%d%s|RecvBufferFullEvent", FLAG, g_cur_process_id, g_sdk_process_id, mem);
 
@@ -439,11 +439,11 @@ int xl_sdk_open_share_memory_event(bool reopen)
 
     if (NULL == g_recvBufferFullEvent)
     {
-        ERR("open fail %s", name);
+        E("open fail %s", name);
         return -13;
     }
 
-    DBG(name);
+    D(name);
 
     sprintf_s(name, sizeof(name), "%s:%d:%d%s|RecvBufferEmptyEvent", FLAG, g_cur_process_id, g_sdk_process_id, mem);
 
@@ -451,11 +451,11 @@ int xl_sdk_open_share_memory_event(bool reopen)
 
     if (NULL == g_recvBufferEmptyEvent)
     {
-        ERR("open fail %s", name);
+        E("open fail %s", name);
         return -14;
     }
 
-    DBG(name);
+    D(name);
 
     // 对方发送的数据
     sprintf_s(name, sizeof(name), "%s:%d:%d%s|SendShareMemory", FLAG, g_cur_process_id, g_sdk_process_id, mem);
@@ -464,21 +464,21 @@ int xl_sdk_open_share_memory_event(bool reopen)
 
     if (NULL == g_sendShareMemory)
     {
-        ERR("open fail %s", name);
+        E("open fail %s", name);
         return -21;
     }
 
-    DBG(name);
+    D(name);
 
     g_send = (UCHAR*)MapViewOfFile(g_sendShareMemory, FILE_MAP_ALL_ACCESS, 0, 0, 0x100000);
 
     if (NULL == g_send)
     {
-        ERR("map fail %s", name);
+        E("map fail %s", name);
         return -22;
     }
 
-    DBG(name);
+    D(name);
 
     sprintf_s(name, sizeof(name), "%s:%d:%d%s|SendBufferFullEvent", FLAG, g_cur_process_id, g_sdk_process_id, mem);
 
@@ -486,11 +486,11 @@ int xl_sdk_open_share_memory_event(bool reopen)
 
     if (NULL == g_sendBufferFullEvent)
     {
-        ERR("open fail %s", name);
+        E("open fail %s", name);
         return -23;
     }
 
-    DBG(name);
+    D(name);
 
     sprintf_s(name, sizeof(name), "%s:%d:%d%s|SendBufferEmptyEvent", FLAG, g_cur_process_id, g_sdk_process_id, mem);
 
@@ -498,11 +498,11 @@ int xl_sdk_open_share_memory_event(bool reopen)
 
     if (NULL == g_sendBufferEmptyEvent)
     {
-        ERR("open fail %s", name);
+        E("open fail %s", name);
         return -24;
     }
 
-    DBG(name);
+    D(name);
     return 0;
 }
 
@@ -523,13 +523,13 @@ int xl_sdk_create_download_process()
 
     if (!ret)
     {
-        ERR("create fail %s", name);
+        E("create fail %s", name);
         return -1;
     }
 
     g_sdk_process_id = pi.dwProcessId;
 
-    DBG("%s sdk:%d", name, g_sdk_process_id);
+    D("%s sdk:%d", name, g_sdk_process_id);
     return 0;
 }
 
@@ -547,11 +547,11 @@ int xl_sdk_create_ServerStartUpEvent()
 
     if (NULL == g_proxyAliveMutex)
     {
-        ERR("create fail %s", name);
+        E("create fail %s", name);
         return -1;
     }
 
-    DBG(name);
+    D(name);
 
     sprintf_s(name, sizeof(name), "%s:%d:%d|ServerStartUpEvent", FLAG, g_cur_process_id, g_sdk_process_id);
 
@@ -559,11 +559,11 @@ int xl_sdk_create_ServerStartUpEvent()
 
     if (NULL == g_serverStartUpEvent)
     {
-        ERR("create fail %s", name);
+        E("create fail %s", name);
         return -2;
     }
 
-    DBG(name);
+    D(name);
     return 0;
 }
 
@@ -583,14 +583,14 @@ int xl_sdk_open_AccetpReturnEvent()
 
     if (NULL == accetpReturnEvent)
     {
-        ERR("open fail %s", name);
+        E("open fail %s", name);
         return -1;
     }
 
     SetEvent(accetpReturnEvent);    // 设置后DownloadSDKServer.exe的第二线程退出
     CloseHandle(accetpReturnEvent);
 
-    DBG(name);
+    D(name);
     return 0;
 }
 
@@ -608,14 +608,14 @@ int xl_sdk_open_ClientAliveMutex()
 
     if (NULL == clientAliveMutex)
     {
-        ERR("open fail %s", name);
+        E("open fail %s", name);
         return -1;
     }
 
     WaitForSingleObject(clientAliveMutex, INFINITE);    // 进入临界区,防止DownloadSDKServer.exe的主循环退出
     CloseHandle(clientAliveMutex);
 
-    DBG(name);
+    D(name);
     return 0;
 }
 
@@ -634,7 +634,7 @@ int xl_sdk_call_get_share_memory_id()
     ResetEvent(g_recvBufferEmptyEvent);
     SetEvent(g_recvBufferFullEvent);
 
-    DBG("write 1");
+    D("write 1");
 
     // 等待对方发送数据,由DownloadSDKServer.exe触发
     WaitForSingleObject(g_sendBufferFullEvent, INFINITE);
@@ -642,13 +642,13 @@ int xl_sdk_call_get_share_memory_id()
     // 固定数据2
     if (g_send[0] != 2)
     {
-        ERR("get share memory id fail");
+        E("get share memory id fail");
         return -1;
     }
 
     // 共享内存ID,4字节大小
     g_share_memory_id = *(DWORD*)&g_send[1];
-    DBG("recei 2 id:%d", g_share_memory_id);
+    D("recei 2 id:%d", g_share_memory_id);
 
     ResetEvent(g_sendBufferFullEvent);
     SetEvent(g_sendBufferEmptyEvent);
@@ -662,7 +662,7 @@ int xl_sdk_call_get_share_memory_id()
     ResetEvent(g_recvBufferEmptyEvent);
     SetEvent(g_recvBufferFullEvent);
 
-    DBG("write 3");
+    D("write 3");
 
     return 0;
 }
@@ -696,7 +696,7 @@ int xl_sdk_call_sdk_init()
 
     if (0 != ret)
     {
-        ERR("call XL_Init fail");
+        E("call XL_Init fail");
         return -1;
     }
 
@@ -706,7 +706,7 @@ int xl_sdk_call_sdk_init()
 
     if (0 != ret)
     {
-        ERR("call XL_GetPeerId fail");
+        E("call XL_GetPeerId fail");
         return -2;
     }
 
@@ -722,7 +722,7 @@ int xl_sdk_call_sdk_init()
 
     if (0 != ret)
     {
-        ERR("call XL_SetUserInfo fail");
+        E("call XL_SetUserInfo fail");
         return -3;
     }
 
@@ -733,7 +733,7 @@ int xl_sdk_call_sdk_init()
 
     if (0 != ret)
     {
-        ERR("call XL_SetGlobalExtInfo fail");
+        E("call XL_SetGlobalExtInfo fail");
         return -4;
     }
 
@@ -744,7 +744,7 @@ int xl_sdk_call_sdk_init()
 
     if (0 != ret)
     {
-        ERR("call XL_SetDownloadSpeedLimit fail");
+        E("call XL_SetDownloadSpeedLimit fail");
         return -5;
     }
 
@@ -755,7 +755,7 @@ int xl_sdk_call_sdk_init()
 
     if (0 != ret)
     {
-        ERR("call XL_SetUploadSpeedLimit fail");
+        E("call XL_SetUploadSpeedLimit fail");
         return -6;
     }
 
@@ -766,7 +766,7 @@ int xl_sdk_call_sdk_init()
 
     if (0 != ret)
     {
-        ERR("call XL_SetGlobalConnectionLimit fail");
+        E("call XL_SetGlobalConnectionLimit fail");
         return -7;
     }
 
@@ -776,11 +776,11 @@ int xl_sdk_call_sdk_init()
 
     if (0 != ret)
     {
-        ERR("call XL_QueryGlobalStat fail");
+        E("call XL_QueryGlobalStat fail");
         return -8;
     }
 
-    DBG("call XL_Init ok");
+    D("call XL_Init ok");
     return 0;
 }
 
@@ -818,7 +818,7 @@ int xl_sdk_init()
 
     if (0 != ret)
     {
-        ERR("create process fail %d", ret);
+        E("create process fail %d", ret);
         return -1;
     }
 
@@ -826,7 +826,7 @@ int xl_sdk_init()
 
     if (0 != ret)
     {
-        ERR("create handler fail %d", ret);
+        E("create handler fail %d", ret);
         return -2;
     }
 
@@ -834,7 +834,7 @@ int xl_sdk_init()
 
     if (0 != ret)
     {
-        ERR("open handler fail %d", ret);
+        E("open handler fail %d", ret);
         return -3;
     }
 
@@ -842,7 +842,7 @@ int xl_sdk_init()
 
     if (0 != ret)
     {
-        ERR("open share memory fail %d", ret);
+        E("open share memory fail %d", ret);
         return -4;
     }
 
@@ -850,7 +850,7 @@ int xl_sdk_init()
 
     if (0 != ret)
     {
-        ERR("get share memory fail %d", ret);
+        E("get share memory fail %d", ret);
         return -5;
     }
 
@@ -858,7 +858,7 @@ int xl_sdk_init()
 
     if (0 != ret)
     {
-        ERR("open handler fail %d", ret);
+        E("open handler fail %d", ret);
         return -6;
     }
 
@@ -866,7 +866,7 @@ int xl_sdk_init()
 
     if (0 != ret)
     {
-        ERR("reopen share memory fail %d", ret);
+        E("reopen share memory fail %d", ret);
         return -7;
     }
 
@@ -877,7 +877,7 @@ int xl_sdk_init()
 
     if (0 != ret)
     {
-        ERR("init sdk fail %d", ret);
+        E("init sdk fail %d", ret);
         return -8;
     }
 
@@ -885,13 +885,13 @@ int xl_sdk_init()
 
     if (0 != ret)
     {
-        ERR("create track fail %d", ret);
+        E("create track fail %d", ret);
         return -9;
     }
 
     g_init = TRUE;
 
-    DBG("ok");
+    D("ok");
     return 0;
 }
 
@@ -948,7 +948,7 @@ int xl_sdk_create_bt_task(const char *torrent, const char *path, const char *lis
         return -1;
     }
 
-    DBG("torrent:%s path:%s list:%s", torrent, path, list);
+    D("torrent:%s path:%s list:%s", torrent, path, list);
 
     short torrent_short[MAX_PATH];
     int   torrent_len  = strlen(torrent);
@@ -962,13 +962,13 @@ int xl_sdk_create_bt_task(const char *torrent, const char *path, const char *lis
 
     if (0 != utf8_unicode(torrent, torrent_len, torrent_short, &torrent_size))
     {
-        ERR("utf8 to unicode error %s", torrent);
+        E("utf8 to unicode Eor %s", torrent);
         return -2;
     }
 
     if (0 != utf8_unicode(path, path_len, path_short, &path_size))
     {
-        ERR("utf8 to unicode error %s", path);
+        E("utf8 to unicode Eor %s", path);
         return -3;
     }
 
@@ -995,13 +995,19 @@ int xl_sdk_create_bt_task(const char *torrent, const char *path, const char *lis
 
     if (0 != ret)
     {
-        ERR("call sdk func fail");
+        E("call sdk func fail");
         return -3;
     }
 
     *taskid = *(int*)(g_send_tmp + 12);
 
-    DBG("ok");
+    char *filename = strrchr(torrent, '\\');
+
+    filename = (NULL == filename) ? "" : filename + 1;
+
+    sprintf_s(task_name, task_name_size, "%s|%s", filename, list);
+
+    D("ok");
     return 0;
 }
 
@@ -1021,7 +1027,7 @@ int xl_sdk_create_url_task(const char *url, const char *path, int *taskid, char 
         return -1;
     }
 
-    DBG("url:%s path:%s", url, path);
+    D("url:%s path:%s", url, path);
 
     short url_short[MAX_PATH];
     int   url_len  = strlen(url);
@@ -1033,13 +1039,13 @@ int xl_sdk_create_url_task(const char *url, const char *path, int *taskid, char 
 
     if (0 != utf8_unicode(url, url_len, url_short, &url_size))
     {
-        ERR("utf8 to unicode error %s", url);
+        E("utf8 to unicode Eor %s", url);
         return -2;
     }
 
     if (0 != utf8_unicode(path, path_len, path_short, &path_size))
     {
-        ERR("utf8 to unicode error %s", path);
+        E("utf8 to unicode Eor %s", path);
         return -3;
     }
 
@@ -1047,7 +1053,7 @@ int xl_sdk_create_url_task(const char *url, const char *path, int *taskid, char 
 
     if (NULL == filename)
     {
-        ERR("no filename");
+        E("no filename");
         return -3;
     }
 
@@ -1082,7 +1088,7 @@ int xl_sdk_create_url_task(const char *url, const char *path, int *taskid, char 
 
     if (0 != ret)
     {
-        ERR("call sdk func fail");
+        E("call sdk func fail");
         return -4;
     }
 
@@ -1096,11 +1102,11 @@ int xl_sdk_create_url_task(const char *url, const char *path, int *taskid, char 
 
     if (0 != unicode_ansi(filename, filename_len, task_name + path_len + 1, &len))
     {
-        ERR("unicode to ansi error");
+        E("unicode to ansi Eor");
         return 0;
     }
 
-    DBG("ok");
+    D("ok");
     return 0;
 }
 
@@ -1120,7 +1126,7 @@ int xl_sdk_create_magnet_task(const char *magnet, const char *path, int *taskid,
         return -1;
     }
 
-    DBG("magent:%s path:%d", magnet, path);
+    D("magent:%s path:%d", magnet, path);
 
     short magnet_short[MAX_PATH];
     int   magnet_len  = strlen(magnet);
@@ -1132,13 +1138,13 @@ int xl_sdk_create_magnet_task(const char *magnet, const char *path, int *taskid,
 
     if (0 != utf8_unicode(magnet, magnet_len, magnet_short, &magnet_size))
     {
-        ERR("utf8 to unicode error %s", magnet);
+        E("utf8 to unicode Eor %s", magnet);
         return -2;
     }
 
     if (0 != utf8_unicode(path, path_len, path_short, &path_size))
     {
-        ERR("utf8 to unicode error %s", path);
+        E("utf8 to unicode Eor %s", path);
         return -3;
     }
 
@@ -1163,7 +1169,7 @@ int xl_sdk_create_magnet_task(const char *magnet, const char *path, int *taskid,
 
     if (0 != ret)
     {
-        ERR("call sdk func fail");
+        E("call sdk func fail");
         return -4;
     }
 
@@ -1171,11 +1177,11 @@ int xl_sdk_create_magnet_task(const char *magnet, const char *path, int *taskid,
 
     if (0 != unicode_ansi(id, arg2->len, task_name, &task_name_size))
     {
-        ERR("unicode to ansi error");
+        E("unicode to ansi Eor");
         return 0;
     }
 
-    DBG("ok");
+    D("ok");
     return 0;
 }
 

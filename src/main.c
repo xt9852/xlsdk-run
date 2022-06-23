@@ -64,9 +64,6 @@
                 td.innerText = item['id'];\n\
                 tr.appendChild(td);\n\
                 td = document.createElement('td');\n\
-                td.innerText = item['torrent'];\n\
-                tr.appendChild(td);\n\
-                td = document.createElement('td');\n\
                 file = decodeURIComponent(atob(item['file']));\n\
                 td.id = 'file_' + i;\n\
                 td.innerText = file;\n\
@@ -78,7 +75,7 @@
                 td.innerText = item['speed'];\n\
                 tr.appendChild(td);\n\
                 td = document.createElement('td');\n\
-                td.innerText = item['progress'];\n\
+                td.innerText = item['prog'];\n\
                 tr.appendChild(td);\n\
                 td = document.createElement('td');\n\
                 td.innerText = item['time'];\n\
@@ -99,7 +96,6 @@
         }\n\
     }\n\
     function show_in_torrent_files(){\n\
-        this.style.display = 'none';\n\
         filename = document.getElementById('file_' + this.i).innerText;\n\
         url = '/torrent-list?torrent=' + filename\n\
         req = new XMLHttpRequest();\n\
@@ -145,7 +141,7 @@
 <table id='file-list' border='1' style='border-collapse:collapse;display:none'>\
 <tr><th><input type='checkbox' name='check' onclick='on_check(this)' /></th><th>大小</th><th>文件</th></tr></table>\
 <table id='down-list' border='1' style='border-collapse:collapse;'>\
-<tr><th>任务</th><th>种子</th><th>文件</th><th>大小</th><th>速度</th><th>进度</th><th>用时</th><th>操作</th></tr>\
+<tr><th>任务</th><th>文件</th><th>大小</th><th>速度</th><th>进度</th><th>用时</th><th>操作</th></tr>\
 </table>\
 </body>"
 config                  g_cfg           = {0};  ///< 配置数据
@@ -178,8 +174,8 @@ void format_data(unsigned __int64 data, char *info, int info_size)
     double m1 = data / 1024.0 / 1024.0;
     double k1 = data / 1024.0;
 
-    DBG("g:%f m:%f k:%f", g, m, k);
-    DBG("g1:%f m1:%f k1:%f", g1, m1, k1);
+    D("g:%f m:%f k:%f", g, m, k);
+    D("g1:%f m1:%f k1:%f", g1, m1, k1);
 
     if (g >= 0.9)
     {
@@ -212,13 +208,13 @@ int xl_download(const char *filename, const char *list)
     int task_type;
     char task_name[MAX_PATH];
 
-    DBG("task count:%d", g_task_count);
+    D("task count:%d", g_task_count);
 
     for (int i = 0; i < g_task_count; i++)
     {
         if (0 == strcmp(filename, g_task[i].filename))  // 已经下载
         {
-            DBG("have %s", filename);
+            D("have %s", filename);
             return 0;
         }
     }
@@ -249,7 +245,7 @@ int xl_download(const char *filename, const char *list)
 
     if (0 != ret)
     {
-        ERR("create task %s error:%d", filename, ret);
+        E("create task %s Eor:%d", filename, ret);
         return -2;
     }
 
@@ -257,7 +253,7 @@ int xl_download(const char *filename, const char *list)
 
     if (0 != ret)
     {
-        ERR("download start %s error:%d", filename, ret);
+        E("download start %s Eor:%d", filename, ret);
         return -3;
     }
 
@@ -265,27 +261,39 @@ int xl_download(const char *filename, const char *list)
 
     if (0 != ret)
     {
-        ERR("get task info error:%d", ret);
+        E("get task info Eor:%d", ret);
         return -4;
     }
 
-    char size[16];
-    format_data(g_task[g_task_count].size, size, sizeof(size));
-
-    DBG("task:%d size:%s", task_id, size);
-
-    strcpy_s(g_task[g_task_count].filename, sizeof(g_task[g_task_count].filename), filename);
-    g_task[g_task_count].id   = task_id;
-    g_task[g_task_count].type = task_type;
-    g_task[g_task_count].size = 0;
-    g_task[g_task_count].down = 0;
-    g_task[g_task_count].time = 0;
-
-    /* test */
-    strcpy_s(g_task[g_task_count].filename, sizeof(g_task[g_task_count].filename), "C:\\Program Files\\7-Zip\\1\\DB2FE78374A1A18C1A5EFCC5E961901A1BCACFD2.torrent");
-    g_task[g_task_count].type = TASK_MAGNET;
-    g_task[g_task_count].time = 123;
-    g_task[g_task_count].size = 1024*1024*1024 + 235*1024*1024;
+    /* ------------------test--------------------- */
+    if (0 == strcmp(filename, "http://127.0.0.1/"))
+    {
+        strcpy_s(g_task[g_task_count].filename, sizeof(g_task[g_task_count].filename), "C:\\Program Files\\7-Zip\\1\\DB2FE78374A1A18C1A5EFCC5E961901A1BCACFD2.torrent");
+        g_task[g_task_count].type      = TASK_MAGNET;
+        g_task[g_task_count].size      = 1024*1024*1024 + 235*1024*1024;
+        g_task[g_task_count].down      = 1024*1024*1024;
+        g_task[g_task_count].time      = 123;
+        g_task[g_task_count].last_down = 0;
+        g_task[g_task_count].last_time = 0;
+    }
+    else if (0 == strcmp(filename, "http://127.0.0.2/"))
+    {
+        strcpy_s(g_task[g_task_count].filename, sizeof(g_task[g_task_count].filename), "D:\\5.downloads\\bt\\7097B42EEBC037482B69056276858599ED9605B5.torrent");
+        g_task[g_task_count].type      = TASK_MAGNET;
+        g_task[g_task_count].size      = 4*1024*1024*1024ll + 567*1024*1024;
+        g_task[g_task_count].down      = 1024*1024*1024;
+        g_task[g_task_count].time      = 456;
+        g_task[g_task_count].last_down = 0;
+        g_task[g_task_count].last_time = 0;
+    }
+    else
+    {
+        strcpy_s(g_task[g_task_count].filename, sizeof(g_task[g_task_count].filename), task_name);
+        g_task[g_task_count].id        = task_id;
+        g_task[g_task_count].type      = task_type;
+        g_task[g_task_count].last_down = 0;
+        g_task[g_task_count].last_time = 0;
+    }
 
     g_task_count++;
 
@@ -315,18 +323,21 @@ int http_proc_download(const p_xt_http_arg arg, p_xt_http_content content)
 
     if (NULL != file && 0 != xl_download(file, list))
     {
-        ERR("xl_download fail");
+        E("xl_download fail");
         return -1;
     }
 
-    int   pos = 1;
-    int   len;
-    int   encode_len;
-    int   base64_len;
-    char  size[16];
-    char  encode[MAX_PATH];
-    char  base64[MAX_PATH];
-    char *data = content->data;
+    int    pos = 1;
+    int    len;
+    int    encode_len;
+    int    base64_len;
+    int    time;
+    char   size[16];
+    char   speed[16];
+    char   encode[MAX_PATH];
+    char   base64[MAX_PATH];
+    char  *data = content->data;
+    double prog;
 
     data[0] = '[';
 
@@ -339,10 +350,15 @@ int http_proc_download(const p_xt_http_arg arg, p_xt_http_content content)
         base64_encode(encode, encode_len, base64, &base64_len); // 文件名中可能有json需要转码的字符
         format_data(g_task[i].size, size, sizeof(size));
 
+        time = g_task[i].time - g_task[i].last_time;
+        if (0 == time) time = 1;
+        format_data((g_task[i].down - g_task[i].last_down) / time, speed, sizeof(speed));
+
+        prog = (0 == g_task[i].size) ? 0 : g_task[i].down * 100.0 / g_task[i].size;
+
         len = snprintf(data + pos, content->len - pos,
-                       "{\"id\":%d,\"torrent\":\"%s\",\"file\":\"%s\",\"size\":\"%s\","
-                       "\"speed\":\"%s\",\"progress\":\"%s\",\"time\":%d},",
-                       g_task[i].id, "", base64, size, "1.23M", "12.3", g_task[i].time);
+                       "{\"id\":%d,\"file\":\"%s\",\"size\":\"%s\",\"speed\":\"%s\",\"prog\":\"%.2f\",\"time\":%d},",
+                       g_task[i].id, base64, size, speed, prog, g_task[i].time);
         pos += len;
     }
 
@@ -377,13 +393,13 @@ int http_proc_torrent(const p_xt_http_arg arg, p_xt_http_content content)
 
     if (NULL == file || 0 == strcmp(file, ""))
     {
-        DBG("file:null or \"\"");
+        D("file:null or \"\"");
         return -2;
     }
 
     if (0 != get_torrent_info(file, &g_torrent))
     {
-        ERR("get torrent:%s info error", file);
+        E("get torrent:%s info Eor", file);
         return -3;
     }
 
@@ -407,7 +423,7 @@ int http_proc_torrent(const p_xt_http_arg arg, p_xt_http_content content)
         base64_encode(encode, encode_len, base64, &base64_len); // 文件名中可能有json需要转码的字符
         format_data(g_torrent.file[i].size, size, sizeof(size));
 
-        DBG("i:%d file:%s uri_encode:%s base64(uri_encode):%s", i, g_torrent.file[i].name, encode, base64);
+        D("i:%d file:%s uri_encode:%s base64(uri_encode):%s", i, g_torrent.file[i].name, encode, base64);
 
         len = snprintf(data + pos, content->len - pos, "{\"file\":\"%s\",\"size\":\"%s\"},", base64, size);
         pos += len;
@@ -443,7 +459,7 @@ int http_proc_other(const char *uri, p_xt_http_content content)
 
     if (NULL == fp)
     {
-        ERR("open %s fail", file);
+        E("open %s fail", file);
         return -1;
     }
 
@@ -454,7 +470,7 @@ int http_proc_other(const char *uri, p_xt_http_content content)
     fread(content->data, 1, content->len, fp);
     fclose(fp);
 
-    DBG("%s size:%d", file, content->len);
+    D("%s size:%d", file, content->len);
 
     char *ext = strrchr(file, '.');
 
@@ -522,7 +538,7 @@ int http_proc_index(p_xt_http_content content)
  */
 int http_proc_callback(const char *uri, const p_xt_http_arg arg, p_xt_http_content content)
 {
-    DBG("uri:%s", uri);
+    D("uri:%s", uri);
 
     if (0 == strcmp(uri, "/"))
     {
@@ -555,7 +571,7 @@ int http_proc_callback(const char *uri, const p_xt_http_arg arg, p_xt_http_conte
  */
 void timer_callback(void *param)
 {
-    DBG("param:%s", (char*)param);
+    D("param:%s", (char*)param);
 }
 
 /**
@@ -584,28 +600,28 @@ int init()
         return -20;
     }
 
-    DBG("g_log init ok");
+    D("g_log init ok");
 
     ret = log_init(TITLE".test", g_cfg.log_level, g_cfg.log_cycle, g_cfg.log_backup, g_cfg.log_clean, 38, &g_test);
 
     if (ret != 0)
     {
-        ERR("init log test fail %d", ret);
+        E("init log test fail %d", ret);
         return -21;
     }
 
-    DBG("g_log init ok");
-    DBG("g_log init ok");
-    DBG("g_log init ok");
-    DBG("g_log init ok");
+    D("g_log init ok");
+    D("g_log init ok");
+    D("g_log init ok");
+    D("g_log init ok");
 
-    D(&g_test, "g_test init ok");
-    D(&g_test, "g_test init ok");
-    D(&g_test, "g_test init ok");
-    D(&g_test, "g_test init ok");
-    D(&g_test, "g_test init ok");
+    DD(&g_test, "g_test init ok");
+    DD(&g_test, "g_test init ok");
+    DD(&g_test, "g_test init ok");
+    DD(&g_test, "g_test init ok");
+    DD(&g_test, "g_test init ok");
 
-    DBG("--------------------------------------------------------------------");
+    D("--------------------------------------------------------------------");
 
     xt_md5 md5;
     char   md5_out[128];
@@ -615,21 +631,21 @@ int init()
 
     if (ret != 0)
     {
-        ERR("get md5 fail %d", ret);
+        E("get md5 fail %d", ret);
         return -30;
     }
 
-    DBG("str:%s md5.A:%x B:%x C:%x D:%x", md5_in, md5.A, md5.B, md5.C, md5.D);
+    D("str:%s md5.A:%x B:%x C:%x D:%x", md5_in, md5.A, md5.B, md5.C, md5.D);
 
     ret = md5_get_str(md5_in, strlen(md5_in), md5_out);
 
     if (ret != 0)
     {
-        ERR("get md5 str fail %d", ret);
+        E("get md5 str fail %d", ret);
         return -31;
     }
 
-    DBG("str:%s md5:%s", md5_in, md5_out);
+    D("str:%s md5:%s", md5_in, md5_out);
 
     md5_in = "1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890"\
              "1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890"\
@@ -642,13 +658,13 @@ int init()
 
     if (ret != 0)
     {
-        ERR("get md5 str fail %d", ret);
+        E("get md5 str fail %d", ret);
         return -32;
     }
 
-    DBG("str:%s md5:%s", md5_in, md5_out);
+    D("str:%s md5:%s", md5_in, md5_out);
 
-    DBG("--------------------------------------------------------------------");
+    D("--------------------------------------------------------------------");
 
     int len;
     char base64[64];
@@ -663,34 +679,34 @@ int init()
 
         if (ret != 0)
         {
-            ERR("get base64 str fail %d", ret);
+            E("get base64 str fail %d", ret);
             return -40;
         }
 
-        DBG("data:%s base64:%s len:%d", data[i], base64, len);
+        D("data:%s base64:%s len:%d", data[i], base64, len);
 
         ret = base64_decode(base64, len, output, &len);
 
         if (ret != 0)
         {
-            ERR("from base64 get data fail %d", ret);
+            E("from base64 get data fail %d", ret);
             return -41;
         }
 
-        DBG("base64:%s data:%s len:%d", base64, output, len);
+        D("base64:%s data:%s len:%d", base64, output, len);
     }
 
-    DBG("--------------------------------------------------------------------");
+    D("--------------------------------------------------------------------");
 
     ret = pinyin_init_res("PINYIN", IDR_PINYIN);
 
     if (ret != 0)
     {
-        ERR("init pinyin fail %d", ret);
+        E("init pinyin fail %d", ret);
         return -50;
     }
 
-    DBG("--------------------------------------------------------------------");
+    D("--------------------------------------------------------------------");
 
     xt_memory_pool mem_pool;
 
@@ -698,7 +714,7 @@ int init()
 
     if (ret != 0)
     {
-        ERR("init memory pool fail %d", ret);
+        E("init memory pool fail %d", ret);
         return -60;
     }
 
@@ -710,11 +726,11 @@ int init()
 
         if (ret != 0)
         {
-            ERR("memory pool get fail %d", ret);
+            E("memory pool get fail %d", ret);
             return -61;
         }
 
-        DBG("memory_pool_get ret:%d count:%d list-size:%d count:%d head:%d tail:%d", ret, mem_pool.count,
+        D("memory_pool_get ret:%d count:%d list-size:%d count:%d head:%d tail:%d", ret, mem_pool.count,
         mem_pool.free.size, mem_pool.free.count, mem_pool.free.head, mem_pool.free.tail);
     }
 
@@ -722,38 +738,38 @@ int init()
 
     if (ret != 0)
     {
-        ERR("memory pool put fail %d", ret);
+        E("memory pool put fail %d", ret);
         return -62;
     }
 
-    DBG("memory_pool_put ret:%d memory-pool-count:%d list-size:%d count:%d head:%d tail:%d", ret, mem_pool.count,
+    D("memory_pool_put ret:%d memory-pool-count:%d list-size:%d count:%d head:%d tail:%d", ret, mem_pool.count,
         mem_pool.free.size, mem_pool.free.count, mem_pool.free.head, mem_pool.free.tail);
 
     ret = memory_pool_uninit(&mem_pool);
 
     if (ret != 0)
     {
-        ERR("memory pool uninit fail %d", ret);
+        E("memory pool uninit fail %d", ret);
         return -63;
     }
 
-    DBG("--------------------------------------------------------------------");
+    D("--------------------------------------------------------------------");
 
     ret = thread_pool_init(&g_thread_pool, 10);
 
     if (ret != 0)
     {
-        ERR("thread pool init fail %d", ret);
+        E("thread pool init fail %d", ret);
         return -70;
     }
 
-    DBG("--------------------------------------------------------------------");
+    D("--------------------------------------------------------------------");
 
     ret = timer_init(&g_timer_set);
 
     if (ret != 0)
     {
-        ERR("timer init fail %d", ret);
+        E("timer init fail %d", ret);
         return -80;
     }
 
@@ -761,7 +777,7 @@ int init()
 
     if (ret != 0)
     {
-        ERR("add cycle timer fail %d", ret);
+        E("add cycle timer fail %d", ret);
         return -81;
     }
 
@@ -769,7 +785,7 @@ int init()
 
     if (ret != 0)
     {
-        ERR("add cycle timer fail %d", ret);
+        E("add cycle timer fail %d", ret);
         return -82;
     }
 
@@ -777,38 +793,38 @@ int init()
 
     if (ret != 0)
     {
-        ERR("add cron timer fail %d", ret);
+        E("add cron timer fail %d", ret);
         return -83;
     }
 
-    DBG("--------------------------------------------------------------------");
+    D("--------------------------------------------------------------------");
 
     ret = http_init(g_cfg.http_port, http_proc_callback, &g_http);
 
     if (ret != 0)
     {
-        ERR("http init fail %d", ret);
+        E("http init fail %d", ret);
         return -90;
     }
 
-    DBG("--------------------------------------------------------------------");
+    D("--------------------------------------------------------------------");
 
     // 初始化SDK
     ret = xl_sdk_init();
 
     if (0 != ret)
     {
-        ERR("init error:%d", ret);
+        E("init Eor:%d", ret);
         return -100;
     }
 
-    DBG("--------------------------------------------------------------------");
+    D("--------------------------------------------------------------------");
 
     ret = get_torrent_info("D:\\5.downloads\\bt\\7097B42EEBC037482B69056276858599ED9605B5.torrent", &g_torrent);
 
     if (0 != ret)
     {
-        ERR("init error:%d", ret);
+        E("init Eor:%d", ret);
         return -110;
     }
 
@@ -875,22 +891,22 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 }
 
 /*
-    int error;
+    int Eor;
     PCRE2_SIZE offset;
     PCRE2_SIZE *ovector;
 
     char *pattern = "{0-9}{5}";
 
-    pcre2_code *pcre_data = pcre2_compile((PCRE2_SPTR)pattern, 0, 0, &error, &offset, NULL);
+    pcre2_code *pcre_data = pcre2_compile((PCRE2_SPTR)pattern, 0, 0, &Eor, &offset, NULL);
 
     if (pcre_data == NULL)
     {
         PCRE2_UCHAR info[256];
-        //pcre2_get_error_message(error, info, sizeof(info));
-        ERR("PCRE init fail pattern:%s offste:%d err:%s", pattern, offset, error, info);
+        //pcre2_get_Eor_message(Eor, info, sizeof(info));
+        E("PCRE init fail pattern:%s offste:%d E:%s", pattern, offset, Eor, info);
     }
 
-    DBG("pcre2_compile ok pattern:\"%s\"", pattern);
+    D("pcre2_compile ok pattern:\"%s\"", pattern);
 
     char *subject = "abcdefghijkl";
 
@@ -906,13 +922,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         {
             //int substring_length = ovector[2 * i + 1] - ovector[2 * i];
             //char* substring_start = subject + ovector[2*i];
-            //DBG("%d: %d %.*s", i, substring_length, substring_start);
-            DBG("%d:%d %d", i, ovector[2 * i], ovector[2 * i + 1]);
+            //D("%d: %d %.*s", i, substring_length, substring_start);
+            D("%d:%d %d", i, ovector[2 * i], ovector[2 * i + 1]);
         }
     }
 
     pcre2_match_data_free(match_data);
     pcre2_code_free(pcre_data);
 
-    DBG("pcre2_match subject:\"%s\" ret:%d", subject, ret);
+    D("pcre2_match subject:\"%s\" ret:%d", subject, ret);
 */

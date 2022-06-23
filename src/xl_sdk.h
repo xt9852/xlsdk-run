@@ -28,9 +28,13 @@ typedef struct _xl_task
 
     unsigned int        time;               ///< 用时秒数
 
-    int                 type;               ///< 任务类型
+    unsigned int        type;               ///< 任务类型
 
     char                filename[512];      ///< 文件名
+    
+    unsigned __int64    last_down;          ///< 上次计算时已经下载的数量
+    
+    unsigned int        last_time;          ///< 上次计算时用时秒数
 
 }xl_task, *p_xl_task;                       ///< 任务信息指针
 
