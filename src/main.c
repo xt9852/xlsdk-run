@@ -4,7 +4,7 @@
  *\author       xt
  *\version      1.0.0
  *\date         2022-02-08
- *\brief        主模块实现,UTF-8(No BOM)
+ *\brief        主模块,UTF-8(No BOM)
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -108,7 +108,9 @@
             console.log(url + ' status:' + req.status);\n\
             if (req.readyState != 4 || req.status != 200) {alert('http请求失败');return;}\n\
             rp = JSON.parse(req.responseText);\n\
-            document.getElementById('file').value = filename;\n\
+            input = document.getElementById('file');\n\
+            input.value = filename;\n\
+            input.size = filename.length;\n\
             file_table = document.getElementById('file-list');\n\
             file_table.style.display = '';\n\
             file_tbody = file_table.childNodes[0];\n\
@@ -147,56 +149,23 @@
 <tr><th>任务</th><th>文件</th><th>大小</th><th>速度</th><th>进度</th><th>用时</th><th>操作</th></tr>\
 </table>\
 </body>"
-config                  g_cfg           = {0};  ///< 配置数据
+config              g_cfg                   = {0};  ///< 配置数据
 
-xt_log                  g_log           = {0};  ///< 日志数据
-xt_log                  g_test          = {0};  ///< 多日志测试
+xt_list             g_monitor_event_list    = {0};  ///< 监控事件队列
 
-xt_http                 g_http          = {0};  ///< HTTP服务
-xt_thread_pool          g_thread_pool   = {0};  ///< 线程池
-xt_timer_set            g_timer_set     = {0};  ///< 定时器
+xt_memory_pool      g_memory_pool           = {0};  ///< 内存池
 
-bt_torrent              g_torrent       = {0};  ///< 种子文件信息
-xl_task                 g_task[128]     = {0};  ///< 当前正在下载的任务信息
-int                     g_task_count    = 0;    ///< 当前正在下载的任务数量
+xt_log              g_log                   = {0};  ///< 日志数据
+xt_log              g_test                  = {0};  ///< 多日志测试
 
-/**
- *\brief        得到格式化后的信息
- *\param[in]    data            数据
- *\param[out]   info            信息
- *\param[in]    info_size       缓冲区大小
- *\return                       无
- */
-void format_data(unsigned __int64 data, char *info, int info_size)
-{
-    double g = (double)data / (1024.0 * 1024 * 1024);
-    double m = (double)data / (1024.0 * 1024);
-    double k = (double)data / (1024.0);
+xt_http             g_http                  = {0};  ///< HTTP服务
+xt_thread_pool      g_thread_pool           = {0};  ///< 线程池
+xt_timer_set        g_timer_set             = {0};  ///< 定时器
 
-    double g1 = data / 1024.0 / 1024.0 / 1024.0;
-    double m1 = data / 1024.0 / 1024.0;
-    double k1 = data / 1024.0;
+bt_torrent          g_torrent               = {0};  ///< 种子文件信息
+xl_task             g_task[128]             = {0};  ///< 当前正在下载的任务信息
+int                 g_task_count            = 0;    ///< 当前正在下载的任务数量
 
-    D("g:%f m:%f k:%f", g, m, k);
-    D("g1:%f m1:%f k1:%f", g1, m1, k1);
-
-    if (g >= 0.9)
-    {
-        snprintf(info, info_size, "%.2fG", g);
-    }
-    else if (m >= 0.9)
-    {
-        snprintf(info, info_size, "%.2fM", m);
-    }
-    else if (k >= 0.9)
-    {
-        snprintf(info, info_size, "%.2fK", k);
-    }
-    else
-    {
-        snprintf(info, info_size, "%I64u", data);
-    }
-}
 
 /**
  *\brief        下载文件
@@ -483,7 +452,11 @@ int http_proc_other(const char *uri, p_xt_http_content content)
         return 0;
     }
 
-    if (0 == strcmp(ext, ".co"))
+    if (0 == strcmp(ext, ".xml"))
+    {
+        content->type = HTTP_TYPE_XML;
+    }
+    else if (0 == strcmp(ext, ".ico"))
     {
         content->type = HTTP_TYPE_ICO;
     }
@@ -594,7 +567,7 @@ int init()
         return -10;
     }
 
-    ret = log_init(g_cfg.log_filename, g_cfg.log_level, g_cfg.log_cycle, g_cfg.log_backup, g_cfg.log_clean, 38, &g_log);
+    ret = log_init_ex(g_cfg.log_filename, g_cfg.log_level, g_cfg.log_cycle, g_cfg.log_backup, g_cfg.log_clean, 38, &g_log);
 
     if (ret != 0)
     {
@@ -605,7 +578,7 @@ int init()
 
     D("g_log init ok");
 
-    ret = log_init(TITLE".test", g_cfg.log_level, g_cfg.log_cycle, g_cfg.log_backup, g_cfg.log_clean, 38, &g_test);
+    ret = log_init_ex(TITLE".test", g_cfg.log_level, g_cfg.log_cycle, g_cfg.log_backup, g_cfg.log_clean, 38, &g_test);
 
     if (ret != 0)
     {
@@ -826,7 +799,7 @@ int init()
     int error;
     PCRE2_SIZE offset;
 
-    PCRE2_SPTR reg = "[0-9]{5}";
+    PCRE2_SPTR reg = "[0-9]{5}[a-z]+[0-9]{5}";
 
     pcre2_code *pcre_data = pcre2_compile(reg, PCRE2_ZERO_TERMINATED, 0, &error, &offset, NULL);
 
@@ -852,7 +825,7 @@ int init()
 
     D("pcre2_match_data_create_from_pattern:ok reg:%s", reg);
 
-    PCRE2_SPTR txt = "abcde12345fghijkl";
+    PCRE2_SPTR txt = "abcde12345abcde12345-=";
 
     ret = pcre2_match(pcre_data, txt, strlen(txt), 0, 0, match_data, NULL); // <0发生错误，==0没有匹配上，>0返回匹配到的元素数量
 
@@ -872,13 +845,13 @@ int init()
         int len;
         char format[512];
 
-        PCRE2_SIZE *ovector = pcre2_get_ovector_pointer(match_data);
+        PCRE2_SIZE *pos = pcre2_get_ovector_pointer(match_data);
 
         for (int i = 0; i < ret; i++)
         {
-            len = ovector[2 * i + 1] - ovector[2 * i];
+            len = pos[2 * i + 1] - pos[2 * i];
             sprintf_s(format, sizeof(format), "i:%%d pos:%%d-%%d len:%%d str:%%.%ds", len);
-            D(format, i, ovector[2 * i], ovector[2 * i + 1], len, txt + ovector[2 * i]);
+            D(format, i, pos[2 * i], pos[2 * i + 1], len, txt + pos[2 * i]);
         }
     }
 
@@ -914,6 +887,97 @@ void on_menu_exit(HWND wnd, void *param)
     DestroyWindow(wnd);
 }
 
+#include "cunit.h"
+#include "Automated.h"
+
+void case_1(void)
+{
+    //CU_FAIL("This is a failure.");
+    CU_ASSERT(1); // 0-失败,!0-成功
+    CU_ASSERT_TRUE(CU_TRUE);
+    CU_ASSERT_FALSE(CU_FALSE);
+    CU_TEST_FATAL(CU_TRUE);
+}
+
+void case_2(void)
+{
+    CU_ASSERT_EQUAL(10, 10);
+    CU_ASSERT_NOT_EQUAL(10, 11);
+}
+
+void case_3(void)
+{
+    CU_ASSERT_PTR_EQUAL((void*)0x100, (void*)0x100);
+    CU_ASSERT_PTR_NOT_EQUAL((void*)0x100, (void*)0x101);
+    CU_ASSERT_PTR_NULL((void*)(NULL));
+    CU_ASSERT_PTR_NOT_NULL((void*)0x100);
+}
+
+void case_4(void)
+{
+    char *str1 = "1234567";
+    char *str2 = "1234567";
+    char *str3 = "123----";
+    CU_ASSERT_STRING_EQUAL(str1, str2);
+    CU_ASSERT_STRING_NOT_EQUAL(str1, str3);
+    CU_ASSERT_NSTRING_EQUAL(str1, str2, strlen(str1));
+    CU_ASSERT_NSTRING_NOT_EQUAL(str1, str3, 4);
+}
+
+void case_5(void)
+{
+    CU_ASSERT_DOUBLE_EQUAL(10, 10.0001, 0.0001);
+    CU_ASSERT_DOUBLE_NOT_EQUAL(10, 10.001, 0.0001);
+}
+
+int suite_init(void)
+{
+    return 0;
+}
+
+int suite_clean(void)
+{
+    return 0;
+}
+
+#define CU(x) { "\"" #x "\"", x }
+
+int cunit()
+{
+    CU_TestInfo cases[] =
+    {
+        CU(case_1),
+        CU(case_2),
+        CU(case_3),
+        CU(case_4),
+        CU(case_5),
+        CU_TEST_INFO_NULL
+    };
+
+    CU_SuiteInfo suites[] =
+    {
+        {TITLE, suite_init, suite_clean, NULL, NULL, cases}, CU_SUITE_INFO_NULL
+    };
+
+    if (CUE_SUCCESS != CU_initialize_registry())
+    {
+        E("init cunit fail");
+        return -1;
+    }
+
+    if (CUE_SUCCESS != CU_register_suites(suites))
+    {
+        E("reg suites fail:%s", CU_get_error_msg());
+        return -2;
+    }
+
+    CU_set_output_filename("D:\\2.code\\CUnit\\"TITLE".cunit");
+    CU_list_tests_to_file();
+    CU_automated_run_tests();
+    CU_cleanup_registry();
+    return 0;
+}
+
 /**
  *\brief        窗体类程序主函数
  *\param[in]    hInstance       当前实例句柄
@@ -932,6 +996,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     notify_menu_info menu[2] = { {0, L"显示(&S)", NULL, on_menu_show},{1, L"退出(&E)", NULL, on_menu_exit} };
 
     notify_init(hInstance, IDI_GREEN, SIZEOF(menu), menu);
+
+    cunit();
 
     // 消息体
     MSG msg;

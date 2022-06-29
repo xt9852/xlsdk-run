@@ -8,7 +8,6 @@
  */
 #ifndef _CONFIG_H_
 #define _CONFIG_H_
-#include "xt_log.h"
 
 /// 配置数据
 typedef struct _config
@@ -17,7 +16,7 @@ typedef struct _config
     int     log_level;          ///< 日志级别(调试,信息,警告,错误)
     int     log_cycle;          ///< 日志文件保留周期(时,天,周)
     int     log_backup;         ///< 日志文件保留数量
-    bool    log_clean;          ///< 首次打开日志文件时是否清空文件内容
+    int     log_clean;          ///< 首次打开日志文件时是否清空文件内容
 
     int     http_port;          ///< HTTP端口
     char    http_path[512];     ///< HTTP路径

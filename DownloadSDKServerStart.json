@@ -4,7 +4,7 @@
         "level": "debug",
         "cycle": "day",
         "backup": 7,
-        "clean": 1
+        "clean": true
     },
     "http": {
         "port": 80,

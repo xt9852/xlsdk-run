@@ -11,6 +11,7 @@
 #include <sys/stat.h>
 #include "config.h"
 #include "cJSON.h"
+#include "xt_log.h"
 
 /**
  *\brief        得到文件大小
