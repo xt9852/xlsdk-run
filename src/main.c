@@ -995,7 +995,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     notify_menu_info menu[2] = { {0, L"显示(&S)", NULL, on_menu_show},{1, L"退出(&E)", NULL, on_menu_exit} };
 
-    notify_init(hInstance, IDI_GREEN, SIZEOF(menu), menu);
+    notify_init(hInstance, IDI_GREEN, TITLE, SIZEOF(menu), menu);
 
     cunit();
 
