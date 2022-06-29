@@ -567,26 +567,26 @@ int init()
         return -10;
     }
 
-    ret = log_init_ex(g_cfg.log_filename, g_cfg.log_level, g_cfg.log_cycle, g_cfg.log_backup, g_cfg.log_clean, 38, &g_log);
-
-    if (ret != 0)
-    {
-        sprintf_s(m, sizeof(m), "init log fail %d", ret);
-        MessageBoxA(NULL, m, TITLE, MB_OK);
-        return -20;
-    }
-
-    D("g_log init ok");
-
     ret = log_init_ex(TITLE".test", g_cfg.log_level, g_cfg.log_cycle, g_cfg.log_backup, g_cfg.log_clean, 38, &g_test);
 
     if (ret != 0)
     {
-        E("init log test fail %d", ret);
-        return -21;
+        sprintf_s(m, sizeof(m), "init log test fail %d", ret);
+        MessageBoxA(NULL, m, TITLE, MB_OK);
+        return -20;
     }
 
     DD(&g_test, "g_test init ok");
+
+    ret = log_init_ex(g_cfg.log_filename, g_cfg.log_level, g_cfg.log_cycle, g_cfg.log_backup, g_cfg.log_clean, 38, &g_log);
+
+    if (ret != 0)
+    {
+        E("init log fail %d", ret);
+        return -21;
+    }
+
+    D("g_log init ok");
 
     D("--------------------------------------------------------------------");
 
