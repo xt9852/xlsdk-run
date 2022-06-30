@@ -15,12 +15,3 @@
 IDR_PINYIN PINYIN "pinyin.dat"
 
 IDI_GREEN ICON "main.ico"
-
-IDC_MENU MENU
-BEGIN
-    POPUP "&File"
-    BEGIN
-        MENUITEM "Show(&S)" IDM_SHOW
-        MENUITEM "Exit(&E)" IDM_EXIT
-    END
-END

@@ -166,7 +166,6 @@ bt_torrent          g_torrent               = {0};  ///< 种子文件信息
 xl_task             g_task[128]             = {0};  ///< 当前正在下载的任务信息
 int                 g_task_count            = 0;    ///< 当前正在下载的任务数量
 
-
 /**
  *\brief        下载文件
  *\param[in]    filename        文件地址
@@ -541,8 +540,8 @@ int http_proc_callback(const char *uri, const p_xt_http_arg arg, p_xt_http_conte
 }
 
 /**
- *\brief    定时器任务回调
- *\param    [in]  param         自定义参数
+ *\brief        定时器任务回调
+ *\param[in]    param           自定义参数
  *\return                       无
  */
 void timer_callback(void *param)
@@ -551,12 +550,122 @@ void timer_callback(void *param)
 }
 
 /**
- *\brief        初始化
- *\return       0               成功
+ *\brief        窗体关闭处理函数
+ *\param[in]    wnd             窗体句柄
+ *\param[in]    param           自定义参数
+ *\return                       无
  */
-int init()
+void on_menu_exit(HWND wnd, void *param)
 {
-    char m[MAX_PATH];
+    if (IDNO == MessageBoxW(wnd, L"确定退出?", L"消息", MB_ICONQUESTION | MB_YESNO))
+    {
+        return;
+    }
+
+    DestroyWindow(wnd);
+}
+
+#include "cunit.h"
+#include "Automated.h"
+#define CU(x) { "\"" #x "\"", x }
+
+void case_1(void)
+{
+    //CU_FAIL("This is a failure.");
+    CU_ASSERT(1); // 0-失败,!0-成功
+    CU_ASSERT_TRUE(CU_TRUE);
+    CU_ASSERT_FALSE(CU_FALSE);
+    CU_TEST_FATAL(CU_TRUE);
+}
+
+void case_2(void)
+{
+    CU_ASSERT_EQUAL(10, 10);
+    CU_ASSERT_NOT_EQUAL(10, 11);
+}
+
+void case_3(void)
+{
+    CU_ASSERT_PTR_EQUAL((void*)0x100, (void*)0x100);
+    CU_ASSERT_PTR_NOT_EQUAL((void*)0x100, (void*)0x101);
+    CU_ASSERT_PTR_NULL((void*)(NULL));
+    CU_ASSERT_PTR_NOT_NULL((void*)0x100);
+}
+
+void case_4(void)
+{
+    char *str1 = "1234567";
+    char *str2 = "1234567";
+    char *str3 = "123----";
+    CU_ASSERT_STRING_EQUAL(str1, str2);
+    CU_ASSERT_STRING_NOT_EQUAL(str1, str3);
+    CU_ASSERT_NSTRING_EQUAL(str1, str2, strlen(str1));
+    CU_ASSERT_NSTRING_NOT_EQUAL(str1, str3, 4);
+}
+
+void case_5(void)
+{
+    CU_ASSERT_DOUBLE_EQUAL(10, 10.0001, 0.0001);
+    CU_ASSERT_DOUBLE_NOT_EQUAL(10, 10.001, 0.0001);
+}
+
+int suite_init(void)
+{
+    return 0;
+}
+
+int suite_clean(void)
+{
+    return 0;
+}
+
+int cunit()
+{
+    CU_TestInfo cases[] =
+    {
+        CU(case_1),
+        CU(case_2),
+        CU(case_3),
+        CU(case_4),
+        CU(case_5),
+        CU_TEST_INFO_NULL
+    };
+
+    CU_SuiteInfo suites[] =
+    {
+        {TITLE, suite_init, suite_clean, NULL, NULL, cases}, CU_SUITE_INFO_NULL
+    };
+
+    if (CUE_SUCCESS != CU_initialize_registry())
+    {
+        E("init cunit fail");
+        return -1;
+    }
+
+    if (CUE_SUCCESS != CU_register_suites(suites))
+    {
+        E("reg suites fail:%s", CU_get_error_msg());
+        return -2;
+    }
+
+    CU_set_output_filename("D:\\2.code\\CUnit-2.1-3\\Share\\"TITLE);
+    CU_list_tests_to_file();
+    CU_automated_run_tests();
+    CU_cleanup_registry();
+    return 0;
+}
+
+/**
+ *\brief        窗体类程序主函数
+ *\param[in]    hInstance       当前实例句柄
+ *\param[in]    hPrevInstance   先前实例句柄
+ *\param[in]    lpCmdLine       命令行参数
+ *\param[in]    nCmdShow        显示状态(最小化,最大化,隐藏)
+ *\return                       exe程序返回值
+ */
+int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
+{
+        char m[MAX_PATH];
 
     int ret = config_init(TITLE".json", &g_cfg);
 
@@ -820,7 +929,7 @@ int init()
         PCRE2_UCHAR info[256];
         pcre2_get_error_message(error, info, sizeof(info));
         E("pcre2_match_data_create_from_pattern:fail reg:%s", reg);
-        return 0;
+        return -120;
     }
 
     D("pcre2_match_data_create_from_pattern:ok reg:%s", reg);
@@ -832,7 +941,7 @@ int init()
     if (ret < 0)
     {
         E("pcre2_match:fail txt:%s ret:%d", txt, ret);
-        return 0;
+        return -130;
     }
     else if (ret == 0)
     {
@@ -857,157 +966,21 @@ int init()
 
     pcre2_match_data_free(match_data);
     pcre2_code_free(pcre_data);
-    return 0;
-}
 
-/**
- *\brief        窗体显示函数
- *\param[in]    wnd             窗体句柄
- *\param[in]    param           自定义参数
- *\return                       无
- */
-void on_menu_show(HWND wnd, void *param)
-{
-    ShowWindow(wnd, IsWindowVisible(wnd) ? SW_HIDE : SW_SHOW);
-}
-
-/**
- *\brief        窗体关闭处理函数
- *\param[in]    wnd             窗体句柄
- *\param[in]    param           自定义参数
- *\return                       无
- */
-void on_menu_exit(HWND wnd, void *param)
-{
-    if (IDNO == MessageBoxW(wnd, L"确定退出?", L"消息", MB_ICONQUESTION | MB_YESNO))
-    {
-        return;
-    }
-
-    DestroyWindow(wnd);
-}
-
-#include "cunit.h"
-#include "Automated.h"
-
-void case_1(void)
-{
-    //CU_FAIL("This is a failure.");
-    CU_ASSERT(1); // 0-失败,!0-成功
-    CU_ASSERT_TRUE(CU_TRUE);
-    CU_ASSERT_FALSE(CU_FALSE);
-    CU_TEST_FATAL(CU_TRUE);
-}
-
-void case_2(void)
-{
-    CU_ASSERT_EQUAL(10, 10);
-    CU_ASSERT_NOT_EQUAL(10, 11);
-}
-
-void case_3(void)
-{
-    CU_ASSERT_PTR_EQUAL((void*)0x100, (void*)0x100);
-    CU_ASSERT_PTR_NOT_EQUAL((void*)0x100, (void*)0x101);
-    CU_ASSERT_PTR_NULL((void*)(NULL));
-    CU_ASSERT_PTR_NOT_NULL((void*)0x100);
-}
-
-void case_4(void)
-{
-    char *str1 = "1234567";
-    char *str2 = "1234567";
-    char *str3 = "123----";
-    CU_ASSERT_STRING_EQUAL(str1, str2);
-    CU_ASSERT_STRING_NOT_EQUAL(str1, str3);
-    CU_ASSERT_NSTRING_EQUAL(str1, str2, strlen(str1));
-    CU_ASSERT_NSTRING_NOT_EQUAL(str1, str3, 4);
-}
-
-void case_5(void)
-{
-    CU_ASSERT_DOUBLE_EQUAL(10, 10.0001, 0.0001);
-    CU_ASSERT_DOUBLE_NOT_EQUAL(10, 10.001, 0.0001);
-}
-
-int suite_init(void)
-{
-    return 0;
-}
-
-int suite_clean(void)
-{
-    return 0;
-}
-
-#define CU(x) { "\"" #x "\"", x }
-
-int cunit()
-{
-    CU_TestInfo cases[] =
-    {
-        CU(case_1),
-        CU(case_2),
-        CU(case_3),
-        CU(case_4),
-        CU(case_5),
-        CU_TEST_INFO_NULL
-    };
-
-    CU_SuiteInfo suites[] =
-    {
-        {TITLE, suite_init, suite_clean, NULL, NULL, cases}, CU_SUITE_INFO_NULL
-    };
-
-    if (CUE_SUCCESS != CU_initialize_registry())
-    {
-        E("init cunit fail");
-        return -1;
-    }
-
-    if (CUE_SUCCESS != CU_register_suites(suites))
-    {
-        E("reg suites fail:%s", CU_get_error_msg());
-        return -2;
-    }
-
-    CU_set_output_filename("D:\\2.code\\CUnit\\"TITLE".cunit");
-    CU_list_tests_to_file();
-    CU_automated_run_tests();
-    CU_cleanup_registry();
-    return 0;
-}
-
-/**
- *\brief        窗体类程序主函数
- *\param[in]    hInstance       当前实例句柄
- *\param[in]    hPrevInstance   先前实例句柄
- *\param[in]    lpCmdLine       命令行参数
- *\param[in]    nCmdShow        显示状态(最小化,最大化,隐藏)
- *\return                       exe程序返回值
- */
-int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
-{
-    if (init() != 0)
-    {
-        return -1;
-    }
-
-    notify_menu_info menu[2] = { {0, L"显示(&S)", NULL, on_menu_show},{1, L"退出(&E)", NULL, on_menu_exit} };
-
-    notify_init(hInstance, IDI_GREEN, TITLE, SIZEOF(menu), menu);
+    D("--------------------------------------------------------------------");
 
     cunit();
 
-    // 消息体
-    MSG msg;
+    D("--------------------------------------------------------------------");
 
-    // 消息循环,从消息队列中取得消息,只到WM_QUIT时退出
-    while (GetMessage(&msg, NULL, 0, 0))
+    notify_menu_info menu[] = { {0, L"退出(&E)", NULL, on_menu_exit} };
+
+    ret = notify_init(hInstance, IDI_GREEN, TITLE, SIZEOF(menu), menu);
+
+    if (0 != ret)
     {
-        TranslateMessage(&msg); // 将WM_KEYDOWN和WM_KEYUP转换为一条WM_CHAR消息
-        DispatchMessage(&msg);  // 分派消息到窗口,内部调用窗体消息处理回调函数
+        return -140;
     }
 
-    return (int)msg.lParam;
+    return notify_loop_msg();
 }
