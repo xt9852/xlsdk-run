@@ -66,7 +66,7 @@ int bencode_str(const char *s, unsigned int len, p_bt_torrent torrent)
             if (torrent->last == NAME) // 单文件
             {
                 torrent->last = 0;
-                torrent->count = 1;
+                torrent->file_count = 1;
                 torrent->file[0].name_len = str_len;
                 memcpy(torrent->file[0].name, s + i, str_len);
             }
@@ -155,9 +155,9 @@ int bencode_int(const char *s, unsigned int len, p_bt_torrent torrent)
         {
             if (torrent->last == LENGTH) // 上一个字符串是"length","name"
             {
-                torrent->file[torrent->count].size = num;
-                torrent->file[torrent->count].name_len = 0;
-                torrent->name_tail = torrent->file[torrent->count].name;
+                torrent->file[torrent->file_count].size = num;
+                torrent->file[torrent->file_count].name_len = 0;
+                torrent->name_tail = torrent->file[torrent->file_count].name;
             }
 
             return i + 1;
@@ -209,8 +209,8 @@ int bencode_list(const char *s, unsigned int len, p_bt_torrent torrent)
         {
             if (torrent->last == PATH_LIST)
             {
-                torrent->file[torrent->count].name_len = torrent->name_tail - torrent->file[torrent->count].name;
-                torrent->count++;
+                torrent->file[torrent->file_count].name_len = torrent->name_tail - torrent->file[torrent->file_count].name -1;
+                torrent->file_count++;
                 torrent->last = 0;
                 torrent->name_tail[-1] = '\0'; // 结尾多了个'\\'
                 torrent->name_tail = NULL;
@@ -390,16 +390,16 @@ int get_torrent_info(const char *filename, p_bt_torrent torrent)
     free(buff);
 
     // 删除旧版本信息
-    for (int i = 0; i < torrent->count;)
+    for (int i = 0; i < torrent->file_count;)
     {
         if (0 == strncmp(torrent->file[i].name, "_____padding_file_", 18))
         {
-            for (int j = i; j < torrent->count - 1; j++)
+            for (int j = i; j < torrent->file_count - 1; j++)
             {
                 torrent->file[j] = torrent->file[j + 1];
             }
 
-            torrent->count--;
+            torrent->file_count--;
         }
         else
         {

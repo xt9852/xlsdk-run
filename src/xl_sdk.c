@@ -10,12 +10,14 @@
 #include <stdlib.h>
 #include <string.h>
 #include <Windows.h>
+#include <pthread.h>
 #include "xl_sdk.h"
 #include "xt_log.h"
 #include "xt_character_set.h"
+#include "torrent.h"
 
 /// XL下载器ID
-#define FLAG                    "BDAF7A63-568C-43ab-9406-D145CF03B08C"
+#define FLAG            "BDAF7A63-568C-43ab-9406-D145CF03B08C"
 
 /// 参数头
 typedef struct _xl_arg_head
@@ -43,34 +45,39 @@ typedef struct _xl_data_head
 
 }xl_data_head, *p_xl_data_head;             ///< 数据包头节点
 
-int    g_cur_process_id         = 0;        ///< 本进程ID
-int    g_sdk_process_id         = 0;        ///< SDK进程ID
-int    g_share_memory_id        = 0;        ///< 共享内存ID
+int         g_cur_process_id        = 0;        ///< 本进程ID
+int         g_sdk_process_id        = 0;        ///< SDK进程ID
+int         g_share_memory_id       = 0;        ///< 共享内存ID
 
-BOOL   g_init                   = FALSE;    ///< 是否完成初始化
+bool        g_init                  = false;    ///< 是否完成初始化
 
-UCHAR *g_recv                   = NULL;     ///< 共享内存1M,对方接收的数据,我方发送的
-UCHAR *g_send                   = NULL;     ///< 共享内存1M,我方发送的数据,需对方处理
+UCHAR      *g_recv                  = NULL;     ///< 共享内存1M,对方接收的数据,我方发送的
+UCHAR      *g_send                  = NULL;     ///< 共享内存1M,我方发送的数据,需对方处理
 
-UCHAR *g_recv_tmp               = NULL;     ///< 临时缓存区
-UCHAR *g_send_tmp               = NULL;     ///< 临时缓存区
+UCHAR      *g_recv_tmp              = NULL;     ///< 临时缓存区
+UCHAR      *g_send_tmp              = NULL;     ///< 临时缓存区
 
-HANDLE g_proxyAliveMutex        = NULL;     ///< 互斥
-HANDLE g_serverStartUpEvent     = NULL;     ///< 事件
+HANDLE      g_proxyAliveMutex       = NULL;     ///< 互斥
+HANDLE      g_serverStartUpEvent    = NULL;     ///< 事件
 
-HANDLE g_recvShareMemory        = NULL;     ///< 共享内存1M,我方发送的数据,需要对方处理
-HANDLE g_recvBufferFullEvent    = NULL;     ///< 信号,表示有数据,对方可以处理啦
-HANDLE g_recvBufferEmptyEvent   = NULL;     ///< 信号,表示对方处理完成,我方可以再次发送
+HANDLE      g_recvShareMemory       = NULL;     ///< 共享内存1M,我方发送的数据,需要对方处理
+HANDLE      g_recvBufferFullEvent   = NULL;     ///< 信号,表示有数据,对方可以处理啦
+HANDLE      g_recvBufferEmptyEvent  = NULL;     ///< 信号,表示对方处理完成,我方可以再次发送
 
-HANDLE g_sendShareMemory        = NULL;     ///< 共享内存1M,对方发送的数据,需要我方处理
-HANDLE g_sendBufferFullEvent    = NULL;     ///< 信号,表示有数据,我方可以处理啦
-HANDLE g_sendBufferEmptyEvent   = NULL;     ///< 信号,表示我方可以处理完成,对方可以再次发送
+HANDLE      g_sendShareMemory       = NULL;     ///< 共享内存1M,对方发送的数据,需要我方处理
+HANDLE      g_sendBufferFullEvent   = NULL;     ///< 信号,表示有数据,我方可以处理啦
+HANDLE      g_sendBufferEmptyEvent  = NULL;     ///< 信号,表示我方可以处理完成,对方可以再次发送
 
-int    g_track_len              = 0;        ///< track数据长度
+int         g_track_len             = 0;        ///< track数据长度
 
-int    g_track_count            = 0;        ///< track数据数量
+int         g_track_count           = 0;        ///< track数据数量
 
-short *g_track_data[10240]      = {0};      ///< track缓冲区
+short      *g_track_data[10240]     = {0};      ///< track缓冲区
+
+xl_task     g_task[TASK_SIZE]       = {0};      ///< 当前正在下载的任务信息
+
+int         g_task_count            = 0;        ///< 当前正在下载的任务数量
+
 
 /// track服务器地址
 const short *g_track[] = {
@@ -809,93 +816,6 @@ int xl_sdk_proc_track()
 }
 
 /**
- *\brief    初始化SDK
- *\return   0   成功
- */
-int xl_sdk_init()
-{
-    int ret = xl_sdk_create_download_process();
-
-    if (0 != ret)
-    {
-        E("create process fail %d", ret);
-        return -1;
-    }
-
-    ret = xl_sdk_create_ServerStartUpEvent();
-
-    if (0 != ret)
-    {
-        E("create handler fail %d", ret);
-        return -2;
-    }
-
-    ret = xl_sdk_open_AccetpReturnEvent();
-
-    if (0 != ret)
-    {
-        E("open handler fail %d", ret);
-        return -3;
-    }
-
-    ret = xl_sdk_open_share_memory_event(false);
-
-    if (0 != ret)
-    {
-        E("open share memory fail %d", ret);
-        return -4;
-    }
-
-    ret = xl_sdk_call_get_share_memory_id();
-
-    if (0 != ret)
-    {
-        E("get share memory fail %d", ret);
-        return -5;
-    }
-
-    ret = xl_sdk_open_ClientAliveMutex();
-
-    if (0 != ret)
-    {
-        E("open handler fail %d", ret);
-        return -6;
-    }
-
-    ret = xl_sdk_open_share_memory_event(true);   // 再次打开共享内存,名称不一样啦
-
-    if (0 != ret)
-    {
-        E("reopen share memory fail %d", ret);
-        return -7;
-    }
-
-    g_recv_tmp = malloc(0x10000);
-    g_send_tmp = malloc(0x10000);
-
-    ret = xl_sdk_call_sdk_init();
-
-    if (0 != ret)
-    {
-        E("init sdk fail %d", ret);
-        return -8;
-    }
-
-    ret = xl_sdk_proc_track();
-
-    if (0 != ret)
-    {
-        E("create track fail %d", ret);
-        return -9;
-    }
-
-    g_init = TRUE;
-
-    D("ok");
-    return 0;
-}
-
-/**
  *\brief        添加服务器
  *\param[in]    taskid      任务ID
  *\param[in]    count       服务器数量
@@ -962,13 +882,13 @@ int xl_sdk_create_bt_task(const char *torrent, const char *path, const char *lis
 
     if (0 != utf8_unicode(torrent, torrent_len, torrent_short, &torrent_size))
     {
-        E("utf8 to unicode Eor %s", torrent);
+        E("utf8 to unicode error %s", torrent);
         return -2;
     }
 
     if (0 != utf8_unicode(path, path_len, path_short, &path_size))
     {
-        E("utf8 to unicode Eor %s", path);
+        E("utf8 to unicode error %s", path);
         return -3;
     }
 
@@ -1001,11 +921,32 @@ int xl_sdk_create_bt_task(const char *torrent, const char *path, const char *lis
 
     *taskid = *(int*)(g_send_tmp + 12);
 
-    char *filename = strrchr(torrent, '\\');
+    bt_torrent tor = {0};
 
-    filename = (NULL == filename) ? "" : filename + 1;
+    ret = get_torrent_info(torrent, &tor);
 
-    sprintf_s(task_name, task_name_size, "%s|%s", filename, list);
+    if (0 != ret)
+    {
+        D("get_torrent_info fail");
+        return 0;
+    }
+
+    char *id = strrchr(torrent, '\\');
+
+    id = (NULL == id) ? "" : id + 1;
+
+    strcpy_s(task_name, task_name_size, id);
+
+    int pos = strlen(task_name);
+
+    for (int i = 0; i < list_len && i < tor.file_count; i++)
+    {
+        if (list[i] == '1')
+        {
+            task_name[pos++] = '|';
+            strcpy_s(task_name + pos, task_name_size - pos, tor.file[i].name);
+        }
+    }
 
     D("ok");
     return 0;
@@ -1039,13 +980,13 @@ int xl_sdk_create_url_task(const char *url, const char *path, int *taskid, char 
 
     if (0 != utf8_unicode(url, url_len, url_short, &url_size))
     {
-        E("utf8 to unicode Eor %s", url);
+        E("utf8 to unicode error %s", url);
         return -2;
     }
 
     if (0 != utf8_unicode(path, path_len, path_short, &path_size))
     {
-        E("utf8 to unicode Eor %s", path);
+        E("utf8 to unicode error %s", path);
         return -3;
     }
 
@@ -1100,7 +1041,7 @@ int xl_sdk_create_url_task(const char *url, const char *path, int *taskid, char 
 
     int len = task_name_size - path_len - 1;
 
-    if (0 != unicode_ansi(filename, filename_len, task_name + path_len + 1, &len))
+    if (0 != unicode_utf8(filename, filename_len, task_name + path_len + 1, &len))
     {
         E("unicode to ansi Eor");
         return 0;
@@ -1128,23 +1069,23 @@ int xl_sdk_create_magnet_task(const char *magnet, const char *path, int *taskid,
 
     D("magent:%s path:%d", magnet, path);
 
-    short magnet_short[MAX_PATH];
+    short magnet_short[1024];
     int   magnet_len  = strlen(magnet);
     int   magnet_size = SIZEOF(magnet_short);
 
-    short path_short[MAX_PATH];
+    short path_short[1024];
     int   path_len  = strlen(path);
     int   path_size = SIZEOF(path_short);
 
     if (0 != utf8_unicode(magnet, magnet_len, magnet_short, &magnet_size))
     {
-        E("utf8 to unicode Eor %s", magnet);
+        E("utf8 to unicode error %s", magnet);
         return -2;
     }
 
     if (0 != utf8_unicode(path, path_len, path_short, &path_size))
     {
-        E("utf8 to unicode Eor %s", path);
+        E("utf8 to unicode error %s", path);
         return -3;
     }
 
@@ -1175,11 +1116,13 @@ int xl_sdk_create_magnet_task(const char *magnet, const char *path, int *taskid,
 
     *taskid = *(int*)(g_send_tmp + 12);
 
-    if (0 != unicode_ansi(id, arg2->len, task_name, &task_name_size))
+    if (0 != unicode_utf8(filename, arg2->len, task_name, &task_name_size))
     {
-        E("unicode to ansi Eor");
+        E("unicode to ansi error");
         return 0;
     }
+
+    D("task_name:%s", task_name);
 
     D("ok");
     return 0;
@@ -1339,3 +1282,277 @@ int xl_sdk_get_task_info(int taskid, unsigned __int64 *size, unsigned __int64 *d
 
     return 0;
 }
+
+/**
+ *\brief        下载文件
+ *\param[in]    path            本地地址
+ *\param[in]    filename        文件地址
+ *\param[in]    list            下载BT文件时选中的要下载的文件,如:"10100",1-选中,0-末选
+ *\return       0               成功
+ */
+int xl_sdk_download(const char *path, const char *filename, const char *list)
+{
+    if (NULL == filename)
+    {
+        E("param is null");
+        return -1;
+    }
+
+    int ret;
+    int task_id;
+    int task_type;
+    char task_name[MAX_PATH];
+
+    if (0 == strcmp(filename + strlen(filename) - 8, ".torrent"))   // BT下载
+    {
+        if (NULL == list || list[0] == '\0')
+        {
+            return -1;
+        }
+
+		task_type = TASK_BT;
+    }
+    else if (0 == strncmp(filename, "magnet:?", 8))                 // 磁力下载
+    {
+        task_type = TASK_MAGNET;
+    }
+    else                                                            // 普通下载
+    {
+        task_type = TASK_URL;
+    }
+
+    for (int i = 0; i < g_task_count; i++)
+    {
+        if (0 == strcmp(filename, g_task[i].name) && task_type == g_task[i].type)  // 已经下载
+        {
+            D("have task:%s", filename);
+            return 0;
+        }
+    }
+
+    switch (task_type)
+    {
+        case TASK_BT:
+        {
+            ret = xl_sdk_create_bt_task(filename, path, list, &task_id, task_name, sizeof(task_name));
+            break;
+        }
+        case TASK_MAGNET:
+        {
+            ret = xl_sdk_create_magnet_task(filename, path, &task_id, task_name, sizeof(task_name));
+            break;
+        }
+        case TASK_URL:
+        {
+            ret = xl_sdk_create_url_task(filename, path, &task_id, task_name, sizeof(task_name));
+            break;
+        }
+    }
+
+    if (0 != ret)
+    {
+        E("create task %s error:%d", filename, ret);
+        return -2;
+    }
+
+    ret = xl_sdk_start_download_file(task_id, task_type);
+
+    if (0 != ret)
+    {
+        E("download start %s error:%d", filename, ret);
+        return -3;
+    }
+
+    strcpy_s(g_task[g_task_count].name, TASK_NAME_SIZE, task_name);
+
+    g_task[g_task_count].id        = task_id;
+    g_task[g_task_count].type      = task_type;
+    g_task[g_task_count].size      = 0;
+    g_task[g_task_count].down      = 0;
+    g_task[g_task_count].time      = 0;
+    g_task[g_task_count].name_len  = strlen(task_name);
+    g_task[g_task_count].last_down = 0;
+    g_task[g_task_count].last_time = 0;
+    g_task[g_task_count].speed     = 0;
+    g_task[g_task_count].prog      = 0;
+    g_task_count++;
+
+    D("task_id:%d, filename:%s task_count:%d", task_id, task_name, g_task_count);
+    return 0;
+}
+
+/**
+ *\brief        SSH主线函数
+ *\param[in]    param   参数数据
+ *\return               无
+ */
+void* xl_sdk_thread(void *param)
+{
+    D("begin");
+
+    double prog;
+    unsigned int down;
+    unsigned int time;
+    unsigned int speed;
+
+    while (g_init)
+    {
+        sleep(5);
+
+        for (int i = 0; i < g_task_count; i++)
+        {
+            if (g_task[i].down == g_task[i].size && g_task[i].size > 0) // 下载完成
+            {
+                continue;
+            }
+
+            xl_sdk_get_task_info(g_task[i].id, &g_task[i].size, &g_task[i].down, &g_task[i].time);
+
+            D("task_id:%d, size:%I64u down:%I64u time:%u", g_task[i].id, g_task[i].size, g_task[i].down, g_task[i].time);
+
+            if (0 == g_task[i].size) // 种子文件
+            {
+                continue;
+            }
+
+            down = (unsigned int)(g_task[i].down - g_task[i].last_down);
+            time = g_task[i].time - g_task[i].last_time;
+            prog = 100.0 * g_task[i].down / g_task[i].size;
+
+            if (0 == down && 0 == time && prog > 99.5) // 有时出现已经下载完成但进度为99.**%的时候
+            {
+                prog  = 100.00;
+            }
+            else if (time > 0)
+            {
+                speed = down / time;
+            }
+            else
+            {
+                E("down:%I64u time:%u prog:%f", down, time, prog);
+            }
+
+            if (prog > 99.99) // 下载完成
+            {
+                if (speed > 0)
+                {
+                    speed = 0;
+                }
+
+                if (g_task[i].down != g_task[i].size)
+                {
+                    g_task[i].down = g_task[i].size;
+                }
+            }
+
+            g_task[i].prog = prog;
+            g_task[i].speed = speed;
+            g_task[i].last_down = g_task[i].down;
+            g_task[i].last_time = g_task[i].time;
+        }
+    }
+
+    D("exit");
+    return NULL;
+}
+
+/**
+ *\brief    初始化SDK
+ *\return   0   成功
+ */
+int xl_sdk_init()
+{
+    int ret = xl_sdk_create_download_process();
+
+    if (0 != ret)
+    {
+        E("create process fail %d", ret);
+        return -1;
+    }
+
+    ret = xl_sdk_create_ServerStartUpEvent();
+
+    if (0 != ret)
+    {
+        E("create handler fail %d", ret);
+        return -2;
+    }
+
+    ret = xl_sdk_open_AccetpReturnEvent();
+
+    if (0 != ret)
+    {
+        E("open handler fail %d", ret);
+        return -3;
+    }
+
+    ret = xl_sdk_open_share_memory_event(false);
+
+    if (0 != ret)
+    {
+        E("open share memory fail %d", ret);
+        return -4;
+    }
+
+    ret = xl_sdk_call_get_share_memory_id();
+
+    if (0 != ret)
+    {
+        E("get share memory fail %d", ret);
+        return -5;
+    }
+
+    ret = xl_sdk_open_ClientAliveMutex();
+
+    if (0 != ret)
+    {
+        E("open handler fail %d", ret);
+        return -6;
+    }
+
+    ret = xl_sdk_open_share_memory_event(true);   // 再次打开共享内存,名称不一样啦
+
+    if (0 != ret)
+    {
+        E("reopen share memory fail %d", ret);
+        return -7;
+    }
+
+    g_recv_tmp = malloc(0x10000);
+    g_send_tmp = malloc(0x10000);
+
+    ret = xl_sdk_call_sdk_init();
+
+    if (0 != ret)
+    {
+        E("init sdk fail %d", ret);
+        return -8;
+    }
+
+    ret = xl_sdk_proc_track();
+
+    if (0 != ret)
+    {
+        E("create track fail %d", ret);
+        return -9;
+    }
+
+    g_init = true;
+
+    pthread_t tid;
+    pthread_attr_t attr;
+    pthread_attr_init(&attr);
+    pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);    // 退出时自行释放所占用的资源
+
+    ret = pthread_create(&tid, &attr, xl_sdk_thread, NULL);
+
+    if (ret != 0)
+    {
+        E("create thread fail, error:%d", ret);
+        return -3;
+    }
+
+    D("ok");
+    return 0;
+}
+

@@ -26,8 +26,8 @@
 #include "xt_exe_ico.h"
 #include "xl_sdk.h"
 #include "torrent.h"
-#define PCRE2_STATIC
-#define PCRE2_CODE_UNIT_WIDTH 8
+#define  PCRE2_STATIC
+#define  PCRE2_CODE_UNIT_WIDTH 8
 #include "pcre2.h"
 
 /// 程序标题
@@ -39,7 +39,7 @@
     function download(init){\n\
         filename = document.getElementById('file').value;\n\
         if (filename == '' && !init) {alert('请输入要下载的文件地址');return;}\n\
-        url = '/download?file=' + filename;\n\
+        url = '/download?file=' + btoa(filename);\n\
         file_table = document.getElementById('file-list');\n\
         if (file_table.style.display == '') {\n\
             list = '';\n\
@@ -90,17 +90,28 @@
                     btn.i = i;\n\
                     btn.id = 'btn_' + i;\n\
                     btn.style='display:block;';\n\
-                    btn.onclick = show_in_torrent_files;\n\
+                    btn.onclick = show_torrent;\n\
                     td.appendChild(btn);\n\
                 }\n\
                 tr.appendChild(td);\n\
                 down_tbody.appendChild(tr);\n\
             }\n\
+            width = document.getElementById('width').clientWidth + 37;\n\
+            if (width < 400) width = 400;;\n\
+            document.getElementById('file').style.width = width;\n\
         }\n\
     }\n\
-    function show_in_torrent_files(){\n\
-        filename = document.getElementById('file_' + this.i).innerText;\n\
-        url = '/torrent-list?torrent=' + filename\n\
+    function show_torrent(edit){\n\
+        console.log(edit);\n\
+        filename = '';\n\
+        \n\
+        if (edit == true) {\n\
+            filename = document.getElementById('file').value;\n\
+        } else {\n\
+            filename = document.getElementById('file_' + this.i).innerText;\n\
+        }\n\
+        \n\
+        url = '/torrent-list?torrent=' + btoa(filename)\n\
         req = new XMLHttpRequest();\n\
         req.open('GET', url);\n\
         req.send(null);\n\
@@ -143,133 +154,24 @@
 <body onload='download(true)'>\
 <input id='file'/>\
 <button onclick='download(false)'>download</button>\
+<button onclick='show_torrent(true)'>open</button>\
+<br><br>\
 <table id='file-list' border='1' style='border-collapse:collapse;display:none'>\
 <tr><th><input type='checkbox' name='check' onclick='on_check(this)' /></th><th>大小</th><th>文件</th></tr></table>\
 <table id='down-list' border='1' style='border-collapse:collapse;'>\
-<tr><th>任务</th><th>文件</th><th>大小</th><th>速度</th><th>进度</th><th>用时</th><th>操作</th></tr>\
+<tr><th>任务</th><th id='width'>文件</th><th>大小</th><th>速度</th><th>进度</th><th>用时</th><th>操作</th></tr>\
 </table>\
 </body>"
+
 config              g_cfg                   = {0};  ///< 配置数据
 
-xt_list             g_monitor_event_list    = {0};  ///< 监控事件队列
-
-xt_memory_pool      g_memory_pool           = {0};  ///< 内存池
-
 xt_log              g_log                   = {0};  ///< 日志数据
-xt_log              g_test                  = {0};  ///< 多日志测试
 
 xt_http             g_http                  = {0};  ///< HTTP服务
-xt_thread_pool      g_thread_pool           = {0};  ///< 线程池
-xt_timer_set        g_timer_set             = {0};  ///< 定时器
 
-bt_torrent          g_torrent               = {0};  ///< 种子文件信息
-xl_task             g_task[128]             = {0};  ///< 当前正在下载的任务信息
-int                 g_task_count            = 0;    ///< 当前正在下载的任务数量
+extern xl_task      g_task[TASK_SIZE];              ///< 当前正在下载的任务信息
 
-/**
- *\brief        下载文件
- *\param[in]    filename        文件地址
- *\param[in]    list            下载BT文件时选中的要下载的文件,如:"10100",1-选中,0-末选
- *\return       0               成功
- */
-int xl_download(const char *filename, const char *list)
-{
-    int ret;
-    int task_id;
-    int task_type;
-    char task_name[MAX_PATH];
-
-    D("task count:%d", g_task_count);
-
-    for (int i = 0; i < g_task_count; i++)
-    {
-        if (0 == strcmp(filename, g_task[i].filename))  // 已经下载
-        {
-            D("have %s", filename);
-            return 0;
-        }
-    }
-
-    if (0 == strcmp(filename + strlen(filename) - 8, ".torrent"))   // BT下载
-    {
-        if (NULL == list)
-        {
-            return -1;
-        }
-
-		task_type = TASK_BT;
-
-        ret = xl_sdk_create_bt_task(filename, g_cfg.download_path, list, &task_id, task_name, sizeof(task_name));
-    }
-    else if (0 == strncmp(filename, "magnet:?", 8))                 // 磁力下载
-    {
-        task_type = TASK_MAGNET;
-
-        ret = xl_sdk_create_magnet_task(filename, g_cfg.download_path, &task_id, task_name, sizeof(task_name));
-    }
-    else                                                            // 普通下载
-    {
-        task_type = TASK_URL;
-
-        ret = xl_sdk_create_url_task(filename, g_cfg.download_path, &task_id, task_name, sizeof(task_name));
-    }
-
-    if (0 != ret)
-    {
-        E("create task %s Eor:%d", filename, ret);
-        return -2;
-    }
-
-    ret = xl_sdk_start_download_file(task_id, task_type);
-
-    if (0 != ret)
-    {
-        E("download start %s Eor:%d", filename, ret);
-        return -3;
-    }
-
-    ret = xl_sdk_get_task_info(task_id, &g_task[g_task_count].size, &g_task[g_task_count].down, &g_task[g_task_count].time);
-
-    if (0 != ret)
-    {
-        E("get task info Eor:%d", ret);
-        return -4;
-    }
-
-    /* ------------------test--------------------- */
-    if (0 == strcmp(filename, "http://127.0.0.1/"))
-    {
-        strcpy_s(g_task[g_task_count].filename, sizeof(g_task[g_task_count].filename), "C:\\Program Files\\7-Zip\\1\\DB2FE78374A1A18C1A5EFCC5E961901A1BCACFD2.torrent");
-        g_task[g_task_count].type      = TASK_MAGNET;
-        g_task[g_task_count].size      = 1024*1024*1024 + 235*1024*1024;
-        g_task[g_task_count].down      = 1024*1024*1024;
-        g_task[g_task_count].time      = 123;
-        g_task[g_task_count].last_down = 0;
-        g_task[g_task_count].last_time = 0;
-    }
-    else if (0 == strcmp(filename, "http://127.0.0.2/"))
-    {
-        strcpy_s(g_task[g_task_count].filename, sizeof(g_task[g_task_count].filename), "D:\\5.downloads\\bt\\7097B42EEBC037482B69056276858599ED9605B5.torrent");
-        g_task[g_task_count].type      = TASK_MAGNET;
-        g_task[g_task_count].size      = 4*1024*1024*1024ll + 567*1024*1024;
-        g_task[g_task_count].down      = 1024*1024*1024;
-        g_task[g_task_count].time      = 456;
-        g_task[g_task_count].last_down = 0;
-        g_task[g_task_count].last_time = 0;
-    }
-    else
-    {
-        strcpy_s(g_task[g_task_count].filename, sizeof(g_task[g_task_count].filename), task_name);
-        g_task[g_task_count].id        = task_id;
-        g_task[g_task_count].type      = task_type;
-        g_task[g_task_count].last_down = 0;
-        g_task[g_task_count].last_time = 0;
-    }
-
-    g_task_count++;
-
-    return 0;
-}
+extern int          g_task_count;                   ///< 当前正在下载的任务数量
 
 /**
  *\brief        http回调函数,下载接口
@@ -292,23 +194,24 @@ int http_proc_download(const p_xt_http_arg arg, p_xt_http_content content)
         list = arg->data[1];
     }
 
-    if (NULL != file && 0 != xl_download(file, list))
+    int len = 512;
+    char filename[512];
+    base64_decode(file, arg->data_len[0], filename, &len);
+
+    if (NULL != file && 0 != xl_sdk_download(g_cfg.download_path, filename, list))
     {
-        E("xl_download fail");
+        E("xl_sdk_download fail");
         return -1;
     }
 
     int    pos = 1;
-    int    len;
     int    encode_len;
     int    base64_len;
-    int    time;
     char   size[16];
     char   speed[16];
     char   encode[MAX_PATH];
     char   base64[MAX_PATH];
     char  *data = content->data;
-    double prog;
 
     data[0] = '[';
 
@@ -317,19 +220,18 @@ int http_proc_download(const p_xt_http_arg arg, p_xt_http_content content)
         encode_len = sizeof(encode);
         base64_len = sizeof(base64);
 
-        uri_encode(g_task[i].filename, strlen(g_task[i].filename), encode, &encode_len); // js的atob不能解码unicode
+        uri_encode(g_task[i].name, g_task[i].name_len, encode, &encode_len); // js的atob不能解码unicode
         base64_encode(encode, encode_len, base64, &base64_len); // 文件名中可能有json需要转码的字符
+
         format_data(g_task[i].size, size, sizeof(size));
+        format_data(g_task[i].speed, speed, sizeof(speed));
 
-        time = g_task[i].time - g_task[i].last_time;
-        if (0 == time) time = 1;
-        format_data((g_task[i].down - g_task[i].last_down) / time, speed, sizeof(speed));
-
-        prog = (0 == g_task[i].size) ? 0 : g_task[i].down * 100.0 / g_task[i].size;
+        D("id:%u, name:%s uri:%s base64:%s size:%s speed:%s prog:%f",
+          g_task[i].id, g_task[i].name, encode, base64, size, speed, g_task[i].prog);
 
         len = snprintf(data + pos, content->len - pos,
-                       "{\"id\":%d,\"file\":\"%s\",\"size\":\"%s\",\"speed\":\"%s\",\"prog\":\"%.2f\",\"time\":%d},",
-                       g_task[i].id, base64, size, speed, prog, g_task[i].time);
+                       "{\"id\":%d,\"file\":\"%s\",\"size\":\"%s\",\"speed\":\"%s\",\"prog\":\"%.2f\",\"time\":%u},",
+                       g_task[i].id, base64, size, speed, g_task[i].prog, g_task[i].time);
         pos += len;
     }
 
@@ -368,14 +270,19 @@ int http_proc_torrent(const p_xt_http_arg arg, p_xt_http_content content)
         return -2;
     }
 
-    if (0 != get_torrent_info(file, &g_torrent))
+    int len = 512;
+    char filename[512];
+    bt_torrent torrent = {0};
+
+    base64_decode(file, arg->data_len[0], filename, &len);
+
+    if (0 != get_torrent_info(filename, &torrent))
     {
-        E("get torrent:%s info Eor", file);
+        E("get torrent:%s info error", file);
         return -3;
     }
 
     int   pos = 1;
-    int   len;
     int   encode_len;
     int   base64_len;
     char  size[16];
@@ -385,22 +292,22 @@ int http_proc_torrent(const p_xt_http_arg arg, p_xt_http_content content)
 
     data[0] = '[';
 
-    for (int i = 0; i < g_torrent.count; i++)
+    for (int i = 0; i < torrent.file_count; i++)
     {
         encode_len = sizeof(encode);
         base64_len = sizeof(base64);
 
-        uri_encode(g_torrent.file[i].name, strlen(g_torrent.file[i].name), encode, &encode_len); // js的atob不能解码unicode
+        uri_encode(torrent.file[i].name, torrent.file[i].name_len, encode, &encode_len); // js的atob不能解码unicode
         base64_encode(encode, encode_len, base64, &base64_len); // 文件名中可能有json需要转码的字符
-        format_data(g_torrent.file[i].size, size, sizeof(size));
+        format_data(torrent.file[i].size, size, sizeof(size));
 
-        D("i:%d file:%s uri_encode:%s base64(uri_encode):%s", i, g_torrent.file[i].name, encode, base64);
+        D("i:%d file:%s uri_encode:%s base64(uri_encode):%s", i, torrent.file[i].name, encode, base64);
 
         len = snprintf(data + pos, content->len - pos, "{\"file\":\"%s\",\"size\":\"%s\"},", base64, size);
         pos += len;
     }
 
-    if (g_torrent.count > 0)
+    if (torrent.file_count > 0)
     {
         data[pos - 1] = ']';
     }
@@ -540,16 +447,6 @@ int http_proc_callback(const char *uri, const p_xt_http_arg arg, p_xt_http_conte
 }
 
 /**
- *\brief        定时器任务回调
- *\param[in]    param           自定义参数
- *\return                       无
- */
-void timer_callback(void *param)
-{
-    D("param:%s", (char*)param);
-}
-
-/**
  *\brief        窗体关闭处理函数
  *\param[in]    wnd             窗体句柄
  *\param[in]    param           自定义参数
@@ -565,96 +462,6 @@ void on_menu_exit(HWND wnd, void *param)
     DestroyWindow(wnd);
 }
 
-#include "cunit.h"
-#include "Automated.h"
-#define CU(x) { "\"" #x "\"", x }
-
-void case_1(void)
-{
-    //CU_FAIL("This is a failure.");
-    CU_ASSERT(1); // 0-失败,!0-成功
-    CU_ASSERT_TRUE(CU_TRUE);
-    CU_ASSERT_FALSE(CU_FALSE);
-    CU_TEST_FATAL(CU_TRUE);
-}
-
-void case_2(void)
-{
-    CU_ASSERT_EQUAL(10, 10);
-    CU_ASSERT_NOT_EQUAL(10, 11);
-}
-
-void case_3(void)
-{
-    CU_ASSERT_PTR_EQUAL((void*)0x100, (void*)0x100);
-    CU_ASSERT_PTR_NOT_EQUAL((void*)0x100, (void*)0x101);
-    CU_ASSERT_PTR_NULL((void*)(NULL));
-    CU_ASSERT_PTR_NOT_NULL((void*)0x100);
-}
-
-void case_4(void)
-{
-    char *str1 = "1234567";
-    char *str2 = "1234567";
-    char *str3 = "123----";
-    CU_ASSERT_STRING_EQUAL(str1, str2);
-    CU_ASSERT_STRING_NOT_EQUAL(str1, str3);
-    CU_ASSERT_NSTRING_EQUAL(str1, str2, strlen(str1));
-    CU_ASSERT_NSTRING_NOT_EQUAL(str1, str3, 4);
-}
-
-void case_5(void)
-{
-    CU_ASSERT_DOUBLE_EQUAL(10, 10.0001, 0.0001);
-    CU_ASSERT_DOUBLE_NOT_EQUAL(10, 10.001, 0.0001);
-}
-
-int suite_init(void)
-{
-    return 0;
-}
-
-int suite_clean(void)
-{
-    return 0;
-}
-
-int cunit()
-{
-    CU_TestInfo cases[] =
-    {
-        CU(case_1),
-        CU(case_2),
-        CU(case_3),
-        CU(case_4),
-        CU(case_5),
-        CU_TEST_INFO_NULL
-    };
-
-    CU_SuiteInfo suites[] =
-    {
-        {TITLE, suite_init, suite_clean, NULL, NULL, cases}, CU_SUITE_INFO_NULL
-    };
-
-    if (CUE_SUCCESS != CU_initialize_registry())
-    {
-        E("init cunit fail");
-        return -1;
-    }
-
-    if (CUE_SUCCESS != CU_register_suites(suites))
-    {
-        E("reg suites fail:%s", CU_get_error_msg());
-        return -2;
-    }
-
-    CU_set_output_filename("D:\\2.code\\CUnit-2.1-3\\Share\\"TITLE);
-    CU_list_tests_to_file();
-    CU_automated_run_tests();
-    CU_cleanup_registry();
-    return 0;
-}
-
 /**
  *\brief        窗体类程序主函数
  *\param[in]    hInstance       当前实例句柄
@@ -665,7 +472,7 @@ int cunit()
  */
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
-        char m[MAX_PATH];
+    char m[MAX_PATH];
 
     int ret = config_init(TITLE".json", &g_cfg);
 
@@ -673,305 +480,33 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     {
         sprintf_s(m, sizeof(m), "init config fail %d", ret);
         MessageBoxA(NULL, m, TITLE, MB_OK);
-        return -10;
+        return -1;
     }
 
-    ret = log_init_ex(TITLE".test", g_cfg.log_level, g_cfg.log_cycle, g_cfg.log_backup, g_cfg.log_clean, 38, &g_test);
+    ret = log_init_ex(TITLE, g_cfg.log_level, g_cfg.log_cycle, g_cfg.log_backup, g_cfg.log_clean, 38, &g_log);
 
     if (ret != 0)
     {
         sprintf_s(m, sizeof(m), "init log test fail %d", ret);
         MessageBoxA(NULL, m, TITLE, MB_OK);
-        return -20;
+        return -2;
     }
-
-    DD(&g_test, "g_test init ok");
-
-    ret = log_init_ex(g_cfg.log_filename, g_cfg.log_level, g_cfg.log_cycle, g_cfg.log_backup, g_cfg.log_clean, 38, &g_log);
-
-    if (ret != 0)
-    {
-        E("init log fail %d", ret);
-        return -21;
-    }
-
-    D("g_log init ok");
-
-    D("--------------------------------------------------------------------");
-
-    xt_md5 md5;
-    char   md5_out[128];
-    char  *md5_in = "1234567890";
-
-    ret = md5_get(md5_in, strlen(md5_in), &md5);
-
-    if (ret != 0)
-    {
-        E("get md5 fail %d", ret);
-        return -30;
-    }
-
-    D("str:%s md5.A:%x B:%x C:%x D:%x", md5_in, md5.A, md5.B, md5.C, md5.D);
-
-    ret = md5_get_str(md5_in, strlen(md5_in), md5_out);
-
-    if (ret != 0)
-    {
-        E("get md5 str fail %d", ret);
-        return -31;
-    }
-
-    D("str:%s md5:%s", md5_in, md5_out);
-
-    md5_in = "1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890"\
-             "1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890"\
-             "1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890"\
-             "1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890"\
-             "1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890"\
-             "1234567890";
-
-    ret = md5_get_str(md5_in, strlen(md5_in), md5_out);
-
-    if (ret != 0)
-    {
-        E("get md5 str fail %d", ret);
-        return -32;
-    }
-
-    D("str:%s md5:%s", md5_in, md5_out);
-
-    D("--------------------------------------------------------------------");
-
-    int len;
-    char base64[64];
-    char output[64];
-    char data[][10] = { "1", "12", "123", "1234" };
-
-    for (int i = 0; i < 4; i++)
-    {
-        len = sizeof(base64);
-
-        ret = base64_encode(data[i], strlen(data[i]), base64, &len);
-
-        if (ret != 0)
-        {
-            E("get base64 str fail %d", ret);
-            return -40;
-        }
-
-        D("data:%s base64:%s len:%d", data[i], base64, len);
-
-        ret = base64_decode(base64, len, output, &len);
-
-        if (ret != 0)
-        {
-            E("from base64 get data fail %d", ret);
-            return -41;
-        }
-
-        D("base64:%s data:%s len:%d", base64, output, len);
-    }
-
-    D("--------------------------------------------------------------------");
-
-    ret = pinyin_init_res("PINYIN", IDR_PINYIN);
-
-    if (ret != 0)
-    {
-        E("init pinyin fail %d", ret);
-        return -50;
-    }
-
-    D("--------------------------------------------------------------------");
-
-    xt_memory_pool mem_pool;
-
-    ret = memory_pool_init(&mem_pool, 1024, 100);
-
-    if (ret != 0)
-    {
-        E("init memory pool fail %d", ret);
-        return -60;
-    }
-
-    void *mem = NULL;
-
-    for (int i = 0; i < 2000; i++)
-    {
-        ret = memory_pool_get(&mem_pool, &mem);
-
-        if (ret != 0)
-        {
-            E("memory pool get fail %d", ret);
-            return -61;
-        }
-
-        D("memory_pool_get ret:%d count:%d list-size:%d count:%d head:%d tail:%d", ret, mem_pool.count,
-        mem_pool.free.size, mem_pool.free.count, mem_pool.free.head, mem_pool.free.tail);
-    }
-
-    ret = memory_pool_put(&mem_pool, mem);
-
-    if (ret != 0)
-    {
-        E("memory pool put fail %d", ret);
-        return -62;
-    }
-
-    D("memory_pool_put ret:%d memory-pool-count:%d list-size:%d count:%d head:%d tail:%d", ret, mem_pool.count,
-        mem_pool.free.size, mem_pool.free.count, mem_pool.free.head, mem_pool.free.tail);
-
-    ret = memory_pool_uninit(&mem_pool);
-
-    if (ret != 0)
-    {
-        E("memory pool uninit fail %d", ret);
-        return -63;
-    }
-
-    D("--------------------------------------------------------------------");
-
-    ret = thread_pool_init(&g_thread_pool, 10);
-
-    if (ret != 0)
-    {
-        E("thread pool init fail %d", ret);
-        return -70;
-    }
-
-    D("--------------------------------------------------------------------");
-
-    ret = timer_init(&g_timer_set);
-
-    if (ret != 0)
-    {
-        E("timer init fail %d", ret);
-        return -80;
-    }
-
-    ret = timer_add_cycle(&g_timer_set, "timer_0",  5, &g_thread_pool, timer_callback, "timer_0_param");
-
-    if (ret != 0)
-    {
-        E("add cycle timer fail %d", ret);
-        return -81;
-    }
-
-    ret = timer_add_cycle(&g_timer_set, "timer_1", 10, &g_thread_pool, timer_callback, "timer_1_param");
-
-    if (ret != 0)
-    {
-        E("add cycle timer fail %d", ret);
-        return -82;
-    }
-
-    ret = timer_add_cron(&g_timer_set, "timer_2", TIMER_CRON_MINUTE, 0, 0, 0, 0, 0, 0, 0, &g_thread_pool, timer_callback, "timer_2_param");
-
-    if (ret != 0)
-    {
-        E("add cron timer fail %d", ret);
-        return -83;
-    }
-
-    D("--------------------------------------------------------------------");
 
     ret = http_init(g_cfg.http_port, http_proc_callback, &g_http);
 
     if (ret != 0)
     {
         E("http init fail %d", ret);
-        return -90;
+        return -3;
     }
-
-    D("--------------------------------------------------------------------");
 
     ret = xl_sdk_init();
 
     if (0 != ret)
     {
-        E("init Eor:%d", ret);
-        return -100;
+        E("init error:%d", ret);
+        return -4;
     }
-
-    D("--------------------------------------------------------------------");
-
-    ret = get_torrent_info("D:\\5.downloads\\bt\\7097B42EEBC037482B69056276858599ED9605B5.torrent", &g_torrent);
-
-    if (0 != ret)
-    {
-        E("init Eor:%d", ret);
-        return -110;
-    }
-
-    D("--------------------------------------------------------------------");
-
-    int error;
-    PCRE2_SIZE offset;
-
-    PCRE2_SPTR reg = "[0-9]{5}[a-z]+[0-9]{5}";
-
-    pcre2_code *pcre_data = pcre2_compile(reg, PCRE2_ZERO_TERMINATED, 0, &error, &offset, NULL);
-
-    if (pcre_data == NULL)
-    {
-        PCRE2_UCHAR info[256];
-        pcre2_get_error_message(error, info, sizeof(info));
-        E("pcre2_compile:fail reg:%s offste:%d error:%d info:%s", reg, offset, error, info);
-        return 0;
-    }
-
-    D("pcre2_compile:ok reg:%s", reg);
-
-    pcre2_match_data *match_data = pcre2_match_data_create_from_pattern(pcre_data, NULL);
-
-    if (NULL == match_data)
-    {
-        PCRE2_UCHAR info[256];
-        pcre2_get_error_message(error, info, sizeof(info));
-        E("pcre2_match_data_create_from_pattern:fail reg:%s", reg);
-        return -120;
-    }
-
-    D("pcre2_match_data_create_from_pattern:ok reg:%s", reg);
-
-    PCRE2_SPTR txt = "abcde12345abcde12345-=";
-
-    ret = pcre2_match(pcre_data, txt, strlen(txt), 0, 0, match_data, NULL); // <0发生错误，==0没有匹配上，>0返回匹配到的元素数量
-
-    if (ret < 0)
-    {
-        E("pcre2_match:fail txt:%s ret:%d", txt, ret);
-        return -130;
-    }
-    else if (ret == 0)
-    {
-        E("pcre2_match:ok txt:%s ret:%d", txt, ret);
-    }
-    else
-    {
-        E("pcre2_match:ok txt:%s ret:%d", txt, ret);
-
-        int len;
-        char format[512];
-
-        PCRE2_SIZE *pos = pcre2_get_ovector_pointer(match_data);
-
-        for (int i = 0; i < ret; i++)
-        {
-            len = pos[2 * i + 1] - pos[2 * i];
-            sprintf_s(format, sizeof(format), "i:%%d pos:%%d-%%d len:%%d str:%%.%ds", len);
-            D(format, i, pos[2 * i], pos[2 * i + 1], len, txt + pos[2 * i]);
-        }
-    }
-
-    pcre2_match_data_free(match_data);
-    pcre2_code_free(pcre_data);
-
-    D("--------------------------------------------------------------------");
-
-    cunit();
-
-    D("--------------------------------------------------------------------");
 
     notify_menu_info menu[] = { {0, L"退出(&E)", NULL, on_menu_exit} };
 
@@ -979,7 +514,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     if (0 != ret)
     {
-        return -140;
+        return -5;
     }
 
     return notify_loop_msg();
