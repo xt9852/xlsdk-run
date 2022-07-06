@@ -15,6 +15,9 @@
 /// 种子中文件名长度
 #define TORRENT_FILENAME_SIZE                           512
 
+/// 种子中服务器信息长度
+#define TORRENT_ANNOUNCE_SIZE                           10240
+
 /// 种子中的文件信息
 typedef struct _bt_torrent_file
 {
@@ -26,19 +29,28 @@ typedef struct _bt_torrent_file
 
 } bt_torrent_file, *p_bt_torrent_file;                  ///< 种子内包含的文件信息
 
+/// 种子中的服务器信息
+typedef struct _bt_torrent_announce
+{
+    short               data[TORRENT_ANNOUNCE_SIZE];    ///< 服务器列表数据
+
+    unsigned int        len;                            ///< 数据长
+
+    unsigned int        count;                          ///< 服务器列表数量
+
+} bt_torrent_announce, *p_bt_torrent_announce;          ///< 种子中的服务器信息
+
 /// 种子信息
 typedef struct _bt_torrent
 {
-    bt_torrent_file     file[TORRENT_FILE_SIZE];        ///< 种子内包含的文件信息
-    int                 file_count;                     ///< 种子内包含的文件数量
+    bt_torrent_announce announce;                       ///< 服务器信息
 
-    int                 announce_len;                   ///< 数据长
-    int                 announce_count;                 ///< 服务器列表数量
-    short               announce[10240];                ///< 服务器列表
+    bt_torrent_file     file[TORRENT_FILE_SIZE];        ///< 种子内包含的文件信息
+    int                 count;                          ///< 种子内包含的文件数量
 
     int                 last;                           ///< 上一个字符串是什么
-    char               *name_tail;                      ///< 指向当是文件名结尾
-    short              *announce_tail;                  ///< 指向服务器列表结尾
+    char               *name;                           ///< 指向当是文件名结尾
+    short              *anno;                           ///< 指向服务器列表结尾
 
 } bt_torrent, *p_bt_torrent;                            ///< 种子文件信息
 

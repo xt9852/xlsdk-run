@@ -75,26 +75,12 @@
                 td.innerText = item['size'];\n\
                 tr.appendChild(td);\n\
                 td = document.createElement('td');\n\
-                td.innerText = item['speed'];\n\
-                tr.appendChild(td);\n\
-                td = document.createElement('td');\n\
                 td.innerText = item['prog'];\n\
                 tr.appendChild(td);\n\
-                td = document.createElement('td');\n\
-                td.innerText = item['time'];\n\
-                tr.appendChild(td);\n\
-                td = document.createElement('td');\n\
-                if (/\\.torrent$/.test(file)) {\n\
-                    btn = document.createElement('button');\n\
-                    btn.innerText = 'open';\n\
-                    btn.i = i;\n\
-                    btn.id = 'btn_' + i;\n\
-                    btn.style='display:block;';\n\
-                    btn.onclick = show_torrent;\n\
-                    td.appendChild(btn);\n\
-                }\n\
-                tr.appendChild(td);\n\
                 down_tbody.appendChild(tr);\n\
+                td = document.createElement('td');\n\
+                td.innerText = item['speed'];\n\
+                tr.appendChild(td);\n\
             }\n\
             width = document.getElementById('width').clientWidth + 37;\n\
             if (width < 400) width = 400;;\n\
@@ -156,10 +142,10 @@
 <button onclick='download(false)'>download</button>\
 <button onclick='show_torrent(true)'>open</button>\
 <br><br>\
-<table id='file-list' border='1' style='border-collapse:collapse;display:none'>\
-<tr><th><input type='checkbox' name='check' onclick='on_check(this)' /></th><th>大小</th><th>文件</th></tr></table>\
-<table id='down-list' border='1' style='border-collapse:collapse;'>\
-<tr><th>任务</th><th id='width'>文件</th><th>大小</th><th>速度</th><th>进度</th><th>用时</th><th>操作</th></tr>\
+<table id='file-list' border='1' style='border-collapse:collapse;font-family:宋体;display:none'>\
+<tr><th><input type='checkbox' name='check' onclick='on_check(this)' /></th><th>文件</th><th>大小</th></tr></table>\
+<table id='down-list' border='1' style='border-collapse:collapse;font-family:宋体;'>\
+<tr><th>任务</th><th id='width'>文件</th><th>大小</th><th>进度</th><th>速度</th></tr>\
 </table>\
 </body>"
 
@@ -171,7 +157,7 @@ xt_http             g_http                  = {0};  ///< HTTP服务
 
 extern xl_task      g_task[TASK_SIZE];              ///< 当前正在下载的任务信息
 
-extern int          g_task_count;                   ///< 当前正在下载的任务数量
+extern unsigned int g_task_count;                   ///< 当前正在下载的任务数量
 
 /**
  *\brief        http回调函数,下载接口
@@ -181,22 +167,28 @@ extern int          g_task_count;                   ///< 当前正在下载的�
  */
 int http_proc_download(const p_xt_http_arg arg, p_xt_http_content content)
 {
-    const char *file = NULL;
-    const char *list = NULL;
+    const char *file = NULL;    // 可以为空
+    const char *list = NULL;    // 可以为空
 
-    if (arg->count >= 1 && NULL != arg->name[0] && 0 == strcmp(arg->name[0], "file") && 0 != strcmp(arg->data[0], ""))
+    if (arg->count >= 1 &&
+        NULL != arg->item[0].name &&
+        0 == strcmp(arg->item[0].name, "file") &&
+        0 != strcmp(arg->item[0].data, ""))
     {
-        file = arg->data[0];
+        file = arg->item[0].data;
     }
 
-    if (arg->count >= 2 && NULL != arg->name[1] && 0 == strcmp(arg->name[1], "list") && 0 != strcmp(arg->data[1], ""))
+    if (arg->count >= 2 &&
+        NULL != arg->item[1].name &&
+        0 == strcmp(arg->item[1].name, "list") &&
+        0 != strcmp(arg->item[1].data, ""))
     {
-        list = arg->data[1];
+        list = arg->item[1].data;
     }
 
-    int len = 512;
-    char filename[512];
-    base64_decode(file, arg->data_len[0], filename, &len);
+    int len = 1024;
+    char filename[1024];
+    base64_decode(file, arg->item[0].data_len, filename, &len);
 
     if (NULL != file && 0 != xl_sdk_download(g_cfg.download_path, filename, list))
     {
@@ -204,24 +196,32 @@ int http_proc_download(const p_xt_http_arg arg, p_xt_http_content content)
         return -1;
     }
 
-    int    pos = 1;
+    int    pos;
     int    encode_len;
     int    base64_len;
     char   size[16];
     char   speed[16];
-    char   encode[MAX_PATH];
-    char   base64[MAX_PATH];
+    char   encode[20480];
+    char   base64[20480];
     char  *data = content->data;
 
+    pos = 1;
     data[0] = '[';
 
-    for (int i = 0; i < g_task_count; i++)
+    for (unsigned int i = 0; i < g_task_count; i++)
     {
         encode_len = sizeof(encode);
         base64_len = sizeof(base64);
 
-        uri_encode(g_task[i].name, g_task[i].name_len, encode, &encode_len); // js的atob不能解码unicode
-        base64_encode(encode, encode_len, base64, &base64_len); // 文件名中可能有json需要转码的字符
+        if (0 != uri_encode(g_task[i].name, g_task[i].name_len, encode, &encode_len)) // js的atob不能解码unicode
+        {
+            return -2;
+        }
+
+        if (0 != base64_encode(encode, encode_len, base64, &base64_len)) // 文件名中可能有json需要转码的字符
+        {
+            return -3;
+        }
 
         format_data(g_task[i].size, size, sizeof(size));
         format_data(g_task[i].speed, speed, sizeof(speed));
@@ -230,8 +230,8 @@ int http_proc_download(const p_xt_http_arg arg, p_xt_http_content content)
           g_task[i].id, g_task[i].name, encode, base64, size, speed, g_task[i].prog);
 
         len = snprintf(data + pos, content->len - pos,
-                       "{\"id\":%d,\"file\":\"%s\",\"size\":\"%s\",\"speed\":\"%s\",\"prog\":\"%.2f\",\"time\":%u},",
-                       g_task[i].id, base64, size, speed, g_task[i].prog, g_task[i].time);
+                       "{\"id\":%d,\"file\":\"%s\",\"size\":\"%s\",\"prog\":\"%.2f\",\"speed\":\"%s\"},",
+                       g_task[i].id, base64, size, g_task[i].prog, speed);
         pos += len;
     }
 
@@ -257,12 +257,13 @@ int http_proc_download(const p_xt_http_arg arg, p_xt_http_content content)
  */
 int http_proc_torrent(const p_xt_http_arg arg, p_xt_http_content content)
 {
-    if (arg->count <= 0 || NULL == arg->name[0] || 0 != strcmp(arg->name[0], "torrent"))
+    if (arg->count <= 0 || NULL == arg->item[0].name || 0 != strcmp(arg->item[0].name, "torrent"))
     {
+        D("file:null or \"\"");
         return -1;
     }
 
-    const char *file = arg->data[0];
+    const char *file = arg->item[0].data;
 
     if (NULL == file || 0 == strcmp(file, ""))
     {
@@ -270,11 +271,11 @@ int http_proc_torrent(const p_xt_http_arg arg, p_xt_http_content content)
         return -2;
     }
 
-    int len = 512;
-    char filename[512];
+    int len = 1024;
+    char filename[1024];
     bt_torrent torrent = {0};
 
-    base64_decode(file, arg->data_len[0], filename, &len);
+    base64_decode(file, arg->item[0].data_len, filename, &len);
 
     if (0 != get_torrent_info(filename, &torrent))
     {
@@ -282,17 +283,18 @@ int http_proc_torrent(const p_xt_http_arg arg, p_xt_http_content content)
         return -3;
     }
 
-    int   pos = 1;
+    int   pos;
     int   encode_len;
     int   base64_len;
     char  size[16];
-    char  encode[MAX_PATH];
-    char  base64[MAX_PATH];
+    char  encode[20480];
+    char  base64[20480];
     char *data = content->data;
 
+    pos = 1;
     data[0] = '[';
 
-    for (int i = 0; i < torrent.file_count; i++)
+    for (int i = 0; i < torrent.count; i++)
     {
         encode_len = sizeof(encode);
         base64_len = sizeof(base64);
@@ -301,13 +303,15 @@ int http_proc_torrent(const p_xt_http_arg arg, p_xt_http_content content)
         base64_encode(encode, encode_len, base64, &base64_len); // 文件名中可能有json需要转码的字符
         format_data(torrent.file[i].size, size, sizeof(size));
 
-        D("i:%d file:%s uri_encode:%s base64(uri_encode):%s", i, torrent.file[i].name, encode, base64);
+        D("i:%d file:%s", i, torrent.file[i].name);
 
         len = snprintf(data + pos, content->len - pos, "{\"file\":\"%s\",\"size\":\"%s\"},", base64, size);
         pos += len;
     }
 
-    if (torrent.file_count > 0)
+    D("5");
+
+    if (torrent.count > 0)
     {
         data[pos - 1] = ']';
     }
@@ -457,6 +461,11 @@ void on_menu_exit(HWND wnd, void *param)
     if (IDNO == MessageBoxW(wnd, L"确定退出?", L"消息", MB_ICONQUESTION | MB_YESNO))
     {
         return;
+    }
+
+    for (unsigned int i = 0; i < g_task_count; i++)
+    {
+        xl_sdk_stop_download_file(g_task[i].id);
     }
 
     DestroyWindow(wnd);

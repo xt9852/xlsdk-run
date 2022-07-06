@@ -45,38 +45,38 @@ typedef struct _xl_data_head
 
 }xl_data_head, *p_xl_data_head;             ///< 数据包头节点
 
-int         g_cur_process_id        = 0;        ///< 本进程ID
-int         g_sdk_process_id        = 0;        ///< SDK进程ID
-int         g_share_memory_id       = 0;        ///< 共享内存ID
+int             g_cur_process_id        = 0;        ///< 本进程ID
+int             g_sdk_process_id        = 0;        ///< SDK进程ID
+int             g_share_memory_id       = 0;        ///< 共享内存ID
 
-bool        g_init                  = false;    ///< 是否完成初始化
+bool            g_init                  = false;    ///< 是否完成初始化
 
-UCHAR      *g_recv                  = NULL;     ///< 共享内存1M,对方接收的数据,我方发送的
-UCHAR      *g_send                  = NULL;     ///< 共享内存1M,我方发送的数据,需对方处理
+UCHAR          *g_recv                  = NULL;     ///< 共享内存1M,对方接收的数据,我方发送的
+UCHAR          *g_send                  = NULL;     ///< 共享内存1M,我方发送的数据,需对方处理
 
-UCHAR      *g_recv_tmp              = NULL;     ///< 临时缓存区
-UCHAR      *g_send_tmp              = NULL;     ///< 临时缓存区
+UCHAR          *g_recv_tmp              = NULL;     ///< 临时缓存区
+UCHAR          *g_send_tmp              = NULL;     ///< 临时缓存区
 
-HANDLE      g_proxyAliveMutex       = NULL;     ///< 互斥
-HANDLE      g_serverStartUpEvent    = NULL;     ///< 事件
+HANDLE          g_proxyAliveMutex       = NULL;     ///< 互斥
+HANDLE          g_serverStartUpEvent    = NULL;     ///< 事件
 
-HANDLE      g_recvShareMemory       = NULL;     ///< 共享内存1M,我方发送的数据,需要对方处理
-HANDLE      g_recvBufferFullEvent   = NULL;     ///< 信号,表示有数据,对方可以处理啦
-HANDLE      g_recvBufferEmptyEvent  = NULL;     ///< 信号,表示对方处理完成,我方可以再次发送
+HANDLE          g_recvShareMemory       = NULL;     ///< 共享内存1M,我方发送的数据,需要对方处理
+HANDLE          g_recvBufferFullEvent   = NULL;     ///< 信号,表示有数据,对方可以处理啦
+HANDLE          g_recvBufferEmptyEvent  = NULL;     ///< 信号,表示对方处理完成,我方可以再次发送
 
-HANDLE      g_sendShareMemory       = NULL;     ///< 共享内存1M,对方发送的数据,需要我方处理
-HANDLE      g_sendBufferFullEvent   = NULL;     ///< 信号,表示有数据,我方可以处理啦
-HANDLE      g_sendBufferEmptyEvent  = NULL;     ///< 信号,表示我方可以处理完成,对方可以再次发送
+HANDLE          g_sendShareMemory       = NULL;     ///< 共享内存1M,对方发送的数据,需要我方处理
+HANDLE          g_sendBufferFullEvent   = NULL;     ///< 信号,表示有数据,我方可以处理啦
+HANDLE          g_sendBufferEmptyEvent  = NULL;     ///< 信号,表示我方可以处理完成,对方可以再次发送
 
-int         g_track_len             = 0;        ///< track数据长度
+unsigned int    g_track_len             = 0;        ///< track数据长度
 
-int         g_track_count           = 0;        ///< track数据数量
+unsigned int    g_track_count           = 0;        ///< track数据数量
 
-short      *g_track_data[10240]     = {0};      ///< track缓冲区
+short          *g_track_data[10240]     = {0};      ///< track缓冲区
 
-xl_task     g_task[TASK_SIZE]       = {0};      ///< 当前正在下载的任务信息
+xl_task         g_task[TASK_SIZE]       = {0};      ///< 当前正在下载的任务信息
 
-int         g_task_count            = 0;        ///< 当前正在下载的任务数量
+unsigned int    g_task_count            = 0;        ///< 当前正在下载的任务数量
 
 
 /// track服务器地址
@@ -351,7 +351,7 @@ int xl_sdk_call_sdk_func()
     ResetEvent(g_recvBufferEmptyEvent);                     // 清空对方准备好接收数据信号
     SetEvent(g_recvBufferFullEvent);                        // 设置对方接收数据信号
 
-    D("send %s len:%d", XL_SDK_FUNC_NAME[p->func_id], p->len);
+    //D("send %s len:%d", XL_SDK_FUNC_NAME[p->func_id], p->len);
 
     WaitForSingleObject(g_sendBufferFullEvent, INFINITE);   // 等待对方已经发送数据信号
 
@@ -369,7 +369,7 @@ int xl_sdk_call_sdk_func()
         return head[2];
     }
 
-    D("recv %s len:%d ret:0", XL_SDK_FUNC_NAME[p->func_id], p->len);
+    //D("recv %s len:%d ret:0", XL_SDK_FUNC_NAME[p->func_id], p->len);
     return 0;
 }
 
@@ -801,7 +801,7 @@ int xl_sdk_proc_track()
 
     g_track_count = SIZEOF(g_track);
 
-    for (int i = 0; i < g_track_count; i++)
+    for (unsigned int i = 0; i < g_track_count; i++)
     {
         len = wcslen(g_track[i]);
 
@@ -861,9 +861,9 @@ int xl_sdk_add_bt_tracker(int taskid, int count, const short *data, int data_len
  *\param[in]    task_name_size  任务名称缓冲区大小
  *\return       0               成功
  */
-int xl_sdk_create_bt_task(const char *torrent, const char *path, const char *list, int *taskid, char *task_name, int task_name_size)
+int xl_sdk_create_bt_task(const char *torrent, const char *path, const char *list, p_xl_task task)
 {
-    if (!g_init || NULL == torrent || NULL == path || NULL == list || NULL == taskid || NULL == task_name || task_name_size <= 0)
+    if (NULL == torrent || NULL == path || NULL == list || NULL == task)
     {
         return -1;
     }
@@ -919,7 +919,7 @@ int xl_sdk_create_bt_task(const char *torrent, const char *path, const char *lis
         return -3;
     }
 
-    *taskid = *(int*)(g_send_tmp + 12);
+    task->id = *(int*)(g_send_tmp + 12);
 
     bt_torrent tor = {0};
 
@@ -935,18 +935,21 @@ int xl_sdk_create_bt_task(const char *torrent, const char *path, const char *lis
 
     id = (NULL == id) ? "" : id + 1;
 
-    strcpy_s(task_name, task_name_size, id);
+    strcpy_s(task->name, TASK_NAME_SIZE, id);
 
-    int pos = strlen(task_name);
+    int pos = strlen(task->name);
 
-    for (int i = 0; i < list_len && i < tor.file_count; i++)
+    for (int i = 0; i < list_len && i < tor.count; i++)
     {
         if (list[i] == '1')
         {
-            task_name[pos++] = '|';
-            strcpy_s(task_name + pos, task_name_size - pos, tor.file[i].name);
+            pos += sprintf_s(&task->name[pos], TASK_NAME_SIZE - pos, "|%s", tor.file[i].name);
         }
     }
+
+    task->name_len = pos;
+
+    D("name:%s %u %u", task->name, pos, strlen(task->name));
 
     D("ok");
     return 0;
@@ -961,9 +964,9 @@ int xl_sdk_create_bt_task(const char *torrent, const char *path, const char *lis
  *\param[in]    task_name_size  任务名称缓冲区大小
  *\return       0               成功
  */
-int xl_sdk_create_url_task(const char *url, const char *path, int *taskid, char *task_name, int task_name_size)
+int xl_sdk_create_url_task(const char *url, const char *path, p_xl_task task)
 {
-    if (!g_init || NULL == url || NULL == path || NULL == taskid || NULL == task_name || task_name_size <= 0)
+    if (NULL == url || NULL == path || NULL == task)
     {
         return -1;
     }
@@ -1033,19 +1036,19 @@ int xl_sdk_create_url_task(const char *url, const char *path, int *taskid, char 
         return -4;
     }
 
-    *taskid = *(int*)(g_send_tmp + 12);
+    task->id = *(int*)(g_send_tmp + 12);
 
-    strcpy_s(task_name, task_name_size, path);
+    int len = TASK_NAME_SIZE - sprintf_s(task->name, TASK_NAME_SIZE, "%s\\", path);
 
-    task_name[path_len] = '\\';
+    int size = TASK_NAME_SIZE - len;
 
-    int len = task_name_size - path_len - 1;
-
-    if (0 != unicode_utf8(filename, filename_len, task_name + path_len + 1, &len))
+    if (0 != unicode_utf8(filename, filename_len, &task->name[path_len + 1], &size))
     {
         E("unicode to ansi Eor");
         return 0;
     }
+
+    task->name_len = len + size;
 
     D("ok");
     return 0;
@@ -1060,9 +1063,9 @@ int xl_sdk_create_url_task(const char *url, const char *path, int *taskid, char 
  *\param[in]    task_name_size  任务名称缓冲区大小
  *\return       0               成功
  */
-int xl_sdk_create_magnet_task(const char *magnet, const char *path, int *taskid, char *task_name, int task_name_size)
+int xl_sdk_create_magnet_task(const char *magnet, const char *path, p_xl_task task)
 {
-    if (!g_init || NULL == magnet || NULL == path || NULL == taskid || NULL == task_name || task_name_size <= 0)
+    if (NULL == magnet || NULL == path || NULL == task)
     {
         return -1;
     }
@@ -1114,15 +1117,17 @@ int xl_sdk_create_magnet_task(const char *magnet, const char *path, int *taskid,
         return -4;
     }
 
-    *taskid = *(int*)(g_send_tmp + 12);
+    task->id = *(int*)(g_send_tmp + 12);
 
-    if (0 != unicode_utf8(filename, arg2->len, task_name, &task_name_size))
+    int size = TASK_NAME_SIZE;
+
+    if (0 != unicode_utf8(filename, arg2->len, task->name, &size))
     {
         E("unicode to ansi error");
         return 0;
     }
 
-    D("task_name:%s", task_name);
+    task->name_len = size;
 
     D("ok");
     return 0;
@@ -1298,10 +1303,7 @@ int xl_sdk_download(const char *path, const char *filename, const char *list)
         return -1;
     }
 
-    int ret;
-    int task_id;
     int task_type;
-    char task_name[MAX_PATH];
 
     if (0 == strcmp(filename + strlen(filename) - 8, ".torrent"))   // BT下载
     {
@@ -1321,30 +1323,32 @@ int xl_sdk_download(const char *path, const char *filename, const char *list)
         task_type = TASK_URL;
     }
 
-    for (int i = 0; i < g_task_count; i++)
+    for (unsigned int i = 0; i < g_task_count; i++)
     {
-        if (0 == strcmp(filename, g_task[i].name) && task_type == g_task[i].type)  // 已经下载
+        if (0 == strcmp(filename, g_task[i].filename) && task_type == g_task[i].type)  // 已经下载
         {
             D("have task:%s", filename);
             return 0;
         }
     }
 
+    int ret = 0;
+
     switch (task_type)
     {
         case TASK_BT:
         {
-            ret = xl_sdk_create_bt_task(filename, path, list, &task_id, task_name, sizeof(task_name));
+            ret = xl_sdk_create_bt_task(filename, path, list, &g_task[g_task_count]);
             break;
         }
         case TASK_MAGNET:
         {
-            ret = xl_sdk_create_magnet_task(filename, path, &task_id, task_name, sizeof(task_name));
+            ret = xl_sdk_create_magnet_task(filename, path, &g_task[g_task_count]);
             break;
         }
         case TASK_URL:
         {
-            ret = xl_sdk_create_url_task(filename, path, &task_id, task_name, sizeof(task_name));
+            ret = xl_sdk_create_url_task(filename, path, &g_task[g_task_count]);
             break;
         }
     }
@@ -1355,7 +1359,7 @@ int xl_sdk_download(const char *path, const char *filename, const char *list)
         return -2;
     }
 
-    ret = xl_sdk_start_download_file(task_id, task_type);
+    ret = xl_sdk_start_download_file(g_task[g_task_count].id, task_type);
 
     if (0 != ret)
     {
@@ -1363,21 +1367,20 @@ int xl_sdk_download(const char *path, const char *filename, const char *list)
         return -3;
     }
 
-    strcpy_s(g_task[g_task_count].name, TASK_NAME_SIZE, task_name);
+    strcpy_s(g_task[g_task_count].filename, TASK_NAME_SIZE, filename);
 
-    g_task[g_task_count].id        = task_id;
     g_task[g_task_count].type      = task_type;
     g_task[g_task_count].size      = 0;
     g_task[g_task_count].down      = 0;
     g_task[g_task_count].time      = 0;
-    g_task[g_task_count].name_len  = strlen(task_name);
     g_task[g_task_count].last_down = 0;
     g_task[g_task_count].last_time = 0;
     g_task[g_task_count].speed     = 0;
     g_task[g_task_count].prog      = 0;
     g_task_count++;
 
-    D("task_id:%d, filename:%s task_count:%d", task_id, task_name, g_task_count);
+    D("task_id:%u task_name:%s name_len:%d task_count:%u",
+      g_task[g_task_count - 1].id, g_task[g_task_count - 1].name, g_task[g_task_count - 1].name_len, g_task_count);
     return 0;
 }
 
@@ -1399,18 +1402,18 @@ void* xl_sdk_thread(void *param)
     {
         sleep(5);
 
-        for (int i = 0; i < g_task_count; i++)
+        for (unsigned int i = 0; i < g_task_count; i++)
         {
-            if (g_task[i].down == g_task[i].size && g_task[i].size > 0) // 下载完成
+            if (g_task[i].down == g_task[i].size && 0 != g_task[i].size) // 下载完成
             {
                 continue;
             }
 
             xl_sdk_get_task_info(g_task[i].id, &g_task[i].size, &g_task[i].down, &g_task[i].time);
 
-            D("task_id:%d, size:%I64u down:%I64u time:%u", g_task[i].id, g_task[i].size, g_task[i].down, g_task[i].time);
+            D("task_id:%02u, size:%I64u down:%I64u time:%u", g_task[i].id, g_task[i].size, g_task[i].down, g_task[i].time);
 
-            if (0 == g_task[i].size) // 种子文件
+            if (0 == g_task[i].size)
             {
                 continue;
             }
@@ -1419,31 +1422,19 @@ void* xl_sdk_thread(void *param)
             time = g_task[i].time - g_task[i].last_time;
             prog = 100.0 * g_task[i].down / g_task[i].size;
 
-            if (0 == down && 0 == time && prog > 99.5) // 有时出现已经下载完成但进度为99.**%的时候
+            if (0 == time && prog > 99) // 下载完成,但进度为99.**%
             {
-                prog  = 100.00;
-            }
-            else if (time > 0)
-            {
-                speed = down / time;
-            }
-            else
-            {
-                E("down:%I64u time:%u prog:%f", down, time, prog);
+                time = 0;
+                prog = 100.00;
+                g_task[i].down = g_task[i].size;
             }
 
-            if (prog > 99.99) // 下载完成
+            if (0 != time && prog > 99.99) // 下载完成,100.00%
             {
-                if (speed > 0)
-                {
-                    speed = 0;
-                }
-
-                if (g_task[i].down != g_task[i].size)
-                {
-                    g_task[i].down = g_task[i].size;
-                }
+                time = 0;
             }
+
+            speed = (0 == time) ? 0 : down / time;
 
             g_task[i].prog = prog;
             g_task[i].speed = speed;

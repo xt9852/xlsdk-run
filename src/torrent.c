@@ -66,24 +66,23 @@ int bencode_str(const char *s, unsigned int len, p_bt_torrent torrent)
             if (torrent->last == NAME) // 单文件
             {
                 torrent->last = 0;
-                torrent->file_count = 1;
+                torrent->count = 1;
                 torrent->file[0].name_len = str_len;
                 memcpy(torrent->file[0].name, s + i, str_len);
             }
             else if (torrent->last == PATH_LIST) // 多文件
             {
-                memcpy(torrent->name_tail, s + i, str_len);
-
-                torrent->name_tail += str_len;
-                *(torrent->name_tail++) = '\\';
+                memcpy(torrent->name, s + i, str_len);
+                torrent->name[str_len] = '\\';
+                torrent->name += str_len + 1;
             }
             else if (torrent->last == ANNOUNCE_LIST_LIST)
             {
                 dst_len = MAX_PATH;
-                torrent->announce_count++;
-                *((unsigned int*)torrent->announce_tail) = str_len;    // 字符串长度
-                utf8_unicode(s + i, str_len, torrent->announce_tail + 2, &dst_len);
-                torrent->announce_tail += 2 + str_len;
+                torrent->announce.count++;
+                *((unsigned int*)torrent->anno) = str_len;    // 字符串长度
+                utf8_unicode(s + i, str_len, torrent->anno + 2, &dst_len);
+                torrent->anno += 2 + str_len;
             }
             else if (0 == strncmp(s + i, "ed2k", str_len))
             {
@@ -118,12 +117,12 @@ int bencode_str(const char *s, unsigned int len, p_bt_torrent torrent)
         }
         else
         {
-            E("string char Eor");
+            E("string char error");
             return -100;
         }
     }
 
-    E("string Eor");
+    E("string error");
     return -101;
 }
 
@@ -138,7 +137,7 @@ int bencode_int(const char *s, unsigned int len, p_bt_torrent torrent)
 {
     if (s[0] != 'i')
     {
-        E("int flag Eor");
+        E("int flag error");
         return -200;
     }
 
@@ -153,23 +152,21 @@ int bencode_int(const char *s, unsigned int len, p_bt_torrent torrent)
         }
         else if (s[i] == 'e')
         {
-            if (torrent->last == LENGTH) // 上一个字符串是"length","name"
+            if (torrent->last == LENGTH)
             {
-                torrent->file[torrent->file_count].size = num;
-                torrent->file[torrent->file_count].name_len = 0;
-                torrent->name_tail = torrent->file[torrent->file_count].name;
+                torrent->file[torrent->count].size = num;
             }
 
             return i + 1;
         }
         else
         {
-            E("int num Eor");
+            E("int num error");
             return -201;
         }
     }
 
-    E("int Eor");
+    E("int error");
     return -202;
 }
 
@@ -184,7 +181,7 @@ int bencode_list(const char *s, unsigned int len, p_bt_torrent torrent)
 {
     if (s[0] != 'l')
     {
-        E("list flag Eor");
+        E("list flag error");
         return -300;
     }
 
@@ -209,11 +206,12 @@ int bencode_list(const char *s, unsigned int len, p_bt_torrent torrent)
         {
             if (torrent->last == PATH_LIST)
             {
-                torrent->file[torrent->file_count].name_len = torrent->name_tail - torrent->file[torrent->file_count].name -1;
-                torrent->file_count++;
+                p_bt_torrent_file file = &(torrent->file[torrent->count]);
+                file->name_len = torrent->name - file->name - 1;
+                torrent->count++;
                 torrent->last = 0;
-                torrent->name_tail[-1] = '\0'; // 结尾多了个'\\'
-                torrent->name_tail = NULL;
+                torrent->name[-1] = '\0'; // 结尾多了个'\\'
+                torrent->name = torrent->file[torrent->count].name;
             }
             else if (torrent->last == ANNOUNCE_LIST)
             {
@@ -245,14 +243,14 @@ int bencode_list(const char *s, unsigned int len, p_bt_torrent torrent)
 
         if (ret <= 0)
         {
-            E("list sub item len Eor");
+            E("list sub item len error");
             return -301;
         }
 
         i += ret;
     }
 
-    E("list Eor");
+    E("list error");
     return -302;
 }
 
@@ -267,7 +265,7 @@ int bencode_dict(const char *s, unsigned int len, p_bt_torrent torrent)
 {
     if (s[0] != 'd')
     {
-        E("dict flag Eor");
+        E("dict flag error");
         return -400;
     }
 
@@ -275,7 +273,7 @@ int bencode_dict(const char *s, unsigned int len, p_bt_torrent torrent)
 
     if (ret <= 0)
     {
-        E("dict key len Eor");
+        E("dict key len error");
         return -401;
     }
 
@@ -304,14 +302,14 @@ int bencode_dict(const char *s, unsigned int len, p_bt_torrent torrent)
 
         if (ret <= 0)
         {
-            printf("dict item len Eor\n");
+            printf("dict item len error\n");
             return -402;
         }
 
         i += ret;
     }
 
-    printf("dict Eor\n");
+    printf("dict error\n");
     return -403;
 }
 
@@ -336,9 +334,9 @@ int load_file_data(const char *filename, char **data, unsigned int *len)
     fseek(fp, 0, SEEK_END);
 
     *len = ftell(fp);
-    fseek(fp, 0, SEEK_SET);
-
     *data = malloc(*len);
+
+    fseek(fp, 0, SEEK_SET);
     fread(*data, 1, *len, fp);
 
     fclose(fp);
@@ -367,45 +365,28 @@ int get_torrent_info(const char *filename, p_bt_torrent torrent)
         return -2;
     }
 
-    char *buff;
+    char *buf;
 
-    if (0 != load_file_data(filename, &buff, &size)) // malloc buff
+    if (0 != load_file_data(filename, &buf, &size)) // malloc buf
     {
         E("load file data fail %s", filename);
         return -3;
     }
 
     memset(torrent, 0, sizeof(bt_torrent));
-    torrent->announce_tail = torrent->announce;
+    torrent->name = torrent->file[0].name;
+    torrent->anno = torrent->announce.data;
 
-    if (size != bencode_dict(buff, size, torrent))
+    if (size != bencode_dict(buf, size, torrent))
     {
         E("dict fail %s", filename);
-        free(buff);
+        free(buf);
         return -4;
     }
 
-    torrent->announce_len = (torrent->announce_tail - torrent->announce) * 2;
+    torrent->announce.len = (torrent->anno - torrent->announce.data) * 2;
 
-    free(buff);
-
-    // 删除旧版本信息
-    for (int i = 0; i < torrent->file_count;)
-    {
-        if (0 == strncmp(torrent->file[i].name, "_____padding_file_", 18))
-        {
-            for (int j = i; j < torrent->file_count - 1; j++)
-            {
-                torrent->file[j] = torrent->file[j + 1];
-            }
-
-            torrent->file_count--;
-        }
-        else
-        {
-            i++;
-        }
-    }
+    free(buf);
 
     return 0;
 }

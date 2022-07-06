@@ -36,6 +36,8 @@ typedef struct _xl_task
     unsigned __int64    down;                           ///< 已经下载的数量
 
     unsigned int        time;                           ///< 用时秒数
+    
+    char                filename[TASK_NAME_SIZE];       ///< 文件名
 
     char                name[TASK_NAME_SIZE];           ///< 任务名
 
