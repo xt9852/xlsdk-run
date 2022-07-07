@@ -54,29 +54,26 @@ int bencode_str(const char *s, unsigned int len, p_bt_torrent torrent)
         {
             i++; // 绕过冒号:
 
-            // 不处理这三种数据
-            if ((torrent->last == ED2K) ||
-                (torrent->last == FILEHASH) ||
-                (torrent->last == PIECES))
+            if (torrent->key == ED2K || torrent->key == FILEHASH || torrent->key == PIECES) // 不处理这三种数据
             {
-                torrent->last = 0;
+                torrent->key = 0;
                 return i + str_len;
             }
 
-            if (torrent->last == NAME) // 单文件
+            if (torrent->key == NAME) // 单文件
             {
-                torrent->last = 0;
+                torrent->key = 0;
                 torrent->count = 1;
                 torrent->file[0].name_len = str_len;
                 memcpy(torrent->file[0].name, s + i, str_len);
             }
-            else if (torrent->last == PATH_LIST) // 多文件
+            else if (torrent->key == PATH_LIST) // 多文件
             {
                 memcpy(torrent->name, s + i, str_len);
                 torrent->name[str_len] = '\\';
                 torrent->name += str_len + 1;
             }
-            else if (torrent->last == ANNOUNCE_LIST_LIST)
+            else if (torrent->key == ANNOUNCE_LIST_LIST)
             {
                 dst_len = MAX_PATH;
                 torrent->announce.count++;
@@ -86,31 +83,31 @@ int bencode_str(const char *s, unsigned int len, p_bt_torrent torrent)
             }
             else if (0 == strncmp(s + i, "ed2k", str_len))
             {
-                torrent->last = ED2K;
+                torrent->key = ED2K;
             }
             else if (0 == strncmp(s + i, "filehash", str_len))
             {
-                torrent->last = FILEHASH;
+                torrent->key = FILEHASH;
             }
             else if (0 == strncmp(s + i, "pieces", str_len))
             {
-                torrent->last = PIECES;
+                torrent->key = PIECES;
             }
             else if (0 == strncmp(s + i, "name", str_len))
             {
-                if (torrent->last == LENGTH) torrent->last = NAME;    // 有只有name没有length的情况
+                if (torrent->key == LENGTH) torrent->key = NAME;    // 有只有name没有length的情况
             }
             else if (0 == strncmp(s + i, "path", str_len))
             {
-                torrent->last = PATH;
+                torrent->key = PATH;
             }
             else if (0 == strncmp(s + i, "length", str_len))
             {
-                torrent->last = LENGTH;
+                torrent->key = LENGTH;
             }
             else if (0 == strncmp(s + i, "announce-list", str_len))
             {
-                torrent->last = ANNOUNCE;
+                torrent->key = ANNOUNCE;
             }
 
             return i + str_len;
@@ -141,27 +138,28 @@ int bencode_int(const char *s, unsigned int len, p_bt_torrent torrent)
         return -200;
     }
 
-    unsigned int     i   = 1;
-    unsigned __int64 num = 0;
+    int flage = 1;
+    __int64 num = 0;
+    unsigned int i = 1;
 
     for (; i < len; i++)
     {
-        if (s[i] >= '0' && s[i] <= '9')
+        if (s[i] == '-')    // 负号
+        {
+            flage = -1;
+        }
+        else if (s[i] >= '0' && s[i] <= '9')
         {
             num = num * 10 + s[i] - '0';
         }
         else if (s[i] == 'e')
         {
-            if (torrent->last == LENGTH)
-            {
-                torrent->file[torrent->count].size = num;
-            }
-
+            if (torrent->key == LENGTH) torrent->file[torrent->count].size = num * flage;
             return i + 1;
         }
         else
         {
-            E("int num error");
+            E("int num error %s", s);
             return -201;
         }
     }
@@ -185,17 +183,17 @@ int bencode_list(const char *s, unsigned int len, p_bt_torrent torrent)
         return -300;
     }
 
-    if (torrent->last == PATH)
+    if (torrent->key == PATH)
     {
-        torrent->last = PATH_LIST;
+        torrent->key = PATH_LIST;
     }
-    else if (torrent->last == ANNOUNCE)
+    else if (torrent->key == ANNOUNCE)
     {
-        torrent->last = ANNOUNCE_LIST;
+        torrent->key = ANNOUNCE_LIST;
     }
-    else if (torrent->last == ANNOUNCE_LIST)
+    else if (torrent->key == ANNOUNCE_LIST)
     {
-        torrent->last = ANNOUNCE_LIST_LIST;
+        torrent->key = ANNOUNCE_LIST_LIST;
     }
 
     int ret;
@@ -204,22 +202,22 @@ int bencode_list(const char *s, unsigned int len, p_bt_torrent torrent)
     {
         if (s[i] == 'e')
         {
-            if (torrent->last == PATH_LIST)
+            if (torrent->key == PATH_LIST)
             {
                 p_bt_torrent_file file = &(torrent->file[torrent->count]);
                 file->name_len = torrent->name - file->name - 1;
                 torrent->count++;
-                torrent->last = 0;
+                torrent->key = 0;
                 torrent->name[-1] = '\0'; // 结尾多了个'\\'
                 torrent->name = torrent->file[torrent->count].name;
             }
-            else if (torrent->last == ANNOUNCE_LIST)
+            else if (torrent->key == ANNOUNCE_LIST)
             {
-                torrent->last = 0;
+                torrent->key = 0;
             }
-            else if (torrent->last == ANNOUNCE_LIST_LIST)
+            else if (torrent->key == ANNOUNCE_LIST_LIST)
             {
-                torrent->last = ANNOUNCE_LIST;
+                torrent->key = ANNOUNCE_LIST;
             }
 
             return i + 1;

@@ -37,10 +37,10 @@
 #define INDEX_PAGE "<meta charset='utf-8'>\
 <script>\n\
     function download(init){\n\
-        filename = document.getElementById('file').value;\n\
-        if (filename == '' && !init) {alert('请输入要下载的文件地址');return;}\n\
-        url = '/download?file=' + btoa(filename);\n\
-        file_table = document.getElementById('file-list');\n\
+        addr = document.getElementById('addr');\n\
+        if (addr.value == '' && !init) {alert('请输入要下载的文件地址');return;}\n\
+        url = '/download?addr=' + btoa(addr.value);\n\
+        file_table = document.getElementById('file');\n\
         if (file_table.style.display == '') {\n\
             list = '';\n\
             file_tbody = file_table.childNodes[0];\n\
@@ -58,7 +58,7 @@
             console.log(url + ' status:' + req.status);\n\
             if (req.readyState != 4 || req.status != 200) {alert('http请求失败');return;}\n\
             rp = JSON.parse(req.responseText);\n\
-            down_tbody = document.getElementById('down-list').childNodes[0];\n\
+            down_tbody = document.getElementById('down').childNodes[0];\n\
             while (down_tbody.childNodes.length > 1) { down_tbody.removeChild(down_tbody.childNodes[1]); }\n\
             for (var i in rp) {\n\
                 item = rp[i];\n\
@@ -77,26 +77,24 @@
                 td = document.createElement('td');\n\
                 td.innerText = item['prog'];\n\
                 tr.appendChild(td);\n\
-                down_tbody.appendChild(tr);\n\
                 td = document.createElement('td');\n\
                 td.innerText = item['speed'];\n\
                 tr.appendChild(td);\n\
+                down_tbody.appendChild(tr);\n\
             }\n\
-            width = document.getElementById('width').clientWidth + 37;\n\
-            if (width < 400) width = 400;;\n\
-            document.getElementById('file').style.width = width;\n\
+            width = document.getElementById('width').clientWidth + 21 + 2;\n\
+            if (width < 600) width = 600;;\n\
+            addr.style.width = width;\n\
         }\n\
     }\n\
     function show_torrent(edit){\n\
         console.log(edit);\n\
         filename = '';\n\
-        \n\
         if (edit == true) {\n\
-            filename = document.getElementById('file').value;\n\
+            filename = document.getElementById('addr').value;\n\
         } else {\n\
             filename = document.getElementById('file_' + this.i).innerText;\n\
         }\n\
-        \n\
         url = '/torrent-list?torrent=' + btoa(filename)\n\
         req = new XMLHttpRequest();\n\
         req.open('GET', url);\n\
@@ -108,7 +106,7 @@
             input = document.getElementById('file');\n\
             input.value = filename;\n\
             input.size = filename.length;\n\
-            file_table = document.getElementById('file-list');\n\
+            file_table = document.getElementById('file');\n\
             file_table.style.display = '';\n\
             file_tbody = file_table.childNodes[0];\n\
             while (file_tbody.childNodes.length > 1) { file_tbody.removeChild(file_tbody.childNodes[1]); }\n\
@@ -130,22 +128,22 @@
             }\n\
         }\n\
     }\n\
-    function on_check(checkbox){\n\
-        file_tbody = document.getElementById('file-list').childNodes[0];\n\
+    function on_check(chk){\n\
+        file_tbody = document.getElementById('file').childNodes[0];\n\
         for (var i = 1; i < file_tbody.childNodes.length; i++){\n\
-            file_tbody.childNodes[i].childNodes[0].childNodes[0].checked = checkbox.checked;\n\
+            file_tbody.childNodes[i].childNodes[0].childNodes[0].checked = chk.checked;\n\
         }\n\
     }\n\
 </script>\n\
 <body onload='download(true)'>\
-<input id='file'/>\
+<input id='addr'/>\
 <button onclick='download(false)'>download</button>\
 <button onclick='show_torrent(true)'>open</button>\
 <br><br>\
-<table id='file-list' border='1' style='border-collapse:collapse;font-family:宋体;display:none'>\
-<tr><th><input type='checkbox' name='check' onclick='on_check(this)' /></th><th>文件</th><th>大小</th></tr></table>\
-<table id='down-list' border='1' style='border-collapse:collapse;font-family:宋体;'>\
-<tr><th>任务</th><th id='width'>文件</th><th>大小</th><th>进度</th><th>速度</th></tr>\
+<table id='file' border='1' style='border-collapse:collapse;font-family:宋体;display:none'>\
+<tr><th><input type='checkbox' onclick='on_check(this)' /></th><th>文件</th><th>大小</th></tr></table>\
+<table id='down' border='1' style='border-collapse:collapse;font-family:宋体;'>\
+<tr><th>ID</th><th id='width'>文件</th><th>大小</th><th>进度</th><th>速度</th></tr>\
 </table>\
 </body>"
 
@@ -161,109 +159,116 @@ extern unsigned int g_task_count;                   ///< 当前正在下载的�
 
 /**
  *\brief        http回调函数,下载接口
- *\param[in]    arg             URI的参数
- *\param[out]   content         返回内容
+ *\param[out]   data            HTTP的数据
  *\return       0               成功
  */
-int http_proc_download(const p_xt_http_arg arg, p_xt_http_content content)
+int http_proc_download(const p_xt_http_data data)
 {
-    const char *file = NULL;    // 可以为空
+    const char *addr = NULL;    // 可以为空
     const char *list = NULL;    // 可以为空
 
-    if (arg->count >= 1 &&
-        NULL != arg->item[0].name &&
-        0 == strcmp(arg->item[0].name, "file") &&
-        0 != strcmp(arg->item[0].data, ""))
+    if (data->arg_count >= 1 &&
+        data->arg[0].key != NULL &&
+        data->arg[0].value != NULL &&
+        data->arg[0].value[0] != '\0' &&
+        0 == strcmp(data->arg[0].key, "addr"))
     {
-        file = arg->item[0].data;
+        addr = data->arg[0].value;
     }
 
-    if (arg->count >= 2 &&
-        NULL != arg->item[1].name &&
-        0 == strcmp(arg->item[1].name, "list") &&
-        0 != strcmp(arg->item[1].data, ""))
+    if (data->arg_count >= 2 &&
+        data->arg[1].key != NULL &&
+        data->arg[1].value != NULL &&
+        data->arg[1].value[0] != '\0' &&
+        0 == strcmp(data->arg[1].key, "list"))
     {
-        list = arg->item[1].data;
+        list = data->arg[1].value;
     }
 
-    int len = 1024;
-    char filename[1024];
-    base64_decode(file, arg->item[0].data_len, filename, &len);
+    char         buf[20480];
+    int          len      = sizeof(buf);
+    unsigned int file_len = data->arg[0].value_len;
 
-    if (NULL != file && 0 != xl_sdk_download(g_cfg.download_path, filename, list))
+    D("file_len:%d", file_len);
+
+    if (file_len > 0 && 0 != base64_decode(addr, file_len, buf, &len))
     {
-        E("xl_sdk_download fail");
+        E("base64_decode fail %s", addr);
         return -1;
     }
 
+    if (NULL != addr && 0 != xl_sdk_download(g_cfg.download_path, buf, list))
+    {
+        E("xl_sdk_download fail");
+        return -2;
+    }
+
     int    pos;
-    int    encode_len;
     int    base64_len;
     char   size[16];
     char   speed[16];
-    char   encode[20480];
-    char   base64[20480];
-    char  *data = content->data;
+    char  *content = data->content;
 
     pos = 1;
-    data[0] = '[';
+    content[0] = '[';
 
     for (unsigned int i = 0; i < g_task_count; i++)
     {
-        encode_len = sizeof(encode);
-        base64_len = sizeof(base64);
-
-        if (0 != uri_encode(g_task[i].name, g_task[i].name_len, encode, &encode_len)) // js的atob不能解码unicode
-        {
-            return -2;
-        }
-
-        if (0 != base64_encode(encode, encode_len, base64, &base64_len)) // 文件名中可能有json需要转码的字符
-        {
-            return -3;
-        }
-
         format_data(g_task[i].size, size, sizeof(size));
         format_data(g_task[i].speed, speed, sizeof(speed));
 
-        D("id:%u, name:%s uri:%s base64:%s size:%s speed:%s prog:%f",
-          g_task[i].id, g_task[i].name, encode, base64, size, speed, g_task[i].prog);
+        pos += snprintf(content + pos, data->len - pos,
+                       "{\"id\":%d,\"size\":\"%s\",\"prog\":\"%.2f\",\"speed\":\"%s\",\"file\":\"",
+                       g_task[i].id, size, g_task[i].prog, speed);
 
-        len = snprintf(data + pos, content->len - pos,
-                       "{\"id\":%d,\"file\":\"%s\",\"size\":\"%s\",\"prog\":\"%.2f\",\"speed\":\"%s\"},",
-                       g_task[i].id, base64, size, g_task[i].prog, speed);
-        pos += len;
+        len = sizeof(buf);
+
+        if (0 != uri_encode(g_task[i].name, g_task[i].name_len, buf, &len)) // js的atob不能解码unicode
+        {
+            E("uri_encode fail %s", g_task[i].name);
+            return -3;
+        }
+
+        base64_len = data->len - pos;
+
+        if (0 != base64_encode(buf, len, content + pos, &base64_len)) // 文件名中可能有json需要转码的字符
+        {
+            E("base64_encode fail %s", buf);
+            return -4;
+        }
+
+        pos += base64_len;
+        pos += snprintf(content + pos, data->len - pos, "\"},");
     }
 
     if (g_task_count > 0)
     {
-        data[pos - 1] = ']';
+        content[pos - 1] = ']';
     }
     else
     {
-        data[pos++] = ']';
+        content[pos++] = ']';
     }
 
-    content->type = HTTP_TYPE_HTML;
-    content->len = pos;
+    data->type = HTTP_TYPE_HTML;
+    data->len = pos;
     return 0;
 }
 
 /**
  *\brief        http回调函数,得到种子中文件信息
- *\param[in]    arg             URI的参数
- *\param[out]   content         返回内容
+ *\param[out]   data            HTTP的数据
  *\return       0               成功
  */
-int http_proc_torrent(const p_xt_http_arg arg, p_xt_http_content content)
+int http_proc_torrent(const p_xt_http_data data)
 {
-    if (arg->count <= 0 || NULL == arg->item[0].name || 0 != strcmp(arg->item[0].name, "torrent"))
+    if (data->arg_count <= 0 || NULL == data->arg[0].key || 0 != strcmp(data->arg[0].key, "torrent"))
     {
         D("file:null or \"\"");
         return -1;
     }
 
-    const char *file = arg->item[0].data;
+    const char *file = data->arg[0].value;
 
     if (NULL == file || 0 == strcmp(file, ""))
     {
@@ -271,70 +276,81 @@ int http_proc_torrent(const p_xt_http_arg arg, p_xt_http_content content)
         return -2;
     }
 
-    int len = 1024;
-    char filename[1024];
-    bt_torrent torrent = {0};
+    char         buf[20480];
+    int          len      = sizeof(buf);
+    unsigned int file_len = data->arg[0].value_len;
+    bt_torrent   torrent  = {0};
 
-    base64_decode(file, arg->item[0].data_len, filename, &len);
-
-    if (0 != get_torrent_info(filename, &torrent))
+    if (0 != base64_decode(file, file_len, buf, &len))
     {
-        E("get torrent:%s info error", file);
+        E("base64_decode fail %s", file);
         return -3;
     }
 
+    if (0 != get_torrent_info(buf, &torrent))
+    {
+        E("get torrent:%s info error", buf);
+        return -4;
+    }
+
     int   pos;
-    int   encode_len;
     int   base64_len;
     char  size[16];
-    char  encode[20480];
-    char  base64[20480];
-    char *data = content->data;
+    char *content;
 
     pos = 1;
-    data[0] = '[';
+    content = data->content;
+    content[0] = '[';
 
     for (int i = 0; i < torrent.count; i++)
     {
-        encode_len = sizeof(encode);
-        base64_len = sizeof(base64);
-
-        uri_encode(torrent.file[i].name, torrent.file[i].name_len, encode, &encode_len); // js的atob不能解码unicode
-        base64_encode(encode, encode_len, base64, &base64_len); // 文件名中可能有json需要转码的字符
         format_data(torrent.file[i].size, size, sizeof(size));
 
-        D("i:%d file:%s", i, torrent.file[i].name);
+        pos += snprintf(content + pos, data->len - pos, "{\"size\":\"%s\",\"file\":\"", size);
 
-        len = snprintf(data + pos, content->len - pos, "{\"file\":\"%s\",\"size\":\"%s\"},", base64, size);
-        pos += len;
+        len = sizeof(buf);
+
+        if (0 != uri_encode(torrent.file[i].name, torrent.file[i].name_len, buf, &len)) // js的atob不能解码unicode
+        {
+            E("uri_encode fail %s", torrent.file[i].name);
+            return -5;
+        }
+
+        base64_len = data->len - pos;
+
+        if (0 != base64_encode(buf, len, content + pos, &base64_len)) // 文件名中可能有json需要转码的字符
+        {
+            E("base64_encode fail %s", buf);
+            return -6;
+        }
+
+        pos += base64_len;
+        pos += snprintf(content + pos, data->len - pos, "\"},");
     }
-
-    D("5");
 
     if (torrent.count > 0)
     {
-        data[pos - 1] = ']';
+        content[pos - 1] = ']';
     }
     else
     {
-        data[pos++] = ']';
+        content[pos++] = ']';
     }
 
-    content->type = HTTP_TYPE_HTML;
-    content->len = pos;
+    data->type = HTTP_TYPE_HTML;
+    data->len = pos;
     return 0;
 }
 
 /**
  *\brief        http回调函数,文件
- *\param[in]    uri             URI地址
- *\param[out]   content         返回内容
+ *\param[out]   data            HTTP的数据
  *\return       0               成功
  */
-int http_proc_other(const char *uri, p_xt_http_content content)
+int http_proc_other(const p_xt_http_data data)
 {
     char file[512];
-    sprintf_s(file, sizeof(file), "%s%s", g_cfg.http_path, uri);
+    sprintf_s(file, sizeof(file), "%s%s", g_cfg.http_path, data->uri);
 
     FILE *fp;
     fopen_s(&fp, file, "rb");
@@ -346,45 +362,45 @@ int http_proc_other(const char *uri, p_xt_http_content content)
     }
 
     fseek(fp, 0, SEEK_END);
-    content->len = ftell(fp);
+    data->len = ftell(fp);
 
     fseek(fp, 0, SEEK_SET);
-    fread(content->data, 1, content->len, fp);
+    fread(data->content, 1, data->len, fp);
     fclose(fp);
 
-    D("%s size:%d", file, content->len);
+    D("%s size:%d", file, data->len);
 
     char *ext = strrchr(file, '.');
 
     if (NULL == ext)
     {
-        content->type = HTTP_TYPE_HTML;
+        data->type = HTTP_TYPE_HTML;
         return 0;
     }
 
     if (0 == strcmp(ext, ".xml"))
     {
-        content->type = HTTP_TYPE_XML;
+        data->type = HTTP_TYPE_XML;
     }
     else if (0 == strcmp(ext, ".ico"))
     {
-        content->type = HTTP_TYPE_ICO;
+        data->type = HTTP_TYPE_ICO;
     }
     else if (0 == strcmp(ext, ".png"))
     {
-        content->type = HTTP_TYPE_PNG;
+        data->type = HTTP_TYPE_PNG;
     }
     else if (0 == strcmp(ext, ".jpg"))
     {
-        content->type = HTTP_TYPE_JPG;
+        data->type = HTTP_TYPE_JPG;
     }
     else if (0 == strcmp(ext, ".jpeg"))
     {
-        content->type = HTTP_TYPE_JPEG;
+        data->type = HTTP_TYPE_JPEG;
     }
     else
     {
-        content->type = HTTP_TYPE_HTML;
+        data->type = HTTP_TYPE_HTML;
     }
 
     return 0;
@@ -392,59 +408,55 @@ int http_proc_other(const char *uri, p_xt_http_content content)
 
 /**
  *\brief        HTTP回调函数,/favicon.ico
- *\param[out]   content         返回内容
+ *\param[out]   data            HTTP的数据
  *\return       0               成功
  */
-int http_proc_icon(p_xt_http_content content)
+int http_proc_icon(const p_xt_http_data data)
 {
-    content->type = HTTP_TYPE_ICO;
-    exe_ico_get_data(IDI_GREEN, content->data, &(content->len));
+    data->type = HTTP_TYPE_ICO;
+    exe_ico_get_data(IDI_GREEN, data->content, &(data->len));
     return 0;
 }
 
 /**
  *\brief        HTTP回调函数,主页
- *\param[out]   content         返回内容
+ *\param[out]   data            HTTP的数据
  *\return       0               成功
  */
-int http_proc_index(p_xt_http_content content)
+int http_proc_index(const p_xt_http_data data)
 {
-    content->type = HTTP_TYPE_HTML;
-    content->len = sizeof(INDEX_PAGE) - 1;
-    strcpy_s(content->data, sizeof(INDEX_PAGE), INDEX_PAGE);
+    data->type = HTTP_TYPE_HTML;
+    data->len = sizeof(INDEX_PAGE) - 1;
+    strcpy_s(data->content, sizeof(INDEX_PAGE), INDEX_PAGE);
     return 0;
 }
 
 /**
  *\brief        HTTP回调函数
- *\param[in]    uri             URI地址
- *\param[in]    arg             URI的参数,参数使用的是conten.data指向的内存
- *\param[out]   content         返回内容
+ *\param[out]   data            HTTP的数据
  *\return       0               成功
  */
-int http_proc_callback(const char *uri, const p_xt_http_arg arg, p_xt_http_content content)
+int http_proc_callback(const p_xt_http_data data)
 {
-    D("uri:%s", uri);
-
-    if (0 == strcmp(uri, "/"))
+    if (0 == strcmp(data->uri, "/"))
     {
-        return http_proc_index(content);
+        return http_proc_index(data);
     }
-    else if (0 == strcmp(uri, "/download"))
+    else if (0 == strcmp(data->uri, "/download"))
     {
-        return http_proc_download(arg, content);
+        return http_proc_download(data);
     }
-    else if (0 == strcmp(uri, "/torrent-list"))
+    else if (0 == strcmp(data->uri, "/torrent-list"))
     {
-        return http_proc_torrent(arg, content);
+        return http_proc_torrent(data);
     }
-    else if (0 == strcmp(uri, "/favicon.ico"))
+    else if (0 == strcmp(data->uri, "/favicon.ico"))
     {
-        return http_proc_icon(content);
+        return http_proc_icon(data);
     }
     else
     {
-        return http_proc_other(uri, content);
+        return http_proc_other(data);
     }
 
     return 404;

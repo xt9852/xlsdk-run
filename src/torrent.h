@@ -48,7 +48,7 @@ typedef struct _bt_torrent
     bt_torrent_file     file[TORRENT_FILE_SIZE];        ///< 种子内包含的文件信息
     int                 count;                          ///< 种子内包含的文件数量
 
-    int                 last;                           ///< 上一个字符串是什么
+    int                 key;                            ///< 上一个字符串是什么
     char               *name;                           ///< 指向当是文件名结尾
     short              *anno;                           ///< 指向服务器列表结尾
 

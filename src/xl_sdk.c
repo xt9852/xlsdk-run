@@ -1072,7 +1072,7 @@ int xl_sdk_create_magnet_task(const char *magnet, const char *path, p_xl_task ta
 
     D("magent:%s path:%d", magnet, path);
 
-    short magnet_short[1024];
+    short magnet_short[10240];
     int   magnet_len  = strlen(magnet);
     int   magnet_size = SIZEOF(magnet_short);
 
