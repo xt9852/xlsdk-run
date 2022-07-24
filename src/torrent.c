@@ -386,5 +386,6 @@ int get_torrent_info(const char *filename, p_bt_torrent torrent)
 
     free(buf);
 
+    D("announce count:%d len:%d", torrent->announce.count, torrent->announce.len);
     return 0;
 }

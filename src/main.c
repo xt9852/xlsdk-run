@@ -43,7 +43,6 @@
         req.open('GET', url);\n\
         req.send(null);\n\
         req.onload = function(){\n\
-            console.log(url + ' status:' + req.status);\n\
             if (req.readyState != 4 || req.status != 200) {alert('http请求失败');return;}\n\
             rp = JSON.parse(req.responseText);\n\
             down_tbody = document.getElementById('down').childNodes[0];\n\
@@ -81,7 +80,9 @@
                 }\n\
                 down_tbody.appendChild(tr);\n\
             }\n\
-            width = document.getElementById('width').clientWidth + 21 + 2;\n\
+            task_th = down_tbody.childNodes[0].childNodes[1];\n\
+            task_th.innerText = '任务(' + rp.length + ')';\n\
+            width = task_th.clientWidth + 21 + 2;\n\
             addr.style.width = (width < 600) ? 600 : width;\n\
         }\n\
     }\n\
@@ -112,7 +113,6 @@
         req.open('GET', url);\n\
         req.send(null);\n\
         req.onload = function(){\n\
-            console.log(url + ' status:' + req.status);\n\
             if (req.readyState != 4 || req.status != 200) {alert('http请求失败');return;}\n\
             rp = JSON.parse(req.responseText);\n\
             torr_table = document.getElementById('torr');\n\
@@ -150,7 +150,7 @@
 </script>\n\
 <body onload='task()'>\
 <table id='down' border='1' style='border-collapse:collapse;font-family:宋体;'>\
-<tr><th>ID</th><th id='width'>文件</th><th>大小</th><th>进度</th><th>速度</th><th>操作</th></tr>\
+<tr><th>ID</th><th>任务</th><th>大小</th><th>进度</th><th>速度</th><th>操作</th></tr>\
 <table id='torr' border='1' style='border-collapse:collapse;font-family:宋体;display:none'>\
 <tr><th><input type='checkbox' onclick='on_check(this)' /></th><th>文件</th><th>大小</th></tr></table>\
 <input id='addr' style='width:600'/><button onclick='add()'>download</button><button onclick='torrent()'>open</button>\
@@ -368,70 +368,6 @@ int http_proc_task(const p_xt_http_data data)
 }
 
 /**
- *\brief        http回调函数,文件
- *\param[out]   data            HTTP的数据
- *\return       0               成功
- */
-int http_proc_other(const p_xt_http_data data)
-{
-    char file[512];
-    sprintf_s(file, sizeof(file), "%s%s", g_cfg.http_path, data->uri);
-
-    FILE *fp;
-    fopen_s(&fp, file, "rb");
-
-    if (NULL == fp)
-    {
-        E("open %s fail", file);
-        return -1;
-    }
-
-    fseek(fp, 0, SEEK_END);
-    data->len = ftell(fp);
-
-    fseek(fp, 0, SEEK_SET);
-    fread(data->content, 1, data->len, fp);
-    fclose(fp);
-
-    D("%s size:%d", file, data->len);
-
-    char *ext = strrchr(file, '.');
-
-    if (NULL == ext)
-    {
-        data->type = HTTP_TYPE_HTML;
-        return 0;
-    }
-
-    if (0 == strcmp(ext, ".xml"))
-    {
-        data->type = HTTP_TYPE_XML;
-    }
-    else if (0 == strcmp(ext, ".ico"))
-    {
-        data->type = HTTP_TYPE_ICO;
-    }
-    else if (0 == strcmp(ext, ".png"))
-    {
-        data->type = HTTP_TYPE_PNG;
-    }
-    else if (0 == strcmp(ext, ".jpg"))
-    {
-        data->type = HTTP_TYPE_JPG;
-    }
-    else if (0 == strcmp(ext, ".jpeg"))
-    {
-        data->type = HTTP_TYPE_JPEG;
-    }
-    else
-    {
-        data->type = HTTP_TYPE_HTML;
-    }
-
-    return 0;
-}
-
-/**
  *\brief        HTTP回调函数,/favicon.ico
  *\param[out]   data            HTTP的数据
  *\return       0               成功
@@ -478,10 +414,6 @@ int http_proc_callback(const p_xt_http_data data)
     else if (0 == strcmp(data->uri, "/favicon.ico"))
     {
         return http_proc_icon(data);
-    }
-    else
-    {
-        return http_proc_other(data);
     }
 
     return 404;

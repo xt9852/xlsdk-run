@@ -19,7 +19,7 @@ typedef struct _config
     int     log_clean;          ///< 首次打开日志文件时是否清空文件内容
 
     int     http_port;          ///< HTTP端口
-    char    http_path[512];     ///< HTTP路径
+
     char    download_path[512]; ///< 下载路径
 
 } config, *p_config;            ///< 配置数据指针

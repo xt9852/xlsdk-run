@@ -14,10 +14,10 @@
 #include "xl_sdk.h"
 #include "xt_log.h"
 #include "xt_character_set.h"
-#include "torrent.h"
+
 
 /// XL下载器ID
-#define FLAG            "BDAF7A63-568C-43ab-9406-D145CF03B08C"
+#define FLAG "BDAF7A63-568C-43ab-9406-D145CF03B08C"
 
 /// 参数头
 typedef struct _xl_arg_head
@@ -68,122 +68,11 @@ HANDLE          g_sendShareMemory       = NULL;     ///< 共享内存1M,对方�
 HANDLE          g_sendBufferFullEvent   = NULL;     ///< 信号,表示有数据,我方可以处理啦
 HANDLE          g_sendBufferEmptyEvent  = NULL;     ///< 信号,表示我方可以处理完成,对方可以再次发送
 
-unsigned int    g_track_len             = 0;        ///< track数据长度
-
-unsigned int    g_track_count           = 0;        ///< track数据数量
-
-short          *g_track_data[10240]     = {0};      ///< track缓冲区
-
 xl_task         g_task[TASK_SIZE]       = {0};      ///< 当前正在下载的任务信息
 
 unsigned int    g_task_count            = 0;        ///< 当前正在下载的任务数量
 
 pthread_mutex_t g_task_mutex;                       ///< 任务锁
-
-/// track服务器地址
-const short *g_track[] = {
-    L"http://1337.abcvg.info:80/announce",
-    L"http://filetracker.xyz:11451/announce",
-    L"http://nyaa.tracker.wf:7777/announce",
-    L"http://opentracker.xyz:80/announce",
-    L"http://rt.tace.ru:80/announce",
-    L"http://share.camoe.cn:8080/announce",
-    L"http://t.nyaatracker.com:80/announce",
-    L"http://torrentsmd.com:8080/announce",
-    L"http://tr.cili001.com:8070/announce",
-    L"http://tracker-cdn.moeking.me:2095/announce",
-    L"http://tracker.anirena.com:80/announce",
-    L"http://tracker.anirena.com:80/b16a15d9a238d1f59178d3614b857290/announce",
-    L"http://tracker.bt4g.com:2095/announce",
-    L"http://tracker.darmowy-torrent.pl:80/announce",
-    L"http://tracker.files.fm:6969/announce",
-    L"http://tracker.gbitt.info:80/announce",
-    L"http://tracker.ipv6tracker.ru:80/announce",
-    L"http://tracker.tfile.co:80/announce",
-    L"http://tracker.trackerfix.com:80/announce",
-    L"http://trk.publictracker.xyz:6969/announce",
-    L"http://vps02.net.orel.ru:80/announce",
-    L"https://1337.abcvg.info:443/announce",
-    L"https://bt.nfshost.com:443/announce",
-    L"https://tp.m-team.cc:443/announce.php",
-    L"https://tracker.coalition.space:443/announce",
-    L"https://tracker.foreverpirates.co:443/announce",
-    L"https://tracker.gbitt.info:443/announce",
-    L"https://tracker.hama3.net:443/announce",
-    L"https://tracker.imgoingto.icu:443/announce",
-    L"https://tracker.iriseden.eu:443/announce",
-    L"https://tracker.iriseden.fr:443/announce",
-    L"https://tracker.lilithraws.cf:443/announce",
-    L"https://tracker.nanoha.org:443/announce",
-    L"https://tracker.nitrix.me:443/announce",
-    L"https://tracker.tamersunion.org:443/announce",
-    L"https://w.wwwww.wtf:443/announce",
-    L"udp://6rt.tace.ru:80/announce",
-    L"udp://9.rarbg.me:2710/announce",
-    L"udp://9.rarbg.to:2710/announce",
-    L"udp://bubu.mapfactor.com:6969/announce",
-    L"udp://code2chicken.nl:6969/announce",
-    L"udp://discord.heihachi.pw:6969/announce",
-    L"udp:/edu.uifr.ru:6969/announce",
-    L"udp://engplus.ru:6969/announce",
-    L"udp://exodus.desync.com:6969/announce",
-    L"udp://explodie.org:6969/announce",
-    L"udp://fe.dealclub.de:6969/announce",
-    L"udp://free.publictracker.xyz:6969/announce",
-    L"udp://ipv6.tracker.zerobytes.xyz:16661/announce",
-    L"udp://mail.realliferpg.de:6969/announce",
-    L"udp://movies.zsw.ca:6969/announce",
-    L"udp://mts.tvbit.co:6969/announce",
-    L"udp://newtoncity.org:6969/announce",
-    L"udp://open.demonii.com:1337/announce",
-    L"udp://open.stealth.si:80/announce",
-    L"udp://opentor.org:2710/announce",
-    L"udp://opentracker.i2p.rocks:6969/announce",
-    L"udp://p4p.arenabg.com:1337/announce",
-    L"udp://retracker.lanta-net.ru:2710/announce",
-    L"udp://retracker.netbynet.ru:2710/announce",
-    L"udp://t1.leech.ie:1337/announce",
-    L"udp:/t2.leech.ie:1337/announce",
-    L"udp://thetracker.org:80/announce",
-    L"udp://torrentclub.online:54123/announce",
-    L"udp://tracker.0x.tf:6969/announce",
-    L"udp://tracker.altrosky.nl:6969/announce",
-    L"udp://tracker.army:6969/announce",
-    L"udp://tracker.beeimg.com:6969/announce",
-    L"udp://tracker.birkenwald.de:6969/announce",
-    L"udp://tracker.ccp.ovh:6969/announce",
-    L"udp://tracker.dler.org:6969/announce",
-    L"udp://tracker.moeking.me:6969/announce",
-    L"udp://tracker.monitorit4.me:6969/announce",
-    L"udp://tracker.nrx.me:6969/announce",
-    L"udp://tracker.openbittorrent.com:6969/announce",
-    L"udp://tracker.opentrackr.org:1337/announce",
-    L"udp://tracker.shkinev.me:6969/announce",
-    L"udp://tracker.theoks.net:6969/announce",
-    L"udp://tracker.tiny-vps.com:6969/announce",
-    L"udp://tracker.torrent.eu.org:451/announce",
-    L"udp://tracker.uw0.xyz:6969/announce",
-    L"udp://tracker.v6speed.org:6969/announce",
-    L"udp://tracker.zemoj.com:6969/announce",
-    L"udp://tracker.zerobytes.xyz:1337/announce",
-    L"udp://tracker0.ufibox.com:6969/announce",
-    L"udp://tracker2.dler.org:80/announce",
-    L"udp://tracker4.itzmx.com:2710/announce",
-    L"udp://u.wwwww.wtf:1/announce",
-    L"udp://udp-tracker.shittyurl.org:6969/announce",
-    L"udp://valakas.rollo.dnsabr.com:2710/announce",
-    L"udp://vibe.community:6969/announce",
-    L"udp://vibe.sleepyinternetfun.xyz:1738/announce",
-    L"udp://wassermann.online:6969/announce",
-    L"udp://www.torrent.eu.org:451/announce",
-    L"udp://z.mercax.com:53/announce",
-    L"udp://zephir.monocul.us:6969/announce",
-    L"udp://tracker4.itzmx.com:2710/announce",
-    L"http://tracker4.itzmx.com:2710/announce",
-    L"http://tracker3.itzmx.com:6961/announce",
-    L"http://tracker2.itzmx.com:6961/announce",
-    L"http://tracker1.itzmx.com:8080/announce"
-};
 
 /// SDK函数ID
 enum
@@ -793,30 +682,6 @@ int xl_sdk_call_sdk_init()
 }
 
 /**
- *\brief    生成TRACK数据UNICODE
- *\return   0   成功
- */
-int xl_sdk_proc_track()
-{
-    DWORD len;
-
-    g_track_count = SIZEOF(g_track);
-
-    for (unsigned int i = 0; i < g_track_count; i++)
-    {
-        len = wcslen(g_track[i]);
-
-        *((DWORD*)g_track_data + g_track_len) = len;
-
-        memcpy(g_track_data + g_track_len + 2, g_track[i], len * 2);
-
-        g_track_len += 2 + len;
-    }
-
-    return 0;
-}
-
-/**
  *\brief        添加服务器
  *\param[in]    taskid      任务ID
  *\param[in]    count       服务器数量
@@ -826,21 +691,13 @@ int xl_sdk_proc_track()
  */
 int xl_sdk_add_bt_tracker(int taskid, int count, const short *data, int data_len)
 {
-    int cnt = SIZEOF(g_track);
-
     p_xl_data_head p = (p_xl_data_head)g_recv_tmp;
     p->func_id = XL_BatchAddBTTracker;
     p->data[0] = taskid;
-    p->data[1] = count + g_track_count;
-    p->len     = 0x0c + data_len + g_track_len;
+    p->data[1] = count;
+    p->len     = 0x0c + data_len;
 
-    char *ptr = (char*)(p->data + 2);
-
-    memcpy(ptr, data, data_len);
-
-    ptr += data_len;
-
-    memcpy(ptr + data_len, g_track_data, g_track_len);
+    memcpy(&p->data[2], data, data_len);
 
     int ret = xl_sdk_call_sdk_func();
 
@@ -922,11 +779,10 @@ int xl_sdk_create_bt_task(const char *torrent, const char *path, const char *lis
 
     task->id = *(int*)(g_send_tmp + 12);
 
-    strcpy_s(task->torrent, TASK_NAME_SIZE, torrent);
+    // 读取种子数据
+    p_bt_torrent tor = &(task->tor);
 
-    bt_torrent tor = {0};
-
-    ret = get_torrent_info(torrent, &tor);
+    ret = get_torrent_info(torrent, tor);
 
     if (0 != ret)
     {
@@ -934,19 +790,21 @@ int xl_sdk_create_bt_task(const char *torrent, const char *path, const char *lis
         return 0;
     }
 
+    strcpy_s(task->torrent, TASK_NAME_SIZE, torrent);
+
     char *id = strrchr(torrent, '\\');
 
     id = (NULL == id) ? "" : id + 1;
 
-    strncpy_s(task->name, TASK_NAME_SIZE, id, 4);
+    strncpy_s(task->name, TASK_NAME_SIZE, id, 4);   // 只取前4位
 
     int pos = strlen(task->name);
 
-    for (int i = 0; i < list_len && i < tor.count; i++)
+    for (int i = 0; i < list_len && i < tor->count; i++) // 拼接文件名
     {
         if (list[i] == '1')
         {
-            pos += sprintf_s(&task->name[pos], TASK_NAME_SIZE - pos, "|%s", tor.file[i].name);
+            pos += sprintf_s(&task->name[pos], TASK_NAME_SIZE - pos, "|%s", tor->file[i].name);
         }
     }
 
@@ -1285,8 +1143,8 @@ int xl_sdk_del_task(unsigned int taskid)
         return -1;
     }
 
-    // 删除迅雷的数据文件
-    if (TASK_BT == task->type)
+    // 删除下载完成的迅雷数据文件
+    if (TASK_BT == task->type && task->down == task->size && 0 != task->size)
     {
         DeleteFileA(task->torrent);
         D("DeleteFileA %s", task->torrent);
@@ -1304,7 +1162,7 @@ int xl_sdk_del_task(unsigned int taskid)
 
         if (NULL != ptr)
         {
-            strcpy_s(ptr, 16, "dat");
+            strcpy_s(ptr, 16, ".dat");
             DeleteFileA(task->torrent);
             D("DeleteFileA %s", task->torrent);
         }
@@ -1405,12 +1263,13 @@ int xl_sdk_download(const char *path, const char *filename, const char *list)
     }
 
     int ret = 0;
+    p_xl_task task = &g_task[g_task_count];
 
     switch (task_type)
     {
         case TASK_BT:
         {
-            ret = xl_sdk_create_bt_task(filename, path, list, &g_task[g_task_count]);
+            ret = xl_sdk_create_bt_task(filename, path, list, task);
             break;
         }
         case TASK_MAGNET:
@@ -1432,7 +1291,7 @@ int xl_sdk_download(const char *path, const char *filename, const char *list)
         return -2;
     }
 
-    ret = xl_sdk_start_task(g_task[g_task_count].id, task_type);
+    ret = xl_sdk_start_task(task->id, task_type);
 
     if (0 != ret)
     {
@@ -1441,16 +1300,28 @@ int xl_sdk_download(const char *path, const char *filename, const char *list)
         return -3;
     }
 
-    strcpy_s(g_task[g_task_count].filename, TASK_NAME_SIZE, filename);
+    if (TASK_BT == task_type && task->tor.announce.count > 0)
+    {
+        ret = xl_sdk_add_bt_tracker(task->id, task->tor.announce.count, task->tor.announce.data, task->tor.announce.len);
+    }
 
-    g_task[g_task_count].type      = task_type;
-    g_task[g_task_count].size      = 0;
-    g_task[g_task_count].down      = 0;
-    g_task[g_task_count].time      = 0;
-    g_task[g_task_count].last_down = 0;
-    g_task[g_task_count].last_time = 0;
-    g_task[g_task_count].speed     = 0;
-    g_task[g_task_count].prog      = 0;
+    if (0 != ret)
+    {
+        pthread_mutex_unlock(&g_task_mutex);
+        E("xl_sdk_add_bt_tracker fail");
+        return -4;
+    }
+
+    strcpy_s(task->filename, TASK_NAME_SIZE, filename);
+
+    task->type      = task_type;
+    task->size      = 0;
+    task->down      = 0;
+    task->time      = 0;
+    task->last_down = 0;
+    task->last_time = 0;
+    task->speed     = 0;
+    task->prog      = 0;
     g_task_count++;
 
     pthread_mutex_unlock(&g_task_mutex);
@@ -1600,14 +1471,6 @@ int xl_sdk_init()
         return -8;
     }
 
-    ret = xl_sdk_proc_track();
-
-    if (0 != ret)
-    {
-        E("create track fail %d", ret);
-        return -9;
-    }
-
     g_init = true;
 
     pthread_mutex_init(&g_task_mutex, NULL);
@@ -1622,7 +1485,7 @@ int xl_sdk_init()
     if (ret != 0)
     {
         E("create thread fail, error:%d", ret);
-        return -3;
+        return -9;
     }
 
     D("ok");

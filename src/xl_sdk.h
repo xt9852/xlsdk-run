@@ -8,6 +8,7 @@
  */
 #ifndef _XL_SDK_H_
 #define _XL_SDK_H_
+#include "torrent.h"
 
 /// 任务数量
 #define TASK_SIZE                                       128
@@ -53,7 +54,9 @@ typedef struct _xl_task
 
     double              prog;                           ///< 下载进度
 
-} xl_task, *p_xl_task;                                   ///< 任务信息指针
+    bt_torrent          tor;                            ///< 种子数据
+
+} xl_task, *p_xl_task;                                  ///< 任务信息指针
 
 /**
  *\brief   初始化SDK

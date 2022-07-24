@@ -242,16 +242,6 @@ int config_http(cJSON *root, p_config config)
 
     config->http_port = port->valueint;
 
-    cJSON *path = cJSON_GetObjectItem(http, "path");
-
-    if (NULL == path)
-    {
-        printf("%s|config json no http.path node\n", __FUNCTION__);
-        return -4;
-    }
-
-    strcpy_s(config->http_path, sizeof(config->http_path), path->valuestring);
-
     return 0;
 }
 
