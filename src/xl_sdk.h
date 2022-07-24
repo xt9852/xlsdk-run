@@ -36,7 +36,9 @@ typedef struct _xl_task
     unsigned __int64    down;                           ///< 已经下载的数量
 
     unsigned int        time;                           ///< 用时秒数
-    
+
+    char                torrent[TASK_NAME_SIZE];        ///< 种子文件名
+
     char                filename[TASK_NAME_SIZE];       ///< 文件名
 
     char                name[TASK_NAME_SIZE];           ///< 任务名
@@ -65,14 +67,21 @@ int xl_sdk_init();
  *\param[in]    task_type   任务类型
  *\return       0           成功
  */
-int xl_sdk_start_download_file(int taskid, int task_type);
+int xl_sdk_start_task(unsigned int taskid, int task_type);
 
 /**
  *\brief        停止下载文件
  *\param[in]    taskid      任务ID
  *\return       0           成功
  */
-int xl_sdk_stop_download_file(int taskid);
+int xl_sdk_stop_task(unsigned int taskid);
+
+/**
+ *\brief        删除任务数据
+ *\param[in]    taskid      任务ID
+ *\return       0           成功
+ */
+int xl_sdk_del_task(unsigned int taskid);
 
 /**
  *\brief        下载文件

@@ -36,20 +36,9 @@
 /// 主页面
 #define INDEX_PAGE "<meta charset='utf-8'>\
 <script>\n\
-    function download(){\n\
+    function task(arg){\n\
         addr = document.getElementById('addr');\n\
-        url = '/download?addr=' + btoa(addr.value);\n\
-        torr_table = document.getElementById('torr');\n\
-        if (torr_table.style.display == '') {\n\
-            list = '';\n\
-            torr_tbody = torr_table.childNodes[0];\n\
-            for (var i = 1; i < torr_tbody.childNodes.length; i++){\n\
-                list = list + (torr_tbody.childNodes[i].childNodes[0].childNodes[0].checked ? '1' : '0');\n\
-            }\n\
-            if (/^0+$/.test(list)) {alert('请选取要下载的文件'); return;}\n\
-            url = url + '&list=' + list ;\n\
-            torr_table.style.display = 'none';\n\
-        }\n\
+        url = '/task?' + arg;\n\
         req = new XMLHttpRequest();\n\
         req.open('GET', url);\n\
         req.send(null);\n\
@@ -61,12 +50,13 @@
             while (down_tbody.childNodes.length > 1) { down_tbody.removeChild(down_tbody.childNodes[1]); }\n\
             for (var i in rp) {\n\
                 item = rp[i];\n\
+                task_name = decodeURIComponent(atob(item['task']));\n\
                 tr = document.createElement('tr');\n\
                 td = document.createElement('td');\n\
                 td.innerText = item['id'];\n\
                 tr.appendChild(td);\n\
                 td = document.createElement('td');\n\
-                td.innerText = decodeURIComponent(atob(item['file']));\n\
+                td.innerText = task_name;\n\
                 tr.appendChild(td);\n\
                 td = document.createElement('td');\n\
                 td.innerText = item['size'];\n\
@@ -77,11 +67,43 @@
                 td = document.createElement('td');\n\
                 td.innerText = item['speed'];\n\
                 tr.appendChild(td);\n\
+                bt = document.createElement('button');\n\
+                bt.onclick = del;\n\
+                bt.innerText = 'del';\n\
+                bt.task_id = item['id'];\n\
+                tr.appendChild(bt);\n\
+                if (/\\.torrent$/.test(task_name)) {\n\
+                    bt = document.createElement('button');\n\
+                    bt.onclick = open;\n\
+                    bt.innerText = 'open';\n\
+                    bt.task_name = task_name;\n\
+                    tr.appendChild(bt);\n\
+                }\n\
                 down_tbody.appendChild(tr);\n\
             }\n\
             width = document.getElementById('width').clientWidth + 21 + 2;\n\
             addr.style.width = (width < 600) ? 600 : width;\n\
         }\n\
+    }\n\
+    function add(){\n\
+        addr = document.getElementById('addr');\n\
+        arg = 'add=' + btoa(addr.value);\n\
+        torr_table = document.getElementById('torr');\n\
+        if (torr_table.style.display == '') {\n\
+            list = '';\n\
+            torr_tbody = torr_table.childNodes[0];\n\
+            for (var i = 1; i < torr_tbody.childNodes.length; i++){\n\
+                list = list + (torr_tbody.childNodes[i].childNodes[0].childNodes[0].checked ? '1' : '0');\n\
+            }\n\
+            if (/^0+$/.test(list)) {alert('请选取要下载的文件'); return;}\n\
+            arg = arg + '&lst=' + list ;\n\
+            torr_table.style.display = 'none';\n\
+        }\n\
+        task(arg);\n\
+    }\n\
+    function del(){\n\
+        arg = 'del=' + this.task_id;\n\
+        task(arg);\n\
     }\n\
     function torrent(){\n\
         addr = document.getElementById('addr');\n\
@@ -115,6 +137,10 @@
             }\n\
         }\n\
     }\n\
+    function open(){\n\
+        document.getElementById('addr').value = this.task_name;\n\
+        torrent();\n\
+    }\n\
     function on_check(chk){\n\
         torr_tbody = document.getElementById('torr').childNodes[0];\n\
         for (var i = 1; i < torr_tbody.childNodes.length; i++){\n\
@@ -122,16 +148,12 @@
         }\n\
     }\n\
 </script>\n\
-<body onload='download()'>\
-<input id='addr' style='width:600'/>\
-<button onclick='download()'>download</button>\
-<button onclick='torrent()'>open</button>\
-<br><br>\
+<body onload='task()'>\
+<table id='down' border='1' style='border-collapse:collapse;font-family:宋体;'>\
+<tr><th>ID</th><th id='width'>文件</th><th>大小</th><th>进度</th><th>速度</th><th>操作</th></tr>\
 <table id='torr' border='1' style='border-collapse:collapse;font-family:宋体;display:none'>\
 <tr><th><input type='checkbox' onclick='on_check(this)' /></th><th>文件</th><th>大小</th></tr></table>\
-<br>\
-<table id='down' border='1' style='border-collapse:collapse;font-family:宋体;'>\
-<tr><th>ID</th><th id='width'>文件</th><th>大小</th><th>进度</th><th>速度</th></tr>\
+<input id='addr' style='width:600'/><button onclick='add()'>download</button><button onclick='torrent()'>open</button>\
 </table>\
 </body>"
 
@@ -237,45 +259,60 @@ int http_proc_torrent(const p_xt_http_data data)
  *\param[out]   data            HTTP的数据
  *\return       0               成功
  */
-int http_proc_download(const p_xt_http_data data)
+int http_proc_task(const p_xt_http_data data)
 {
-    const char *addr = NULL;    // 可以为空
-    const char *list = NULL;    // 可以为空
+    const char *del = NULL;    // 可以为空
+    const char *add = NULL;    // 可以为空
+    const char *lst = NULL;    // 可以为空
+    unsigned int addr_len = 0;
 
-    if (data->arg_count >= 1 &&
-        data->arg[0].key != NULL &&
-        data->arg[0].value != NULL &&
-        data->arg[0].value[0] != '\0' &&
-        0 == strcmp(data->arg[0].key, "addr"))
+    for (unsigned int i = 0; i < data->arg_count; i++)
     {
-        addr = data->arg[0].value;
+        if (data->arg[i].key   != NULL && 0 == strcmp(data->arg[i].key, "add") &&
+            data->arg[i].value != NULL && 0 != strcmp(data->arg[i].value, ""))
+        {
+            add = data->arg[i].value;
+            addr_len = data->arg[i].value_len;
+        }
+        else if (data->arg[i].key   != NULL && 0 == strcmp(data->arg[i].key, "lst") &&
+                 data->arg[i].value != NULL && 0 != strcmp(data->arg[i].value, ""))
+        {
+            lst = data->arg[i].value;
+        }
+        else if (data->arg[i].key   != NULL && 0 == strcmp(data->arg[i].key, "del") &&
+                 data->arg[i].value != NULL && 0 != strcmp(data->arg[i].value, ""))
+        {
+            del = data->arg[i].value;
+        }
     }
 
-    if (data->arg_count >= 2 &&
-        data->arg[1].key != NULL &&
-        data->arg[1].value != NULL &&
-        data->arg[1].value[0] != '\0' &&
-        0 == strcmp(data->arg[1].key, "list"))
+    if (NULL != del)
     {
-        list = data->arg[1].value;
+        D("del:%s", del);
+
+        unsigned int task_id = atoi(del);
+        xl_sdk_stop_task(task_id);
+        xl_sdk_del_task(task_id);
     }
 
-    char         buf[20480];
-    int          len      = sizeof(buf);
-    unsigned int file_len = data->arg[0].value_len;
+    char buf[20480];
+    int  len = sizeof(buf);
 
-    D("file_len:%d", file_len);
-
-    if (file_len > 0 && 0 != base64_decode(addr, file_len, buf, &len))
+    if (NULL != add)
     {
-        E("base64_decode fail %s", addr);
-        return -1;
-    }
+        D("add:%s", add);
 
-    if (NULL != addr && 0 != xl_sdk_download(g_cfg.download_path, buf, list))
-    {
-        E("xl_sdk_download fail");
-        return -2;
+        if (0 != base64_decode(add, addr_len, buf, &len))
+        {
+            E("base64_decode fail %s", add);
+            return -1;
+        }
+
+        if (0 != xl_sdk_download(g_cfg.download_path, buf, lst))
+        {
+            E("xl_sdk_download fail");
+            return -2;
+        }
     }
 
     int    pos;
@@ -293,7 +330,7 @@ int http_proc_download(const p_xt_http_data data)
         format_data(g_task[i].speed, speed, sizeof(speed));
 
         pos += snprintf(content + pos, data->len - pos,
-                       "{\"id\":%d,\"size\":\"%s\",\"prog\":\"%.2f\",\"speed\":\"%s\",\"file\":\"",
+                       "{\"id\":%d,\"size\":\"%s\",\"prog\":\"%.2f\",\"speed\":\"%s\",\"task\":\"",
                        g_task[i].id, size, g_task[i].prog, speed);
 
         len = sizeof(buf);
@@ -430,13 +467,13 @@ int http_proc_callback(const p_xt_http_data data)
     {
         return http_proc_index(data);
     }
+    else if (0 == strcmp(data->uri, "/task"))
+    {
+        return http_proc_task(data);
+    }
     else if (0 == strcmp(data->uri, "/torrent"))
     {
         return http_proc_torrent(data);
-    }
-    else if (0 == strcmp(data->uri, "/download"))
-    {
-        return http_proc_download(data);
     }
     else if (0 == strcmp(data->uri, "/favicon.ico"))
     {
@@ -465,7 +502,7 @@ void on_menu_exit(HWND wnd, void *param)
 
     for (unsigned int i = 0; i < g_task_count; i++)
     {
-        xl_sdk_stop_download_file(g_task[i].id);
+        xl_sdk_stop_task(g_task[i].id);
     }
 
     DestroyWindow(wnd);

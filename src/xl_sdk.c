@@ -78,6 +78,7 @@ xl_task         g_task[TASK_SIZE]       = {0};      ///< 当前正在下载的�
 
 unsigned int    g_task_count            = 0;        ///< 当前正在下载的任务数量
 
+pthread_mutex_t g_task_mutex;                       ///< 任务锁
 
 /// track服务器地址
 const short *g_track[] = {
@@ -921,6 +922,8 @@ int xl_sdk_create_bt_task(const char *torrent, const char *path, const char *lis
 
     task->id = *(int*)(g_send_tmp + 12);
 
+    strcpy_s(task->torrent, TASK_NAME_SIZE, torrent);
+
     bt_torrent tor = {0};
 
     ret = get_torrent_info(torrent, &tor);
@@ -935,7 +938,7 @@ int xl_sdk_create_bt_task(const char *torrent, const char *path, const char *lis
 
     id = (NULL == id) ? "" : id + 1;
 
-    strcpy_s(task->name, TASK_NAME_SIZE, id);
+    strncpy_s(task->name, TASK_NAME_SIZE, id, 4);
 
     int pos = strlen(task->name);
 
@@ -1139,7 +1142,7 @@ int xl_sdk_create_magnet_task(const char *magnet, const char *path, p_xl_task ta
  *\param[in]    task_type       任务类型
  *\return       0               成功
  */
-int xl_sdk_start_download_file(int taskid, int task_type)
+int xl_sdk_start_task(unsigned int taskid, int task_type)
 {
     p_xl_data_head p = (p_xl_data_head)g_recv_tmp;
     p->func_id = XL_SetTaskStrategy;
@@ -1228,7 +1231,7 @@ int xl_sdk_start_download_file(int taskid, int task_type)
  *\param[in]    taskid          任务ID
  *\return       0               成功
  */
-int xl_sdk_stop_download_file(int taskid)
+int xl_sdk_stop_task(unsigned int taskid)
 {
     p_xl_data_head p = (p_xl_data_head)g_recv_tmp;
     p->func_id = XL_StopTask;
@@ -1255,6 +1258,71 @@ int xl_sdk_stop_download_file(int taskid)
 }
 
 /**
+ *\brief        删除任务数据
+ *\param[in]    taskid      任务ID
+ *\return       0           成功
+ */
+int xl_sdk_del_task(unsigned int taskid)
+{
+    unsigned int i;
+    p_xl_task task;
+
+    pthread_mutex_lock(&g_task_mutex);
+
+    for (i = 0; i < g_task_count; i++)
+    {
+        task = &g_task[i];
+
+        if (task->id == taskid)
+        {
+            break;
+        }
+    }
+
+    if (i >= g_task_count) // 没有这个任务
+    {
+        pthread_mutex_unlock(&g_task_mutex);
+        return -1;
+    }
+
+    // 删除迅雷的数据文件
+    if (TASK_BT == task->type)
+    {
+        DeleteFileA(task->torrent);
+        D("DeleteFileA %s", task->torrent);
+
+        char *ptr = strrchr(task->torrent, '.');
+
+        if (NULL != ptr)
+        {
+            strcpy_s(ptr, 16, ".xlbt.cfg");
+            DeleteFileA(task->torrent);
+            D("DeleteFileA %s", task->torrent);
+        }
+
+        ptr = strrchr(task->torrent, '.');
+
+        if (NULL != ptr)
+        {
+            strcpy_s(ptr, 16, "dat");
+            DeleteFileA(task->torrent);
+            D("DeleteFileA %s", task->torrent);
+        }
+    }
+
+    for (unsigned int j = i + 1; j < g_task_count; j++)
+    {
+        g_task[j - 1] = g_task[j];
+    }
+
+    g_task_count--;
+
+    pthread_mutex_unlock(&g_task_mutex);
+
+    return 0;
+}
+
+/**
  *\brief        得到下载任务信息
  *\param[in]    taskid          任务ID
  *\param[out]   size            下载的数据总大小
@@ -1262,7 +1330,7 @@ int xl_sdk_stop_download_file(int taskid)
  *\param[out]   time            本次下载任务用时单位秒
  *\return       0               成功
  */
-int xl_sdk_get_task_info(int taskid, unsigned __int64 *size, unsigned __int64 *down, unsigned int *time)
+int xl_sdk_get_task_info(unsigned int taskid, unsigned __int64 *size, unsigned __int64 *down, unsigned int *time)
 {
     if (NULL == size || NULL == down || NULL == time)
     {
@@ -1309,6 +1377,7 @@ int xl_sdk_download(const char *path, const char *filename, const char *list)
     {
         if (NULL == list || list[0] == '\0')
         {
+            E("dont have list");
             return -1;
         }
 
@@ -1323,10 +1392,13 @@ int xl_sdk_download(const char *path, const char *filename, const char *list)
         task_type = TASK_URL;
     }
 
+    pthread_mutex_lock(&g_task_mutex);
+
     for (unsigned int i = 0; i < g_task_count; i++)
     {
         if (0 == strcmp(filename, g_task[i].filename) && task_type == g_task[i].type)  // 已经下载
         {
+            pthread_mutex_unlock(&g_task_mutex);
             D("have task:%s", filename);
             return 0;
         }
@@ -1355,14 +1427,16 @@ int xl_sdk_download(const char *path, const char *filename, const char *list)
 
     if (0 != ret)
     {
+        pthread_mutex_unlock(&g_task_mutex);
         E("create task %s error:%d", filename, ret);
         return -2;
     }
 
-    ret = xl_sdk_start_download_file(g_task[g_task_count].id, task_type);
+    ret = xl_sdk_start_task(g_task[g_task_count].id, task_type);
 
     if (0 != ret)
     {
+        pthread_mutex_unlock(&g_task_mutex);
         E("download start %s error:%d", filename, ret);
         return -3;
     }
@@ -1378,6 +1452,8 @@ int xl_sdk_download(const char *path, const char *filename, const char *list)
     g_task[g_task_count].speed     = 0;
     g_task[g_task_count].prog      = 0;
     g_task_count++;
+
+    pthread_mutex_unlock(&g_task_mutex);
 
     D("task_id:%u task_name:%s name_len:%d task_count:%u",
       g_task[g_task_count - 1].id, g_task[g_task_count - 1].name, g_task[g_task_count - 1].name_len, g_task_count);
@@ -1401,6 +1477,8 @@ void* xl_sdk_thread(void *param)
     while (g_init)
     {
         sleep(5);
+
+        pthread_mutex_lock(&g_task_mutex);
 
         for (unsigned int i = 0; i < g_task_count; i++)
         {
@@ -1441,6 +1519,8 @@ void* xl_sdk_thread(void *param)
             g_task[i].last_down = g_task[i].down;
             g_task[i].last_time = g_task[i].time;
         }
+
+        pthread_mutex_unlock(&g_task_mutex);
     }
 
     D("exit");
@@ -1529,6 +1609,8 @@ int xl_sdk_init()
     }
 
     g_init = true;
+
+    pthread_mutex_init(&g_task_mutex, NULL);
 
     pthread_t tid;
     pthread_attr_t attr;
