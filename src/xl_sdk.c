@@ -711,36 +711,37 @@ int xl_sdk_add_bt_tracker(int taskid, int count, const short *data, int data_len
 
 /**
  *\brief        创建下载BT文件任务
- *\param[in]    torrent         种子文件全名
+ *\param[in]    torrent         种子数据
  *\param[in]    path            本地下载目录
- *\param[in]    list            文件下载列表,例:"001",0-不下载,1-下载,文件按拼音顺序排列
- *\param[out]   taskid          任务ID
- *\param[out]   task_name       任务名称
- *\param[in]    task_name_size  任务名称缓冲区大小
+ *\param[in]    mask            文件下载列表,例:"001",0-不下载,1-下载,文件按拼音顺序排列
+ *\param[out]   task            任务
  *\return       0               成功
  */
-int xl_sdk_create_bt_task(const char *torrent, const char *path, const char *list, p_xl_task task)
+int xl_sdk_create_bt_task(p_bt_torrent torrent, const char *path, const char *mask, p_xl_task task)
 {
-    if (NULL == torrent || NULL == path || NULL == list || NULL == task)
+    if (NULL == torrent || NULL == path || NULL == mask || mask[0] == '\0' || NULL == task)
     {
+        E("param is null");
         return -1;
     }
 
-    D("torrent:%s path:%s list:%s", torrent, path, list);
+    D("torrent:%s path:%s mask:%s", torrent->filename, path, mask);
 
-    short torrent_short[MAX_PATH];
-    int   torrent_len  = strlen(torrent);
-    int   torrent_size = SIZEOF(torrent_short);
+    char *torrent_filename = torrent->filename;
+
+    short torrent_filename_short[MAX_PATH];
+    int   torrent_filename_len  = strlen(torrent_filename);
+    int   torrent_filename_size = MAX_PATH;
 
     short path_short[MAX_PATH];
     int   path_len  = strlen(path);
-    int   path_size = SIZEOF(path_short);
+    int   path_size = MAX_PATH;
 
-    int   list_len  = strlen(list);
+    int   mask_len  = strlen(mask);
 
-    if (0 != utf8_unicode(torrent, torrent_len, torrent_short, &torrent_size))
+    if (0 != utf8_unicode(torrent_filename, torrent_filename_len, torrent_filename_short, &torrent_filename_size))
     {
-        E("utf8 to unicode error %s", torrent);
+        E("utf8 to unicode error %s", torrent_filename);
         return -2;
     }
 
@@ -752,18 +753,18 @@ int xl_sdk_create_bt_task(const char *torrent, const char *path, const char *lis
 
     // 参数1,本地种子文件全名,unicode
     p_xl_data_head p = (p_xl_data_head)g_recv_tmp;
-    memcpy(p->arg1.data, torrent_short, torrent_len * 2);
-    p->arg1.len = torrent_len;
+    p->arg1.len = torrent_filename_len;
+    memcpy(p->arg1.data, torrent_filename_short, p->arg1.len * 2);
 
     // 参数2,本地下载目录,unicode
     p_xl_arg_head arg2 = (p_xl_arg_head)(p->arg1.data + p->arg1.len * 2);
-    memcpy(arg2->data, path_short, path_len * 2);
     arg2->len = path_len;
+    memcpy(arg2->data, path_short, arg2->len * 2);
 
     // 参数3,下载列表,ansi,1-下载,0-不下载
     p_xl_arg_head arg3 = (p_xl_arg_head)(arg2->data + arg2->len * 2);
-    memcpy(arg3->data, list, list_len);
-    arg3->len = list_len;
+    arg3->len = mask_len;
+    memcpy(arg3->data, mask, arg3->len);
 
     // 创建下载BT文件任务
     p->func_id = XL_CreateBTTask;
@@ -779,33 +780,16 @@ int xl_sdk_create_bt_task(const char *torrent, const char *path, const char *lis
 
     task->id = *(int*)(g_send_tmp + 12);
 
-    // 读取种子数据
-    p_bt_torrent tor = &(task->tor);
+    // 删除数据时使用
+    strcpy_s(task->torrent_filename, TASK_NAME_SIZE, torrent_filename);
 
-    ret = get_torrent_info(torrent, tor);
-
-    if (0 != ret)
-    {
-        D("get_torrent_info fail");
-        return 0;
-    }
-
-    strcpy_s(task->torrent, TASK_NAME_SIZE, torrent);
-
-    char *id = strrchr(torrent, '\\');
-
-    id = (NULL == id) ? "" : id + 1;
-
-    strncpy_s(task->name, TASK_NAME_SIZE, id, 4);   // 只取前4位
+    strncpy_s(task->name, TASK_NAME_SIZE, strrchr(torrent_filename, '\\') + 1, 4);  // 只取前4位
 
     int pos = strlen(task->name);
 
-    for (int i = 0; i < list_len && i < tor->count; i++) // 拼接文件名
+    for (int i = 0; i < mask_len && i < torrent->count; i++) // 拼接文件名
     {
-        if (list[i] == '1')
-        {
-            pos += sprintf_s(&task->name[pos], TASK_NAME_SIZE - pos, "|%s", tor->file[i].name);
-        }
+        pos += (mask[i] == '1') ? sprintf_s(&task->name[pos], TASK_NAME_SIZE - pos, "|%s", torrent->file[i].name) : 0;
     }
 
     task->name_len = pos;
@@ -820,15 +804,14 @@ int xl_sdk_create_bt_task(const char *torrent, const char *path, const char *lis
  *\brief        创建下载URL文件任务
  *\param[in]    url             URL地址
  *\param[in]    path            本地下载目录
- *\param[out]   taskid          任务ID
- *\param[out]   task_name       任务名称
- *\param[in]    task_name_size  任务名称缓冲区大小
+ *\param[out]   task            任务
  *\return       0               成功
  */
 int xl_sdk_create_url_task(const char *url, const char *path, p_xl_task task)
 {
     if (NULL == url || NULL == path || NULL == task)
     {
+        E("param is null");
         return -1;
     }
 
@@ -868,8 +851,8 @@ int xl_sdk_create_url_task(const char *url, const char *path, p_xl_task task)
 
     // 参数1,URL地址,unicode
     p_xl_data_head p = (p_xl_data_head)g_recv_tmp;
-    memcpy(p->arg1.data, url_short, url_len * 2);
     p->arg1.len = url_len;
+    memcpy(p->arg1.data, url_short, p->arg1.len * 2);
 
     // 参数2,8个0x00
     char *arg2 = p->arg1.data + p->arg1.len * 2;
@@ -877,13 +860,13 @@ int xl_sdk_create_url_task(const char *url, const char *path, p_xl_task task)
 
     // 参数3,本地下载目录,unicode
     p_xl_arg_head arg3 = (p_xl_arg_head)(arg2 + 8);
-    memcpy(arg3->data, path_short, path_len * 2);
     arg3->len = path_len;
+    memcpy(arg3->data, path_short, arg3->len * 2);
 
     // 参数4,文件名称,unicode
     p_xl_arg_head arg4 = (p_xl_arg_head)(arg3->data + arg3->len * 2);
-    memcpy(arg4->data, filename, filename_len * 2);
     arg4->len = filename_len;
+    memcpy(arg4->data, filename, arg4->len * 2);
 
     // 创建下载URL文件任务
     p->func_id = XL_CreateP2spTask;
@@ -919,15 +902,14 @@ int xl_sdk_create_url_task(const char *url, const char *path, p_xl_task task)
  *\brief        创建下载磁力文件任务
  *\param[in]    magnet          磁力URL
  *\param[in]    path            本地存储路径
- *\param[out]   taskid          任务ID
- *\param[out]   task_name       任务名称
- *\param[in]    task_name_size  任务名称缓冲区大小
+ *\param[out]   task            任务
  *\return       0               成功
  */
 int xl_sdk_create_magnet_task(const char *magnet, const char *path, p_xl_task task)
 {
     if (NULL == magnet || NULL == path || NULL == task)
     {
+        E("param is null");
         return -1;
     }
 
@@ -958,8 +940,8 @@ int xl_sdk_create_magnet_task(const char *magnet, const char *path, p_xl_task ta
 
     // 参数1,磁力连接URL,unicode
     p_xl_data_head p = (p_xl_data_head)g_recv_tmp;
-    memcpy(p->arg1.data, magnet_short, magnet_len * 2);
     p->arg1.len = magnet_len;
+    memcpy(p->arg1.data, magnet_short, p->arg1.len * 2);
 
     // 参数2,本地文件名,unicode
     p_xl_arg_head arg2 = (p_xl_arg_head)(p->arg1.data + p->arg1.len * 2);
@@ -1016,9 +998,7 @@ int xl_sdk_start_task(unsigned int taskid, int task_type)
 
     p->func_id = XL_SetTaskExtInfo;
     p->data[0] = taskid;
-    p->data[1] = sprintf_s((char*)&(p->data[2]), 100,
-                           "parentid=109183876,taskorigin=%s",
-                           (TASK_MAGNET == task_type) ? "Magnet" : "newwindow_url");
+    p->data[1] = sprintf_s((char*)&(p->data[2]), 100, "parentid=109183876,taskorigin=%s", (TASK_MAGNET == task_type) ? "Magnet" : "newwindow_url");
     p->len = 0x0c + p->data[1];
     ret = xl_sdk_call_sdk_func();
 
@@ -1146,25 +1126,25 @@ int xl_sdk_del_task(unsigned int taskid)
     // 删除下载完成的迅雷数据文件
     if (TASK_BT == task->type && task->down == task->size && 0 != task->size)
     {
-        DeleteFileA(task->torrent);
-        D("DeleteFileA %s", task->torrent);
+        DeleteFileA(task->torrent_filename);
+        D("DeleteFileA %s", task->torrent_filename);
 
-        char *ptr = strrchr(task->torrent, '.');
+        char *ptr = strrchr(task->torrent_filename, '.');
 
         if (NULL != ptr)
         {
             strcpy_s(ptr, 16, ".xlbt.cfg");
-            DeleteFileA(task->torrent);
-            D("DeleteFileA %s", task->torrent);
+            DeleteFileA(task->torrent_filename);
+            D("DeleteFileA %s", task->torrent_filename);
         }
 
-        ptr = strrchr(task->torrent, '.');
+        ptr = strrchr(task->torrent_filename, '.');
 
         if (NULL != ptr)
         {
             strcpy_s(ptr, 16, ".dat");
-            DeleteFileA(task->torrent);
-            D("DeleteFileA %s", task->torrent);
+            DeleteFileA(task->torrent_filename);
+            D("DeleteFileA %s", task->torrent_filename);
         }
     }
 
@@ -1217,13 +1197,14 @@ int xl_sdk_get_task_info(unsigned int taskid, unsigned __int64 *size, unsigned _
 /**
  *\brief        下载文件
  *\param[in]    path            本地地址
- *\param[in]    filename        文件地址
- *\param[in]    list            下载BT文件时选中的要下载的文件,如:"10100",1-选中,0-末选
+ *\param[in]    addr            文件地址
+ *\param[in]    mask            下载BT文件时选中的要下载的文件,如:"10100",1-选中,0-末选
+ *\param[in]    torrent         种子数据
  *\return       0               成功
  */
-int xl_sdk_download(const char *path, const char *filename, const char *list)
+int xl_sdk_download(const char *path, const char *addr, const char *mask, p_bt_torrent torrent)
 {
-    if (NULL == filename)
+    if (NULL == path || NULL == addr || NULL == torrent)
     {
         E("param is null");
         return -1;
@@ -1231,21 +1212,15 @@ int xl_sdk_download(const char *path, const char *filename, const char *list)
 
     int task_type;
 
-    if (0 == strcmp(filename + strlen(filename) - 8, ".torrent"))   // BT下载
+    if (0 == strcmp(addr + strlen(addr) - 8, ".torrent"))   // BT下载
     {
-        if (NULL == list || list[0] == '\0')
-        {
-            E("dont have list");
-            return -1;
-        }
-
 		task_type = TASK_BT;
     }
-    else if (0 == strncmp(filename, "magnet:?", 8))                 // 磁力下载
+    else if (0 == strncmp(addr, "magnet:?", 8))             // 磁力下载
     {
         task_type = TASK_MAGNET;
     }
-    else                                                            // 普通下载
+    else                                                    // 普通下载
     {
         task_type = TASK_URL;
     }
@@ -1254,10 +1229,10 @@ int xl_sdk_download(const char *path, const char *filename, const char *list)
 
     for (unsigned int i = 0; i < g_task_count; i++)
     {
-        if (0 == strcmp(filename, g_task[i].filename) && task_type == g_task[i].type)  // 已经下载
+        if (0 == strcmp(addr, g_task[i].addr) && task_type == g_task[i].type)  // 已经下载
         {
             pthread_mutex_unlock(&g_task_mutex);
-            D("have task:%s", filename);
+            D("have task:%s", addr);
             return 0;
         }
     }
@@ -1269,17 +1244,17 @@ int xl_sdk_download(const char *path, const char *filename, const char *list)
     {
         case TASK_BT:
         {
-            ret = xl_sdk_create_bt_task(filename, path, list, task);
-            break;
-        }
-        case TASK_MAGNET:
-        {
-            ret = xl_sdk_create_magnet_task(filename, path, &g_task[g_task_count]);
+            ret = xl_sdk_create_bt_task(torrent, path, mask, task);
             break;
         }
         case TASK_URL:
         {
-            ret = xl_sdk_create_url_task(filename, path, &g_task[g_task_count]);
+            ret = xl_sdk_create_url_task(addr, path, task);
+            break;
+        }
+        case TASK_MAGNET:
+        {
+            ret = xl_sdk_create_magnet_task(addr, path, task);
             break;
         }
     }
@@ -1287,7 +1262,7 @@ int xl_sdk_download(const char *path, const char *filename, const char *list)
     if (0 != ret)
     {
         pthread_mutex_unlock(&g_task_mutex);
-        E("create task %s error:%d", filename, ret);
+        E("create task %s error:%d", addr, ret);
         return -2;
     }
 
@@ -1296,13 +1271,13 @@ int xl_sdk_download(const char *path, const char *filename, const char *list)
     if (0 != ret)
     {
         pthread_mutex_unlock(&g_task_mutex);
-        E("download start %s error:%d", filename, ret);
+        E("download start %s error:%d", addr, ret);
         return -3;
     }
 
-    if (TASK_BT == task_type && task->tor.announce.count > 0)
+    if (TASK_BT == task_type && torrent->tracker.count > 0)
     {
-        ret = xl_sdk_add_bt_tracker(task->id, task->tor.announce.count, task->tor.announce.data, task->tor.announce.len);
+        ret = xl_sdk_add_bt_tracker(task->id, torrent->tracker.count, torrent->tracker.data, torrent->tracker.len);
     }
 
     if (0 != ret)
@@ -1312,7 +1287,7 @@ int xl_sdk_download(const char *path, const char *filename, const char *list)
         return -4;
     }
 
-    strcpy_s(task->filename, TASK_NAME_SIZE, filename);
+    strcpy_s(task->addr, TASK_NAME_SIZE, addr);
 
     task->type      = task_type;
     task->size      = 0;
@@ -1324,10 +1299,10 @@ int xl_sdk_download(const char *path, const char *filename, const char *list)
     task->prog      = 0;
     g_task_count++;
 
+    D("task_id:%u task_name:%s name_len:%d task_count:%u", task->id, task->name, task->name_len, g_task_count);
+
     pthread_mutex_unlock(&g_task_mutex);
 
-    D("task_id:%u task_name:%s name_len:%d task_count:%u",
-      g_task[g_task_count - 1].id, g_task[g_task_count - 1].name, g_task[g_task_count - 1].name_len, g_task_count);
     return 0;
 }
 

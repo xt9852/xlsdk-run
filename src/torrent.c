@@ -75,11 +75,17 @@ int bencode_str(const char *s, unsigned int len, p_bt_torrent torrent)
             }
             else if (torrent->key == ANNOUNCE_LIST_LIST)
             {
-                dst_len = MAX_PATH;
-                torrent->announce.count++;
-                *((unsigned int*)torrent->anno) = str_len;    // 字符串长度
-                utf8_unicode(s + i, str_len, torrent->anno + 2, &dst_len);
-                torrent->anno += 2 + str_len;
+                dst_len = TORRENT_ANNOUNCE_SIZE - torrent->tracker.len / 2;
+
+                if (0 != utf8_unicode(s + i, str_len, torrent->ptr + 2, &dst_len))
+                {
+                    return 100;
+                }
+
+                torrent->tracker.count++;
+                torrent->tracker.len += 4 + str_len * 2;    // 字节长度
+                *((unsigned int*)torrent->ptr) = str_len;   // 字符串长度
+                torrent->ptr += 2 + str_len;
             }
             else if (0 == strncmp(s + i, "ed2k", str_len))
             {
@@ -115,12 +121,12 @@ int bencode_str(const char *s, unsigned int len, p_bt_torrent torrent)
         else
         {
             E("string char error");
-            return -100;
+            return -101;
         }
     }
 
     E("string error");
-    return -101;
+    return -102;
 }
 
 /**
@@ -372,8 +378,9 @@ int get_torrent_info(const char *filename, p_bt_torrent torrent)
     }
 
     memset(torrent, 0, sizeof(bt_torrent));
+    strcpy_s(torrent->filename, TORRENT_FILENAME_SIZE, filename);
     torrent->name = torrent->file[0].name;
-    torrent->anno = torrent->announce.data;
+    torrent->ptr  = torrent->tracker.data;
 
     if (size != bencode_dict(buf, size, torrent))
     {
@@ -382,10 +389,8 @@ int get_torrent_info(const char *filename, p_bt_torrent torrent)
         return -4;
     }
 
-    torrent->announce.len = (torrent->anno - torrent->announce.data) * 2;
-
     free(buf);
 
-    D("announce count:%d len:%d", torrent->announce.count, torrent->announce.len);
+    D("tracker count:%d len:%d", torrent->tracker.count, torrent->tracker.len);
     return 0;
 }

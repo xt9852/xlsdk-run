@@ -91,13 +91,13 @@
         arg = 'add=' + btoa(addr.value);\n\
         torr_table = document.getElementById('torr');\n\
         if (torr_table.style.display == '') {\n\
-            list = '';\n\
+            mask = '';\n\
             torr_tbody = torr_table.childNodes[0];\n\
             for (var i = 1; i < torr_tbody.childNodes.length; i++){\n\
-                list = list + (torr_tbody.childNodes[i].childNodes[0].childNodes[0].checked ? '1' : '0');\n\
+                mask = mask + (torr_tbody.childNodes[i].childNodes[0].childNodes[0].checked ? '1' : '0');\n\
             }\n\
-            if (/^0+$/.test(list)) {alert('请选取要下载的文件'); return;}\n\
-            arg = arg + '&lst=' + list ;\n\
+            if (/^0+$/.test(mask)) {alert('请选取要下载的文件'); return;}\n\
+            arg = arg + '&msk=' + mask ;\n\
             torr_table.style.display = 'none';\n\
         }\n\
         task(arg);\n\
@@ -163,6 +163,8 @@ xt_log              g_log                   = {0};  ///< 日志数据
 
 xt_http             g_http                  = {0};  ///< HTTP服务
 
+bt_torrent          g_torrent               = {0};  ///< 种子数据
+
 extern xl_task      g_task[TASK_SIZE];              ///< 当前正在下载的任务信息
 
 extern unsigned int g_task_count;                   ///< 当前正在下载的任务数量
@@ -191,7 +193,6 @@ int http_proc_torrent(const p_xt_http_data data)
     char         buf[20480];
     int          len      = sizeof(buf);
     unsigned int file_len = data->arg[0].value_len;
-    bt_torrent   torrent  = {0};
 
     if (0 != base64_decode(file, file_len, buf, &len))
     {
@@ -199,7 +200,7 @@ int http_proc_torrent(const p_xt_http_data data)
         return -3;
     }
 
-    if (0 != get_torrent_info(buf, &torrent))
+    if (0 != get_torrent_info(buf, &g_torrent))
     {
         E("get torrent:%s info error", buf);
         return -4;
@@ -214,17 +215,17 @@ int http_proc_torrent(const p_xt_http_data data)
     content = data->content;
     content[0] = '[';
 
-    for (int i = 0; i < torrent.count; i++)
+    for (int i = 0; i < g_torrent.count; i++)
     {
-        format_data(torrent.file[i].size, size, sizeof(size));
+        format_data(g_torrent.file[i].size, size, sizeof(size));
 
         pos += snprintf(content + pos, data->len - pos, "{\"size\":\"%s\",\"file\":\"", size);
 
         len = sizeof(buf);
 
-        if (0 != uri_encode(torrent.file[i].name, torrent.file[i].name_len, buf, &len)) // js的atob不能解码unicode
+        if (0 != uri_encode(g_torrent.file[i].name, g_torrent.file[i].name_len, buf, &len)) // js的atob不能解码unicode
         {
-            E("uri_encode fail %s", torrent.file[i].name);
+            E("uri_encode fail %s", g_torrent.file[i].name);
             return -5;
         }
 
@@ -240,7 +241,7 @@ int http_proc_torrent(const p_xt_http_data data)
         pos += snprintf(content + pos, data->len - pos, "\"},");
     }
 
-    if (torrent.count > 0)
+    if (g_torrent.count > 0)
     {
         content[pos - 1] = ']';
     }
@@ -263,7 +264,7 @@ int http_proc_task(const p_xt_http_data data)
 {
     const char *del = NULL;    // 可以为空
     const char *add = NULL;    // 可以为空
-    const char *lst = NULL;    // 可以为空
+    const char *msk = NULL;    // 可以为空
     unsigned int addr_len = 0;
 
     for (unsigned int i = 0; i < data->arg_count; i++)
@@ -274,10 +275,10 @@ int http_proc_task(const p_xt_http_data data)
             add = data->arg[i].value;
             addr_len = data->arg[i].value_len;
         }
-        else if (data->arg[i].key   != NULL && 0 == strcmp(data->arg[i].key, "lst") &&
+        else if (data->arg[i].key   != NULL && 0 == strcmp(data->arg[i].key, "msk") &&
                  data->arg[i].value != NULL && 0 != strcmp(data->arg[i].value, ""))
         {
-            lst = data->arg[i].value;
+            msk = data->arg[i].value;
         }
         else if (data->arg[i].key   != NULL && 0 == strcmp(data->arg[i].key, "del") &&
                  data->arg[i].value != NULL && 0 != strcmp(data->arg[i].value, ""))
@@ -308,7 +309,7 @@ int http_proc_task(const p_xt_http_data data)
             return -1;
         }
 
-        if (0 != xl_sdk_download(g_cfg.download_path, buf, lst))
+        if (0 != xl_sdk_download(g_cfg.download_path, buf, msk, &g_torrent))
         {
             E("xl_sdk_download fail");
             return -2;
