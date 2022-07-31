@@ -94,7 +94,7 @@
             mask = '';\n\
             torr_tbody = torr_table.childNodes[0];\n\
             for (var i = 1; i < torr_tbody.childNodes.length; i++){\n\
-                mask = mask + (torr_tbody.childNodes[i].childNodes[0].childNodes[0].checked ? '1' : '0');\n\
+                mask = mask + (torr_tbody.childNodes[i].childNodes[0].checked ? '1' : '0');\n\
             }\n\
             if (/^0+$/.test(mask)) {alert('请选取要下载的文件'); return;}\n\
             arg = arg + '&msk=' + mask ;\n\
@@ -122,11 +122,9 @@
             for (var i in rp) {\n\
                 item = rp[i];\n\
                 tr = document.createElement('tr');\n\
-                td = document.createElement('td');\n\
                 ip = document.createElement('input');\n\
                 ip.type = 'checkbox';\n\
-                td.appendChild(ip);\n\
-                tr.appendChild(td);\n\
+                tr.appendChild(ip);\n\
                 td = document.createElement('td');\n\
                 td.innerText = decodeURIComponent(atob(item['file']));\n\
                 tr.appendChild(td);\n\
@@ -144,7 +142,7 @@
     function on_check(chk){\n\
         torr_tbody = document.getElementById('torr').childNodes[0];\n\
         for (var i = 1; i < torr_tbody.childNodes.length; i++){\n\
-            torr_tbody.childNodes[i].childNodes[0].childNodes[0].checked = chk.checked;\n\
+            torr_tbody.childNodes[i].childNodes[0].checked = chk.checked;\n\
         }\n\
     }\n\
 </script>\n\
