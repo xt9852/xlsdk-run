@@ -33,7 +33,7 @@
 /// 程序标题
 #define TITLE "DownloadSDKServerStart"
 
-/// 主页面
+/// 首页页面
 #define INDEX_PAGE "<meta charset='utf-8'>\
 <script>\n\
     function task(arg){\n\
@@ -106,9 +106,9 @@
         arg = 'del=' + this.task_id;\n\
         task(arg);\n\
     }\n\
-    function torrent(){\n\
+    function file(){\n\
         addr = document.getElementById('addr');\n\
-        url = '/torrent?file=' + btoa(addr.value)\n\
+        url = '/file?torrent=' + btoa(addr.value)\n\
         req = new XMLHttpRequest();\n\
         req.open('GET', url);\n\
         req.send(null);\n\
@@ -137,7 +137,7 @@
     }\n\
     function open(){\n\
         document.getElementById('addr').value = this.task_name;\n\
-        torrent();\n\
+        file();\n\
     }\n\
     function on_check(chk){\n\
         torr_tbody = document.getElementById('torr').childNodes[0];\n\
@@ -151,7 +151,7 @@
 <tr><th>ID</th><th>任务</th><th>大小</th><th>进度</th><th>速度</th><th>操作</th></tr>\
 <table id='torr' border='1' style='border-collapse:collapse;font-family:宋体;display:none'>\
 <tr><th><input type='checkbox' onclick='on_check(this)' /></th><th>文件</th><th>大小</th></tr></table>\
-<input id='addr' style='width:600'/><button onclick='add()'>download</button><button onclick='torrent()'>open</button>\
+<input id='addr' style='width:600'/><button onclick='add()'>download</button><button onclick='file()'>open</button>\
 </table>\
 </body>"
 
@@ -172,29 +172,28 @@ extern unsigned int g_task_count;                   ///< 当前正在下载的�
  *\param[out]   data            HTTP的数据
  *\return       0               成功
  */
-int http_proc_torrent(const p_xt_http_data data)
+int http_proc_file(const p_xt_http_data data)
 {
-    if (data->arg_count <= 0 || NULL == data->arg[0].key || 0 != strcmp(data->arg[0].key, "file"))
+    if (data->arg_count <= 0 || NULL == data->arg[0].key || 0 != strcmp(data->arg[0].key, "torrent"))
     {
-        D("file:null or \"\"");
+        D("torrent:null or \"\"");
         return -1;
     }
 
-    const char *file = data->arg[0].value;
+    const char *torrent_filename = data->arg[0].value;
 
-    if (NULL == file || 0 == strcmp(file, ""))
+    if (NULL == torrent_filename || 0 == strcmp(torrent_filename, ""))
     {
-        D("file:null or \"\"");
+        D("torrent:null or \"\"");
         return -2;
     }
 
-    char         buf[20480];
-    int          len      = sizeof(buf);
-    unsigned int file_len = data->arg[0].value_len;
+    char buf[20480];
+    int  len = sizeof(buf);
 
-    if (0 != base64_decode(file, file_len, buf, &len))
+    if (0 != base64_decode(torrent_filename, data->arg[0].value_len, buf, &len))
     {
-        E("base64_decode fail %s", file);
+        E("base64_decode fail %s", torrent_filename);
         return -3;
     }
 
@@ -402,13 +401,13 @@ int http_proc_callback(const p_xt_http_data data)
     {
         return http_proc_index(data);
     }
+    else if (0 == strcmp(data->uri, "/file"))
+    {
+        return http_proc_file(data);
+    }
     else if (0 == strcmp(data->uri, "/task"))
     {
         return http_proc_task(data);
-    }
-    else if (0 == strcmp(data->uri, "/torrent"))
-    {
-        return http_proc_torrent(data);
     }
     else if (0 == strcmp(data->uri, "/favicon.ico"))
     {

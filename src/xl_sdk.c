@@ -1335,7 +1335,7 @@ void* xl_sdk_thread(void *param)
 
             xl_sdk_get_task_info(g_task[i].id, &g_task[i].size, &g_task[i].down, &g_task[i].time);
 
-            D("task_id:%02u, size:%I64u down:%I64u time:%u", g_task[i].id, g_task[i].size, g_task[i].down, g_task[i].time);
+            D("task_id:%02u, size:%10I64u down:%10I64u time:%u", g_task[i].id, g_task[i].size, g_task[i].down, g_task[i].time);
 
             if (0 == g_task[i].size)
             {
