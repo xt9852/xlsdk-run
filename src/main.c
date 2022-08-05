@@ -107,7 +107,8 @@
         arg = 'del=' + this.task_id;\n\
         task(arg);\n\
     }\n\
-    function file(){\n\
+    function open(){\n\
+        document.getElementById('addr').value = this.task_name;\n\
         addr = document.getElementById('addr');\n\
         url = '/file?torrent=' + btoa(addr.value)\n\
         req = new XMLHttpRequest();\n\
@@ -135,10 +136,6 @@
                 torr_tbody.appendChild(tr);\n\
             }\n\
         }\n\
-    }\n\
-    function open(){\n\
-        document.getElementById('addr').value = this.task_name;\n\
-        file();\n\
     }\n\
     function torrent(){\n\
         req = new XMLHttpRequest();\n\
@@ -192,7 +189,6 @@
 <tr><th><input type='checkbox' onclick='on_check(this)' /></th><th>文件</th><th>大小</th></tr></table>\
 <input id='addr' style='width:600'/>\
 <button onclick='add()'>download</button>\
-<button onclick='file()'>open</button>\
 <button onclick='torrent()'>torrent</button>\
 </table>\
 </body>"
