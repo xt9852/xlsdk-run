@@ -14,7 +14,7 @@
 #define TASK_SIZE       128
 
 /// 任务名长度
-#define TASK_NAME_SIZE  512
+#define TASK_NAME_SIZE  1024
 
 /// 任务类型
 enum

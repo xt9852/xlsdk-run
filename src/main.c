@@ -24,6 +24,7 @@
 #include "xt_notify.h"
 #include "xt_http.h"
 #include "xt_exe_ico.h"
+#include "xt_character_set.h"
 #include "xl_sdk.h"
 #include "torrent.h"
 #define  PCRE2_STATIC
@@ -139,6 +140,44 @@
         document.getElementById('addr').value = this.task_name;\n\
         file();\n\
     }\n\
+    function torrent(){\n\
+        req = new XMLHttpRequest();\n\
+        req.open('GET', '/torrent');\n\
+        req.send(null);\n\
+        req.onload = function(){\n\
+            if (req.readyState != 4 || req.status != 200) {alert('http请求失败');return;}\n\
+            rp = JSON.parse(req.responseText);\n\
+            down_tbody = document.getElementById('down').childNodes[0];\n\
+            for (var i in rp) {\n\
+                item = rp[i];\n\
+                task_name = decodeURIComponent(atob(item['filename']));\n\
+                tr = document.createElement('tr');\n\
+                td = document.createElement('td');\n\
+                tr.appendChild(td);\n\
+                td = document.createElement('td');\n\
+                td.innerText = task_name;\n\
+                tr.appendChild(td);\n\
+                td = document.createElement('td');\n\
+                tr.appendChild(td);\n\
+                td = document.createElement('td');\n\
+                tr.appendChild(td);\n\
+                td = document.createElement('td');\n\
+                tr.appendChild(td);\n\
+                if (/\\.torrent$/.test(task_name)) {\n\
+                    bt = document.createElement('button');\n\
+                    bt.onclick = open;\n\
+                    bt.innerText = 'open';\n\
+                    bt.task_name = task_name;\n\
+                    tr.appendChild(bt);\n\
+                }\n\
+                down_tbody.appendChild(tr);\n\
+            }\n\
+            task_th = down_tbody.childNodes[0].childNodes[1];\n\
+            task_th.innerText = '任务(' + rp.length + ')';\n\
+            width = task_th.clientWidth + 21 + 2;\n\
+            addr.style.width = (width < 600) ? 600 : width;\n\
+        }\n\
+    }\n\
     function on_check(chk){\n\
         torr_tbody = document.getElementById('torr').childNodes[0];\n\
         for (var i = 1; i < torr_tbody.childNodes.length; i++){\n\
@@ -151,7 +190,10 @@
 <tr><th>ID</th><th>任务</th><th>大小</th><th>进度</th><th>速度</th><th>操作</th></tr>\
 <table id='torr' border='1' style='border-collapse:collapse;font-family:宋体;display:none'>\
 <tr><th><input type='checkbox' onclick='on_check(this)' /></th><th>文件</th><th>大小</th></tr></table>\
-<input id='addr' style='width:600'/><button onclick='add()'>download</button><button onclick='file()'>open</button>\
+<input id='addr' style='width:600'/>\
+<button onclick='add()'>download</button>\
+<button onclick='file()'>open</button>\
+<button onclick='torrent()'>torrent</button>\
 </table>\
 </body>"
 
@@ -253,7 +295,7 @@ int http_proc_file(const p_xt_http_data data)
 }
 
 /**
- *\brief        http回调函数,下载接口
+ *\brief        http回调函数,任务信息
  *\param[out]   data            HTTP的数据
  *\return       0               成功
  */
@@ -293,12 +335,14 @@ int http_proc_task(const p_xt_http_data data)
         xl_sdk_del_task(task_id);
     }
 
+    int  len;
     char buf[20480];
-    int  len = sizeof(buf);
 
     if (NULL != add)
     {
         D("add:%s", add);
+
+        len = sizeof(buf);
 
         if (0 != base64_decode(add, addr_len, buf, &len))
         {
@@ -366,7 +410,106 @@ int http_proc_task(const p_xt_http_data data)
 }
 
 /**
- *\brief        HTTP回调函数,/favicon.ico
+ *\brief        http回调函数,种子文件列表
+ *\param[out]   data            HTTP的数据
+ *\return       0               成功
+ */
+int http_proc_torrent(const p_xt_http_data data)
+{
+    char  buf[20480];
+    char  filename[MAX_PATH];
+    int   filename_len;
+    int   len;
+    int   pos = 1;
+    int   count = 0;
+    int   base64_len;
+    char *content = data->content;
+
+    content[0] = '[';
+    sprintf_s(filename, MAX_PATH, "%s\\*.torrent", g_cfg.download_path);
+
+    WIN32_FIND_DATAA wfd;
+
+    HANDLE find = FindFirstFileA(filename, &wfd);
+
+    if (INVALID_HANDLE_VALUE == find)
+    {
+        E("path error");
+        return -1;
+    }
+
+    while (true)
+    {
+        bool have = false;
+
+        filename_len = sizeof(filename);
+
+        sprintf_s(buf, MAX_PATH, "%s\\%s", g_cfg.download_path, wfd.cFileName);
+
+        if (0 != ansi_utf8(buf, strlen(buf), filename, &filename_len))
+        {
+            E("ansi_utf8 fail %s", wfd.cFileName);
+            return -2;
+        }
+
+        D(filename);
+
+        for (unsigned int i = 0; i < g_task_count; i++)
+        {
+            if (0 == strcmp(filename, g_task[i].torrent_filename))
+            {
+                have = true;
+                break;
+            }
+        }
+
+        if (!have)
+        {
+            count++;
+
+            pos += snprintf(content + pos, data->len - pos, "{\"filename\":\"");
+
+            len = sizeof(buf);
+
+            if (0 != uri_encode(filename, filename_len, buf, &len)) // js的atob不能解码unicode
+            {
+                E("uri_encode fail %s", filename);
+                return -3;
+            }
+
+            base64_len = data->len - pos;
+
+            if (0 != base64_encode(buf, len, content + pos, &base64_len)) // 文件名中可能有json需要转码的字符
+            {
+                E("base64_encode fail %s", buf);
+                return -4;
+            }
+
+            pos += base64_len;
+            pos += snprintf(content + pos, data->len - pos, "\"},");
+        }
+
+        if (!FindNextFileA(find, &wfd)) break;
+    }
+
+    FindClose(find);
+
+    if (count > 0)
+    {
+        content[pos - 1] = ']';
+    }
+    else
+    {
+        content[pos++] = ']';
+    }
+
+    data->type = HTTP_TYPE_HTML;
+    data->len = pos;
+    return 0;
+}
+
+/**
+ *\brief        HTTP回调函数,默认图标
  *\param[out]   data            HTTP的数据
  *\return       0               成功
  */
@@ -378,7 +521,7 @@ int http_proc_icon(const p_xt_http_data data)
 }
 
 /**
- *\brief        HTTP回调函数,主页
+ *\brief        HTTP回调函数,首页
  *\param[out]   data            HTTP的数据
  *\return       0               成功
  */
@@ -408,6 +551,10 @@ int http_proc_callback(const p_xt_http_data data)
     else if (0 == strcmp(data->uri, "/task"))
     {
         return http_proc_task(data);
+    }
+    else if (0 == strcmp(data->uri, "/torrent"))
+    {
+        return http_proc_torrent(data);
     }
     else if (0 == strcmp(data->uri, "/favicon.ico"))
     {
