@@ -785,9 +785,9 @@ int xl_sdk_create_bt_task(p_bt_torrent torrent, const char *path, const char *ma
 
     strncpy_s(task->name, TASK_NAME_SIZE, strrchr(torrent_filename, '\\') + 1, 4);  // 只取前4位
 
-    int pos = strlen(task->name);
+    unsigned int pos = strlen(task->name);
 
-    for (int i = 0; i < mask_len && i < torrent->count; i++) // 拼接文件名
+    for (int i = 0; i < mask_len && i < torrent->count && (TASK_NAME_SIZE - pos) > torrent->file[i].name_len; i++) // 拼接文件名
     {
         pos += (mask[i] == '1') ? sprintf_s(&task->name[pos], TASK_NAME_SIZE - pos, "|%s", torrent->file[i].name) : 0;
     }
@@ -1229,7 +1229,7 @@ int xl_sdk_download(const char *path, const char *addr, const char *mask, p_bt_t
 
     for (unsigned int i = 0; i < g_task_count; i++)
     {
-        if (0 == strcmp(addr, g_task[i].addr) && task_type == g_task[i].type)  // 已经下载
+        if (0 == strncmp(addr, g_task[i].addr, TASK_NAME_SIZE - 1) && task_type == g_task[i].type)  // 已经下载
         {
             pthread_mutex_unlock(&g_task_mutex);
             D("have task:%s", addr);
@@ -1275,10 +1275,14 @@ int xl_sdk_download(const char *path, const char *addr, const char *mask, p_bt_t
         return -3;
     }
 
+    D("1");
+
     if (TASK_BT == task_type && torrent->tracker.count > 0)
     {
         ret = xl_sdk_add_bt_tracker(task->id, torrent->tracker.count, torrent->tracker.data, torrent->tracker.len);
     }
+
+    D("2");
 
     if (0 != ret)
     {
@@ -1287,7 +1291,9 @@ int xl_sdk_download(const char *path, const char *addr, const char *mask, p_bt_t
         return -4;
     }
 
-    strcpy_s(task->addr, TASK_NAME_SIZE, addr);
+    strncpy_s(task->addr, TASK_NAME_SIZE, addr, TASK_NAME_SIZE - 1);
+
+    D("3");
 
     task->type      = task_type;
     task->size      = 0;
