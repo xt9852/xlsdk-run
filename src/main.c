@@ -430,7 +430,7 @@ int http_proc_torrent(const p_xt_http_data data)
 
     if (INVALID_HANDLE_VALUE == find)
     {
-        E("path error");
+        E("FindFirstFileA path %s error %d", filename, GetLastError());
         return -1;
     }
 
@@ -611,7 +611,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         return -2;
     }
 
-    ret = http_init(g_cfg.http_port, http_proc_callback, &g_http);
+    ret = http_init(g_cfg.http_ip, g_cfg.http_port, g_cfg.http_ipv4, http_proc_callback, &g_http);
 
     if (ret != 0)
     {

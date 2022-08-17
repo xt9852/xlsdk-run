@@ -204,9 +204,15 @@ int config_log(cJSON *root, p_config config)
 
     config->log_backup = backup->valueint;
 
-    cJSON *clean = cJSON_GetObjectItem(log, "clean");   // 可以为空
+    cJSON *clean = cJSON_GetObjectItem(log, "first_clean");
 
-    config->log_clean = (NULL != clean) ? clean->valueint : false;
+    if (NULL == clean)
+    {
+        printf("%s|config no log.clean value Eor\n", __FUNCTION__);
+        return -9;
+    }
+
+    config->log_clean = clean->valueint;
 
     return 0;
 }
@@ -232,15 +238,35 @@ int config_http(cJSON *root, p_config config)
         return -2;
     }
 
+    cJSON *ip = cJSON_GetObjectItem(http, "ip");
+
+    if (NULL == ip)
+    {
+        printf("%s|config json no http.ip node\n", __FUNCTION__);
+        return -3;
+    }
+
+    strncpy_s(config->http_ip, sizeof(config->http_ip), ip->valuestring, sizeof(config->http_ip) - 1);
+
     cJSON *port = cJSON_GetObjectItem(http, "port");
 
     if (NULL == port)
     {
         printf("%s|config json no http.port node\n", __FUNCTION__);
-        return -3;
+        return -4;
     }
 
     config->http_port = port->valueint;
+
+    cJSON *ipv4 = cJSON_GetObjectItem(http, "ipv4");
+
+    if (NULL == ipv4)
+    {
+        printf("%s|config no http.ipv4 value Eor\n", __FUNCTION__);
+        return -5;
+    }
+
+    config->http_ipv4 = ipv4->valueint;
 
     return 0;
 }

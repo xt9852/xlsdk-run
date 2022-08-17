@@ -4,12 +4,14 @@
         "level": "debug",
         "cycle": "day",
         "backup": 7,
-        "clean": true
+        "first_clean": true
     },
     "http": {
-        "port": 80
+        "ip": "127.0.0.1",
+        "port": 80,
+        "ipv4": true
     },
     "download": {
-        "path": "D:\\5.downloads\\bt"
+        "path": "D:\\5.download\\bt"
     }
 }

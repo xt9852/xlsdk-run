@@ -18,7 +18,9 @@ typedef struct _config
     int     log_backup;         ///< 日志文件保留数量
     int     log_clean;          ///< 首次打开日志文件时是否清空文件内容
 
+    char    http_ip[512];       ///< HTTP地址s
     int     http_port;          ///< HTTP端口
+    int     http_ipv4;          ///< 是否是IPV4
 
     char    download_path[512]; ///< 下载路径
 
