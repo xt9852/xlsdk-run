@@ -258,16 +258,6 @@ int config_http(cJSON *root, p_config config)
 
     config->http_port = port->valueint;
 
-    cJSON *ipv4 = cJSON_GetObjectItem(http, "ipv4");
-
-    if (NULL == ipv4)
-    {
-        printf("%s|config no http.ipv4 value Eor\n", __FUNCTION__);
-        return -5;
-    }
-
-    config->http_ipv4 = ipv4->valueint;
-
     return 0;
 }
 

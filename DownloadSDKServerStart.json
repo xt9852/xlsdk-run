@@ -8,8 +8,7 @@
     },
     "http": {
         "ip": "127.0.0.1",
-        "port": 80,
-        "ipv4": true
+        "port": 80
     },
     "download": {
         "path": "D:\\5.download\\bt"

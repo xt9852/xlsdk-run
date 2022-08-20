@@ -20,7 +20,6 @@ typedef struct _config
 
     char    http_ip[512];       ///< HTTP地址s
     int     http_port;          ///< HTTP端口
-    int     http_ipv4;          ///< 是否是IPV4
 
     char    download_path[512]; ///< 下载路径
 
