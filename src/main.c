@@ -38,7 +38,6 @@
 #define INDEX_PAGE "<meta charset='utf-8'>\
 <script>\n\
     function task(arg){\n\
-        addr = document.getElementById('addr');\n\
         url = '/task?' + arg;\n\
         req = new XMLHttpRequest();\n\
         req.open('GET', url);\n\
@@ -54,18 +53,22 @@
                 tr = document.createElement('tr');\n\
                 td = document.createElement('td');\n\
                 td.innerText = item['id'];\n\
+                td.align = 'right';\n\
                 tr.appendChild(td);\n\
                 td = document.createElement('td');\n\
                 td.innerText = task_name;\n\
                 tr.appendChild(td);\n\
                 td = document.createElement('td');\n\
                 td.innerText = item['size'];\n\
+                td.align = 'right';\n\
                 tr.appendChild(td);\n\
                 td = document.createElement('td');\n\
                 td.innerText = item['prog'];\n\
+                td.align = 'right';\n\
                 tr.appendChild(td);\n\
                 td = document.createElement('td');\n\
                 td.innerText = item['speed'];\n\
+                td.align = 'right';\n\
                 tr.appendChild(td);\n\
                 bt = document.createElement('button');\n\
                 bt.onclick = del;\n\
@@ -83,8 +86,10 @@
             }\n\
             task_th = down_tbody.childNodes[0].childNodes[1];\n\
             task_th.innerText = '任务(' + rp.length + ')';\n\
-            width = task_th.clientWidth + 21 + 2;\n\
-            addr.style.width = (width < 600) ? 600 : width;\n\
+            tor = document.getElementById('tor');\n\
+            dow = document.getElementById('dow');\n\
+            addr = document.getElementById('addr');\n\
+            addr.style.width = (down_tbody.clientWidth - tor.clientWidth - dow.clientWidth - 6) + 'px';\n\
         }\n\
     }\n\
     function add(){\n\
@@ -128,10 +133,10 @@
                 ip.type = 'checkbox';\n\
                 tr.appendChild(ip);\n\
                 td = document.createElement('td');\n\
-                td.innerText = decodeURIComponent(atob(item['file']));\n\
+                td.innerText = item['size'];\n\
                 tr.appendChild(td);\n\
                 td = document.createElement('td');\n\
-                td.innerText = item['size'];\n\
+                td.innerText = decodeURIComponent(atob(item['file']));\n\
                 tr.appendChild(td);\n\
                 torr_tbody.appendChild(tr);\n\
             }\n\
@@ -150,6 +155,7 @@
                 task_name = decodeURIComponent(atob(item['filename']));\n\
                 tr = document.createElement('tr');\n\
                 td = document.createElement('td');\n\
+                td.innerText = i;\n\
                 tr.appendChild(td);\n\
                 td = document.createElement('td');\n\
                 td.innerText = task_name;\n\
@@ -169,10 +175,6 @@
                 }\n\
                 down_tbody.appendChild(tr);\n\
             }\n\
-            task_th = down_tbody.childNodes[0].childNodes[1];\n\
-            task_th.innerText = '任务(' + rp.length + ')';\n\
-            width = task_th.clientWidth + 21 + 2;\n\
-            addr.style.width = (width < 600) ? 600 : width;\n\
         }\n\
     }\n\
     function on_check(chk){\n\
@@ -186,10 +188,10 @@
 <table id='down' border='1' style='border-collapse:collapse;font-family:宋体;'>\
 <tr><th>ID</th><th>任务</th><th>大小</th><th>进度</th><th>速度</th><th>操作</th></tr>\
 <table id='torr' border='1' style='border-collapse:collapse;font-family:宋体;display:none'>\
-<tr><th><input type='checkbox' onclick='on_check(this)' /></th><th>文件</th><th>大小</th></tr></table>\
-<input id='addr' style='width:600'/>\
-<button onclick='add()'>download</button>\
-<button onclick='torrent()'>torrent</button>\
+<tr><th><input type='checkbox' onclick='on_check(this)' /></th><th>大小</th><th>文件</th></tr></table>\
+<button id='tor' onclick='torrent()'>种子</button>\
+<button id='dow' onclick='add()'>下载</button>\
+<input id='addr'/>\
 </table>\
 </body>"
 

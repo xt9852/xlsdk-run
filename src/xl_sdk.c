@@ -739,6 +739,16 @@ int xl_sdk_create_bt_task(p_bt_torrent torrent, const char *path, const char *ma
 
     int   mask_len  = strlen(mask);
 
+    // 删除1后面的0
+    for (int i = mask_len - 1; i > 0; i--)
+    {
+        if (mask[i] == '1')
+        {
+            mask_len = i + 1;
+            break;
+        }
+    }
+
     if (0 != utf8_unicode(torrent_filename, torrent_filename_len, torrent_filename_short, &torrent_filename_size))
     {
         E("utf8 to unicode error %s", torrent_filename);
@@ -815,15 +825,23 @@ int xl_sdk_create_url_task(const char *url, const char *path, p_xl_task task)
         return -1;
     }
 
-    D("url:%s path:%s", url, path);
+    char *filename = strrchr(url, '/');
+
+    filename = (NULL == filename || 0 == filename[1]) ? "index.html" : filename + 1;
+
+    D("url:%s path:%s filename:%s", url, path, filename);
 
     short url_short[MAX_PATH];
     int   url_len  = strlen(url);
-    int   url_size = SIZEOF(url_short);
+    int   url_size = MAX_PATH;
 
     short path_short[MAX_PATH];
     int   path_len  = strlen(path);
-    int   path_size = SIZEOF(path_short);
+    int   path_size = MAX_PATH;
+
+    short filename_short[MAX_PATH];
+    int   filename_len  = strlen(filename);
+    int   filename_size = MAX_PATH;
 
     if (0 != utf8_unicode(url, url_len, url_short, &url_size))
     {
@@ -837,17 +855,11 @@ int xl_sdk_create_url_task(const char *url, const char *path, p_xl_task task)
         return -3;
     }
 
-    short *filename = wcsrchr(url_short, L'/');
-
-    if (NULL == filename)
+    if (0 != utf8_unicode(filename, filename_len, filename_short, &filename_size))
     {
-        E("no filename");
-        return -3;
+        E("utf8 to unicode error %s", path);
+        return -4;
     }
-
-    filename = (0 == filename[1]) ? L"index.html" : filename + 1;
-
-    int filename_len = wcslen(filename);
 
     // 参数1,URL地址,unicode
     p_xl_data_head p = (p_xl_data_head)g_recv_tmp;
@@ -866,7 +878,7 @@ int xl_sdk_create_url_task(const char *url, const char *path, p_xl_task task)
     // 参数4,文件名称,unicode
     p_xl_arg_head arg4 = (p_xl_arg_head)(arg3->data + arg3->len * 2);
     arg4->len = filename_len;
-    memcpy(arg4->data, filename, arg4->len * 2);
+    memcpy(arg4->data, filename_short, arg4->len * 2);
 
     // 创建下载URL文件任务
     p->func_id = XL_CreateP2spTask;
@@ -881,18 +893,7 @@ int xl_sdk_create_url_task(const char *url, const char *path, p_xl_task task)
     }
 
     task->id = *(int*)(g_send_tmp + 12);
-
-    int len = TASK_NAME_SIZE - sprintf_s(task->name, TASK_NAME_SIZE, "%s\\", path);
-
-    int size = TASK_NAME_SIZE - len;
-
-    if (0 != unicode_utf8(filename, filename_len, &task->name[path_len + 1], &size))
-    {
-        E("unicode to ansi Eor");
-        return 0;
-    }
-
-    task->name_len = len + size;
+    task->name_len = sprintf_s(task->name, TASK_NAME_SIZE, "%s\\%s", path, filename);
 
     D("ok");
     return 0;
