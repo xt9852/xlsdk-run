@@ -35,165 +35,167 @@
 #define TITLE "DownloadSDKServerStart"
 
 /// 首页页面
-#define INDEX_PAGE "<meta charset='utf-8'>\
-<script>\n\
-    function task(arg){\n\
-        url = '/task?' + arg;\n\
-        req = new XMLHttpRequest();\n\
-        req.open('GET', url);\n\
-        req.send(null);\n\
-        req.onload = function(){\n\
-            if (req.readyState != 4 || req.status != 200) {alert('http请求失败');return;}\n\
-            rp = JSON.parse(req.responseText);\n\
-            down_tbody = document.getElementById('down').childNodes[0];\n\
-            while (down_tbody.childNodes.length > 1) { down_tbody.removeChild(down_tbody.childNodes[1]); }\n\
-            for (var i in rp) {\n\
-                item = rp[i];\n\
-                task_name = decodeURIComponent(atob(item['task']));\n\
-                tr = document.createElement('tr');\n\
-                td = document.createElement('td');\n\
-                td.innerText = item['id'];\n\
-                td.align = 'right';\n\
-                tr.appendChild(td);\n\
-                td = document.createElement('td');\n\
-                td.innerText = task_name;\n\
-                tr.appendChild(td);\n\
-                td = document.createElement('td');\n\
-                td.innerText = item['size'];\n\
-                td.align = 'right';\n\
-                tr.appendChild(td);\n\
-                td = document.createElement('td');\n\
-                td.innerText = item['prog'];\n\
-                td.align = 'right';\n\
-                tr.appendChild(td);\n\
-                td = document.createElement('td');\n\
-                td.innerText = item['speed'];\n\
-                td.align = 'right';\n\
-                tr.appendChild(td);\n\
-                bt = document.createElement('button');\n\
-                bt.onclick = del;\n\
-                bt.innerText = 'del';\n\
-                bt.task_id = item['id'];\n\
-                tr.appendChild(bt);\n\
-                if (/\\.torrent$/.test(task_name)) {\n\
-                    bt = document.createElement('button');\n\
-                    bt.onclick = open;\n\
-                    bt.innerText = 'open';\n\
-                    bt.task_name = task_name;\n\
-                    tr.appendChild(bt);\n\
-                }\n\
-                down_tbody.appendChild(tr);\n\
-            }\n\
-            task_th = down_tbody.childNodes[0].childNodes[1];\n\
-            task_th.innerText = '任务(' + rp.length + ')';\n\
-            tor = document.getElementById('tor');\n\
-            dow = document.getElementById('dow');\n\
-            addr = document.getElementById('addr');\n\
-            addr.style.width = (down_tbody.clientWidth - tor.clientWidth - dow.clientWidth - 6) + 'px';\n\
-        }\n\
-    }\n\
-    function add(){\n\
-        addr = document.getElementById('addr');\n\
-        arg = 'add=' + btoa(addr.value);\n\
-        torr_table = document.getElementById('torr');\n\
-        if (torr_table.style.display == '') {\n\
-            mask = '';\n\
-            torr_tbody = torr_table.childNodes[0];\n\
-            for (var i = 1; i < torr_tbody.childNodes.length; i++){\n\
-                mask = mask + (torr_tbody.childNodes[i].childNodes[0].checked ? '1' : '0');\n\
-            }\n\
-            if (/^0+$/.test(mask)) {alert('请选取要下载的文件'); return;}\n\
-            arg = arg + '&msk=' + mask ;\n\
-            torr_table.style.display = 'none';\n\
-        }\n\
-        task(arg);\n\
-    }\n\
-    function del(){\n\
-        arg = 'del=' + this.task_id;\n\
-        task(arg);\n\
-    }\n\
-    function open(){\n\
-        document.getElementById('addr').value = this.task_name;\n\
-        addr = document.getElementById('addr');\n\
-        url = '/file?torrent=' + btoa(addr.value)\n\
-        req = new XMLHttpRequest();\n\
-        req.open('GET', url);\n\
-        req.send(null);\n\
-        req.onload = function(){\n\
-            if (req.readyState != 4 || req.status != 200) {alert('http请求失败');return;}\n\
-            rp = JSON.parse(req.responseText);\n\
-            torr_table = document.getElementById('torr');\n\
-            torr_table.style.display = '';\n\
-            torr_tbody = torr_table.childNodes[0];\n\
-            while (torr_tbody.childNodes.length > 1) { torr_tbody.removeChild(torr_tbody.childNodes[1]); }\n\
-            for (var i in rp) {\n\
-                item = rp[i];\n\
-                tr = document.createElement('tr');\n\
-                ip = document.createElement('input');\n\
-                ip.type = 'checkbox';\n\
-                tr.appendChild(ip);\n\
-                td = document.createElement('td');\n\
-                td.innerText = item['size'];\n\
-                tr.appendChild(td);\n\
-                td = document.createElement('td');\n\
-                td.innerText = decodeURIComponent(atob(item['file']));\n\
-                tr.appendChild(td);\n\
-                torr_tbody.appendChild(tr);\n\
-            }\n\
-        }\n\
-    }\n\
-    function torrent(){\n\
-        req = new XMLHttpRequest();\n\
-        req.open('GET', '/torrent');\n\
-        req.send(null);\n\
-        req.onload = function(){\n\
-            if (req.readyState != 4 || req.status != 200) {alert('http请求失败');return;}\n\
-            rp = JSON.parse(req.responseText);\n\
-            down_tbody = document.getElementById('down').childNodes[0];\n\
-            for (var i in rp) {\n\
-                item = rp[i];\n\
-                task_name = decodeURIComponent(atob(item['filename']));\n\
-                tr = document.createElement('tr');\n\
-                td = document.createElement('td');\n\
-                td.innerText = i;\n\
-                tr.appendChild(td);\n\
-                td = document.createElement('td');\n\
-                td.innerText = task_name;\n\
-                tr.appendChild(td);\n\
-                td = document.createElement('td');\n\
-                tr.appendChild(td);\n\
-                td = document.createElement('td');\n\
-                tr.appendChild(td);\n\
-                td = document.createElement('td');\n\
-                tr.appendChild(td);\n\
-                if (/\\.torrent$/.test(task_name)) {\n\
-                    bt = document.createElement('button');\n\
-                    bt.onclick = open;\n\
-                    bt.innerText = 'open';\n\
-                    bt.task_name = task_name;\n\
-                    tr.appendChild(bt);\n\
-                }\n\
-                down_tbody.appendChild(tr);\n\
-            }\n\
-        }\n\
-    }\n\
-    function on_check(chk){\n\
-        torr_tbody = document.getElementById('torr').childNodes[0];\n\
-        for (var i = 1; i < torr_tbody.childNodes.length; i++){\n\
-            torr_tbody.childNodes[i].childNodes[0].checked = chk.checked;\n\
-        }\n\
-    }\n\
-</script>\n\
-<body onload='task()'>\
-<table id='down' border='1' style='border-collapse:collapse;font-family:宋体;'>\
-<tr><th>ID</th><th>任务</th><th>大小</th><th>进度</th><th>速度</th><th>操作</th></tr>\
-<table id='torr' border='1' style='border-collapse:collapse;font-family:宋体;display:none'>\
-<tr><th><input type='checkbox' onclick='on_check(this)' /></th><th>大小</th><th>文件</th></tr></table>\
-<button id='tor' onclick='torrent()'>种子</button>\
-<button id='dow' onclick='add()'>下载</button>\
-<input id='addr'/>\
-</table>\
-</body>"
+#define INDEX_PAGE "<meta charset='utf-8'>"\
+"<script>"\
+    "function task(arg){"\
+        "url = '/task?' + arg;"\
+        "req = new XMLHttpRequest();"\
+        "req.open('GET', url);"\
+        "req.send(null);"\
+        "req.onload = function(){"\
+            "if (req.readyState != 4 || req.status != 200) {alert('http请求失败');return;}"\
+            "rp = JSON.parse(req.responseText);"\
+            "down_tbody = document.getElementById('down').childNodes[0];"\
+            "while (down_tbody.childNodes.length > 1) { down_tbody.removeChild(down_tbody.childNodes[1]); }"\
+            "for (var i in rp) {"\
+                "item = rp[i];"\
+                "task_name = decodeURIComponent(atob(item['task']));"\
+                "tr = document.createElement('tr');"\
+                "td = document.createElement('td');"\
+                "td.innerText = item['id'];"\
+                "td.align = 'right';"\
+                "tr.appendChild(td);"\
+                "td = document.createElement('td');"\
+                "td.innerText = task_name;"\
+                "tr.appendChild(td);"\
+                "td = document.createElement('td');"\
+                "td.innerText = item['size'];"\
+                "td.align = 'right';"\
+                "tr.appendChild(td);"\
+                "td = document.createElement('td');"\
+                "td.innerText = item['prog'];"\
+                "td.align = 'right';"\
+                "tr.appendChild(td);"\
+                "td = document.createElement('td');"\
+                "td.innerText = item['speed'];"\
+                "td.align = 'right';"\
+                "tr.appendChild(td);"\
+                "bt = document.createElement('button');"\
+                "bt.onclick = del;"\
+                "bt.innerText = '删除';"\
+                "bt.task_id = item['id'];"\
+                "tr.appendChild(bt);"\
+                "if (/\\.torrent$/.test(task_name)) {"\
+                    "bt = document.createElement('button');"\
+                    "bt.onclick = open;"\
+                    "bt.innerText = '打开';"\
+                    "bt.task_name = task_name;"\
+                    "tr.appendChild(bt);"\
+                "}"\
+                "down_tbody.appendChild(tr);"\
+            "}"\
+            "task_th = down_tbody.childNodes[0].childNodes[1];"\
+            "task_th.innerText = '任务(' + rp.length + ')';"\
+            "tor = document.getElementById('tor');"\
+            "dow = document.getElementById('dow');"\
+            "addr = document.getElementById('addr');"\
+            "addr.style.width = (down_tbody.clientWidth - tor.clientWidth - dow.clientWidth - 6) + 'px';"\
+        "}"\
+    "}"\
+    "function add(){"\
+        "addr = document.getElementById('addr');"\
+        "arg = 'add=' + btoa(addr.value);"\
+        "torr_table = document.getElementById('torr');"\
+        "if (torr_table.style.display == '') {"\
+            "mask = '';"\
+            "torr_tbody = torr_table.childNodes[0];"\
+            "for (var i = 1; i < torr_tbody.childNodes.length; i++){"\
+                "mask = mask + (torr_tbody.childNodes[i].childNodes[0].checked ? '1' : '0');"\
+            "}"\
+            "if (/^0+$/.test(mask)) {alert('请选取要下载的文件'); return;}"\
+            "arg = arg + '&msk=' + mask ;"\
+            "torr_table.style.display = 'none';"\
+        "}"\
+        "task(arg);"\
+    "}"\
+    "function del(){"\
+        "arg = 'del=' + this.task_id;"\
+        "task(arg);"\
+    "}"\
+    "function open(){"\
+        "document.getElementById('addr').value = this.task_name;"\
+        "addr = document.getElementById('addr');"\
+        "url = '/file?torrent=' + btoa(addr.value)"\
+        "req = new XMLHttpRequest();"\
+        "req.open('GET', url);"\
+        "req.send(null);"\
+        "req.onload = function(){"\
+            "if (req.readyState != 4 || req.status != 200) {alert('http请求失败');return;}"\
+            "rp = JSON.parse(req.responseText);"\
+            "torr_table = document.getElementById('torr');"\
+            "torr_table.style.display = '';"\
+            "torr_tbody = torr_table.childNodes[0];"\
+            "while (torr_tbody.childNodes.length > 1) { torr_tbody.removeChild(torr_tbody.childNodes[1]); }"\
+            "for (var i in rp) {"\
+                "item = rp[i];"\
+                "tr = document.createElement('tr');"\
+                "ip = document.createElement('input');"\
+                "ip.type = 'checkbox';"\
+                "tr.appendChild(ip);"\
+                "td = document.createElement('td');"\
+                "td.innerText = item['size'];"\
+                "tr.appendChild(td);"\
+                "td = document.createElement('td');"\
+                "td.innerText = decodeURIComponent(atob(item['file']));"\
+                "tr.appendChild(td);"\
+                "torr_tbody.appendChild(tr);"\
+            "}"\
+        "}"\
+    "}"\
+    "function torrent(){"\
+        "req = new XMLHttpRequest();"\
+        "req.open('GET', '/torrent');"\
+        "req.send(null);"\
+        "req.onload = function(){"\
+            "if (req.readyState != 4 || req.status != 200) {alert('http请求失败');return;}"\
+            "rp = JSON.parse(req.responseText);"\
+            "down_tbody = document.getElementById('down').childNodes[0];"\
+            "for (var i in rp) {"\
+                "item = rp[i];"\
+                "task_name = decodeURIComponent(atob(item['filename']));"\
+                "tr = document.createElement('tr');"\
+                "td = document.createElement('td');"\
+                "td.innerText = i;"\
+                "tr.appendChild(td);"\
+                "td = document.createElement('td');"\
+                "td.innerText = task_name;"\
+                "tr.appendChild(td);"\
+                "td = document.createElement('td');"\
+                "tr.appendChild(td);"\
+                "td = document.createElement('td');"\
+                "tr.appendChild(td);"\
+                "td = document.createElement('td');"\
+                "tr.appendChild(td);"\
+                "if (/\\.torrent$/.test(task_name)) {"\
+                    "bt = document.createElement('button');"\
+                    "bt.onclick = open;"\
+                    "bt.innerText = '打开';"\
+                    "bt.task_name = task_name;"\
+                    "tr.appendChild(bt);"\
+                "}"\
+                "down_tbody.appendChild(tr);"\
+            "}"\
+        "}"\
+    "}"\
+    "function on_check(chk){"\
+        "torr_tbody = document.getElementById('torr').childNodes[0];"\
+        "for (var i = 1; i < torr_tbody.childNodes.length; i++){"\
+            "torr_tbody.childNodes[i].childNodes[0].checked = chk.checked;"\
+        "}"\
+    "}"\
+"</script>"\
+"<body onload='task()'>"\
+"<table id='down' border='1' style='border-collapse:collapse;font-family:宋体;'>"\
+    "<tr><th>ID</th><th>任务</th><th>大小</th><th>进度</th><th>速度</th><th>操作</th></tr>"\
+"</table>"\
+"<table id='torr' border='1' style='border-collapse:collapse;font-family:宋体;display:none'>"\
+    "<tr><th><input type='checkbox' onclick='on_check(this)' /></th><th>大小</th><th>文件</th></tr>"\
+"</table>"\
+"</br>"\
+"<button id='tor' onclick='torrent()'>种子</button>"\
+"<button id='dow' onclick='add()'>下载</button>"\
+"<input id='addr'/>"\
+"</body>"
 
 config              g_cfg                   = {0};  ///< 配置数据
 
