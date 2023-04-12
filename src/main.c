@@ -39,9 +39,8 @@
 "<script>"\
     "function set_addr_input_width(width){"\
         "addr_input = document.getElementById('addr_input');"\
-        "torrent_btn = document.getElementById('torrent_btn');"\
         "download_btn = document.getElementById('download_btn');"\
-        "addr_input.style.width = (width - torrent_btn.clientWidth - download_btn.clientWidth - 6) + 'px';"\
+        "addr_input.style.width = (width - download_btn.clientWidth - 2) + 'px';"\
     "}"\
     "function http_proc(url, callback){"\
         "console.log(url);"\
@@ -83,9 +82,15 @@
             "td.align = 'right';"\
             "tr.appendChild(td);"\
             "bt = document.createElement('button');"\
-            "bt.onclick = task_del;"\
-            "bt.innerText = '删除';"\
-            "bt.task_id = item['id'];"\
+            "if (/\\.torrent$/.test(task_name)) {"\
+                "bt.onclick = torrent_open;"\
+                "bt.innerText = '打开';"\
+                "bt.task_name = task_name;"\
+            "} else {"\
+                "bt.onclick = task_del;"\
+                "bt.innerText = '删除';"\
+                "bt.task_id = item['id'];"\
+            "}"\
             "tr.appendChild(bt);"\
             "tab.appendChild(tr);"\
         "}"\
@@ -164,12 +169,11 @@
 "</script>"\
 "<body onload='http_proc(\"/task\", task_list)'>"\
 "<table id='task' border='1' style='border-collapse:collapse;font-family:宋体;'>"\
-    "<tr><th>ID</th><th>任务</th><th>大小</th><th>进度</th><th>速度</th><th>操作</th></tr>"\
+    "<tr><th>ID</th><th>任务</th><th>大小</th><th>进度</th><th>速度</th><th><button id='torrent_btn' onclick='http_proc(\"/torrent\", torrent_list)'>种子</button></th></tr>"\
 "</table>"\
 "</br>"\
 "<input id='addr_input'/>"\
 "<button id='download_btn' onclick='task_add()'>下载</button>"\
-"<button id='torrent_btn' onclick='http_proc(\"/torrent\", torrent_list)'>种子</button>"\
 "</br></br>"\
 "<table id='torrent' border='1' style='border-collapse:collapse;font-family:宋体;display:none'>"\
     "<tr><th></th><th>大小</th><th>文件</th></tr>"\
