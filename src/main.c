@@ -163,24 +163,24 @@
     "}"\
 "</script>"\
 "<input id='addr_input' size='111'/>"\
-    "<button id='download_btn' onclick='task_add()'>下载</button>"\
-    "<table id='task' border='1' style='border-collapse:collapse;font-family:宋体;'>"\
-        "<tr>"\
-            "<th>ID</th>"\
-            "<th width='600px'>任务</th>"\
-            "<th width='60px'>大小</th>"\
-            "<th width='60px'>进度</th>"\
-            "<th width='60px'>速度</th>"\
-            "<th><button id='torrent_btn' onclick='http_proc(\"/torrent\", torrent_list)'>种子</button></th>"\
-        "</tr>"\
-    "</table>"\
-    "<table id='torrent' border='1' style='border-collapse:collapse;font-family:宋体;display:none'>"\
-        "<tr>"\
-            "<th></th>"\
-            "<th>大小</th>"\
-            "<th>文件</th>"\
-        "</tr>"\
-    "</table>"\
+"<button id='download_btn' onclick='task_add()'>下载</button>"\
+"<table id='task' border='1' style='border-collapse:collapse;font-family:宋体;'>"\
+    "<tr>"\
+        "<th>ID</th>"\
+        "<th width='600px'>任务</th>"\
+        "<th width='60px'>大小</th>"\
+        "<th width='60px'>进度</th>"\
+        "<th width='60px'>速度</th>"\
+        "<th><button id='torrent_btn' onclick='http_proc(\"/torrent\", torrent_list)'>种子</button></th>"\
+    "</tr>"\
+"</table>"\
+"<table id='torrent' border='1' style='border-collapse:collapse;font-family:宋体;display:none'>"\
+    "<tr>"\
+        "<th></th>"\
+        "<th>大小</th>"\
+        "<th>文件</th>"\
+    "</tr>"\
+"</table>"
 
 config              g_cfg                   = {0};  ///< 配置数据
 
