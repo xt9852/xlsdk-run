@@ -47,12 +47,14 @@
             "callback(JSON.parse(req.responseText));"\
         "}"\
     "}"\
+    "function get_tbody(name, count){"\
+        "tbd = document.getElementById(name).childNodes[0];"\
+        "tbd.childNodes[0].childNodes[1].innerText = '任务(' + count + ')';"\
+        "while (tbd.childNodes.length > 1){tbd.removeChild(tbd.childNodes[1]);}"\
+        "return tbd;"\
+    "}"\
     "function task_list(rsp){"\
-        "tab = document.getElementById('torrent');"\
-        "tab.style.display = 'none';"\
-        "tab = document.getElementById('task').childNodes[0];"\
-        "tab.childNodes[0].childNodes[1].innerText = '任务(' + rsp.length + ')';"\
-        "while (tab.childNodes.length > 1){tab.removeChild(tab.childNodes[1]);}"\
+        "tbd = get_tbody('task', rsp.length);"\
         "for (var i in rsp) {"\
             "item = rsp[i];"\
             "task_name = decodeURIComponent(atob(item['task']));"\
@@ -88,32 +90,25 @@
                 "bt.onclick = torrent_open;"\
                 "tr.appendChild(bt);"\
             "}"\
-            "tab.appendChild(tr);"\
+            "tbd.appendChild(tr);"\
         "}"\
     "}"\
     "function task_add(){"\
-        "arg = '/task?add=' + btoa(document.getElementById('addr_input').value);"\
-        "tab = document.getElementById('torrent');"\
-        "if (tab.style.display == '') {"\
-            "mask = '';"\
-            "tab_tr = tab.childNodes[0].childNodes;"\
-            "for (var i = 1; i < tab_tr.length; i++){"\
-                "mask += (tab_tr[i].childNodes[0].checked ? '1' : '0');"\
-            "}"\
+        "addr = document.getElementById('addr_input').value;"\
+        "arg = '/task?add=' + btoa(addr);"\
+        "if (/\\.torrent$/.test(addr)) {"\
+            "tr = document.getElementById('task').childNodes[0].childNodes[1];"\
+            "for (mask = ''; tr.nextSibling != null; tr = tr.nextSibling) {mask += tr.childNodes[0].checked * 1;}"\
             "if (/^0+$/.test(mask)) {alert('请选取要下载的文件'); return;}"\
             "arg += '&msk=' + mask ;"\
-            "tab.style.display = 'none';"\
         "}"\
         "http_proc(arg, task_list);"\
     "}"\
     "function task_del(){"\
         "http_proc('/task?del=' + this.task_id, task_list);"\
     "}"\
-    "function torrent_open_proc(rsp){"\
-        "tab = document.getElementById('torrent');"\
-        "tab.style.display = '';"\
-        "tab = tab.childNodes[0];"\
-        "while (tab.childNodes.length > 1){tab.removeChild(tab.childNodes[1]);}"\
+    "function torrent_file(rsp){"\
+        "tbd = get_tbody('task', rsp.length);"\
         "for (var i in rsp) {"\
             "item = rsp[i];"\
             "tr = document.createElement('tr');"\
@@ -121,22 +116,20 @@
             "ip.type = 'checkbox';"\
             "tr.appendChild(ip);"\
             "td = document.createElement('td');"\
-            "td.innerText = item['size'];"\
-            "tr.appendChild(td);"\
-            "td = document.createElement('td');"\
             "td.innerText = decodeURIComponent(atob(item['file']));"\
             "tr.appendChild(td);"\
-            "tab.appendChild(tr);"\
+            "td = document.createElement('td');"\
+            "td.innerText = item['size'];"\
+            "tr.appendChild(td);"\
+            "tbd.appendChild(tr);"\
         "}"\
     "}"\
     "function torrent_open(){"\
         "document.getElementById('addr_input').value = this.task_name;"\
-        "http_proc('/file?torrent=' + btoa(this.task_name), torrent_open_proc);"\
+        "http_proc('/file?torrent=' + btoa(this.task_name), torrent_file);"\
     "}"\
     "function torrent_list(rsp){"\
-        "tab = document.getElementById('task').childNodes[0];"\
-        "tab.childNodes[0].childNodes[1].innerText = '任务(' + rsp.length + ')';"\
-        "while (tab.childNodes.length > 1){tab.removeChild(tab.childNodes[1]);}"\
+        "tbd = get_tbody('task', rsp.length);"\
         "for (var i in rsp) {"\
             "item = rsp[i];"\
             "task_name = decodeURIComponent(atob(item['filename']));"\
@@ -158,11 +151,11 @@
             "bt.onclick = torrent_open;"\
             "bt.task_name = task_name;"\
             "tr.appendChild(bt);"\
-            "tab.appendChild(tr);"\
+            "tbd.appendChild(tr);"\
         "}"\
     "}"\
 "</script>"\
-"<input id='addr_input' size='111'/>"\
+"<input id='addr_input' size='111' onFocus='select()'/>"\
 "<button id='download_btn' onclick='task_add()'>下载</button>"\
 "<table id='task' border='1' style='border-collapse:collapse;font-family:宋体;'>"\
     "<tr>"\
@@ -172,13 +165,6 @@
         "<th width='60px'>进度</th>"\
         "<th width='60px'>速度</th>"\
         "<th><button id='torrent_btn' onclick='http_proc(\"/torrent\", torrent_list)'>种子</button></th>"\
-    "</tr>"\
-"</table>"\
-"<table id='torrent' border='1' style='border-collapse:collapse;font-family:宋体;display:none'>"\
-    "<tr>"\
-        "<th></th>"\
-        "<th>大小</th>"\
-        "<th>文件</th>"\
     "</tr>"\
 "</table>"
 
