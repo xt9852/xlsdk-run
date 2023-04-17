@@ -4,7 +4,8 @@
  *\author       xt
  *\version      1.0.0
  *\date         2022-02-08
- *\brief        主模块,UTF-8(No BOM)
+ *\note         Encode:UTF-8
+ *\brief        主模块
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -37,14 +38,14 @@
 /// 首页页面
 #define INDEX_PAGE "<meta charset='utf-8'>"\
 "<script>"\
-    "function http_proc(url, callback){"\
-        "console.log(url);"\
+    "function http_get(url, data, callback){"\
+        "console.log(url + data);"\
         "req = new XMLHttpRequest();"\
-        "req.open('GET', url);"\
+        "req.open('GET', url + data);"\
         "req.send(null);"\
         "req.onload = function(){"\
             "if (req.readyState != 4 || req.status != 200){alert('请求失败');return;}"\
-            "callback(JSON.parse(req.responseText));"\
+            "callback(JSON.parse(req.responseText), data);"\
         "}"\
     "}"\
     "function get_tbody(name, count){"\
@@ -53,7 +54,8 @@
         "while (tbd.childNodes.length > 1){tbd.removeChild(tbd.childNodes[1]);}"\
         "return tbd;"\
     "}"\
-    "function task_list(rsp){"\
+    "function task_list(rsp, data){"\
+        "document.getElementById('addr_input').value = '';"\
         "tbd = get_tbody('task', rsp.length);"\
         "for (var i in rsp) {"\
             "item = rsp[i];"\
@@ -80,18 +82,17 @@
             "tr.appendChild(td);"\
             "bt = document.createElement('button');"\
             "tr.appendChild(bt);"\
-            "bt.outerHTML = '<button onclick=\"http_proc(\\'/task?del=' + item['id'] + '\\', task_list)\">删除</button>';"\
+            "bt.outerHTML = '<button onclick=\"http_get(\\'/task?del=\\',\\''+item['id']+'\\', task_list)\">删除</button>';"\
             "if (/\\.torrent$/.test(task_name)) {"\
                 "bt = document.createElement('button');"\
-                "bt.innerText = '打开';"\
-                "bt.task_name = task_name;"\
-                "bt.onclick = torrent_open;"\
                 "tr.appendChild(bt);"\
+                "bt.outerHTML='<button onclick=\"http_get(\\'/file?torrent=\\',\\''+btoa(task_name)+'\\',torrent_file)\">打开</button>';"\
             "}"\
             "tbd.appendChild(tr);"\
         "}"\
     "}"\
-    "function torrent_list(rsp){"\
+    "function torrent_list(rsp, data){"\
+        "document.getElementById('addr_input').value = '';"\
         "tbd = get_tbody('task', rsp.length);"\
         "for (var i in rsp) {"\
             "item = rsp[i];"\
@@ -111,19 +112,19 @@
             "tr.appendChild(td);"\
             "bt = document.createElement('button');"\
             "tr.appendChild(bt);"\
-            "bt.outerHTML = '<button onclick=\"http_proc(\\'/file?torrent=' + btoa(task_name) + '\\', torrent_file)\">打开</button>';"\
+            "bt.outerHTML='<button onclick=\"http_get(\\'/file?torrent=\\',\\''+btoa(task_name)+'\\',torrent_file)\">打开</button>';"\
             "tbd.appendChild(tr);"\
         "}"\
     "}"\
-    "function torrent_file(rsp){"\
-        "document.getElementById('addr_input').value = this.task_name;"\
+    "function torrent_file(rsp, data){"\
+        "document.getElementById('addr_input').value = atob(data);"\
         "tbd = get_tbody('task', rsp.length);"\
         "for (var i in rsp) {"\
             "item = rsp[i];"\
             "tr = document.createElement('tr');"\
-            "ip = document.createElement('input');"\
-            "ip.type = 'checkbox';"\
-            "tr.appendChild(ip);"\
+            "cb = document.createElement('input');"\
+            "cb.type = 'checkbox';"\
+            "tr.appendChild(cb);"\
             "td = document.createElement('td');"\
             "td.innerText = decodeURIComponent(atob(item['file']));"\
             "tr.appendChild(td);"\
@@ -134,26 +135,24 @@
         "}"\
     "}"\
     "function task_add(){"\
-        "addr = document.getElementById('addr_input').value;"\
-        "arg = '/task?add=' + btoa(addr);"\
-        "if (/\\.torrent$/.test(addr)) {"\
-            "tr = document.getElementById('task').childNodes[0].childNodes[1];"\
+        "data = '';"\
+        "tr = document.getElementById('task').childNodes[0].childNodes[1];"\
+        "if (tr != undefined && tr.childNodes[0].type == 'checkbox') {"\
             "for (mask = ''; tr != null; tr = tr.nextSibling) {mask += tr.childNodes[0].checked * 1;}"\
-            "if (/^0+$/.test(mask)) {alert('请选取要下载的文件'); return;}"\
-            "arg += '&msk=' + mask ;"\
+            "if (/1+/.test(mask)) {data = btoa(document.getElementById('addr_input').value) + '&msk=' + mask;} "\
         "}"\
-        "http_proc(arg, task_list);"\
+        "http_get('/task?add=', data, task_list);"\
     "}"\
 "</script>"\
 "<input id='addr_input' size='103' onFocus='select()'/>"\
-"<button id='download_btn' onclick='task_add()'>下载</button>"\
+"<button onclick='task_add()'>下载</button>"\
 "<table id='task' border='1' style='border-collapse:collapse;font-family:宋体;'>"\
     "<th width='30px'>ID</th>"\
     "<th width='530px'>任务</th>"\
     "<th width='60px'>大小</th>"\
     "<th width='60px'>进度</th>"\
     "<th width='60px'>速度</th>"\
-    "<th><button id='torrent_btn' onclick='http_proc(\"/torrent\", torrent_list)'>种子</button></th>"\
+    "<th><button onclick='http_get(\"/torrent\", \"\", torrent_list)'>种子</button></th>"\
 "</table>"
 
 config              g_cfg                   = {0};  ///< 配置数据
