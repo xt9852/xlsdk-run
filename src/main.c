@@ -59,12 +59,11 @@
         "tb = get_tbody('task', rsp.length);"\
         "for (var i in rsp) {"\
             "item = rsp[i];"\
-            "task_name = decodeURIComponent(atob(item['task']));"\
             "tr = document.createElement('tr'); tb.appendChild(tr);"\
             "td = document.createElement('td'); tr.appendChild(td);"\
             "td.innerText = item['id'];"\
             "td = document.createElement('td'); tr.appendChild(td);"\
-            "td.innerText = task_name;"\
+            "td.innerText = decodeURIComponent(atob(item['task']));"\
             "td = document.createElement('td'); tr.appendChild(td);"\
             "td.align = 'right';"\
             "td.innerText = item['size'];"\
@@ -120,8 +119,7 @@
         "http_get('/task?add=', data, task_list);"\
     "}"\
 "</script>"\
-"<input id='addr_input' size='103' onFocus='select()'/>"\
-"<button onclick='task_add()'>下载</button>"\
+"<input id='addr_input' size='103' onFocus='select()'/><button onclick='task_add()'>下载</button>"\
 "<table id='task' border='1' style='border-collapse:collapse;font-family:宋体;'>"\
     "<th width='30px'>ID</th>"\
     "<th width='530px'>任务</th>"\
