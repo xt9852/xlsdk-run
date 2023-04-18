@@ -56,90 +56,66 @@
     "}"\
     "function task_list(rsp, data){"\
         "document.getElementById('addr_input').value = '';"\
-        "tbd = get_tbody('task', rsp.length);"\
+        "tb = get_tbody('task', rsp.length);"\
         "for (var i in rsp) {"\
             "item = rsp[i];"\
             "task_name = decodeURIComponent(atob(item['task']));"\
-            "tr = document.createElement('tr');"\
-            "td = document.createElement('td');"\
+            "tr = document.createElement('tr'); tb.appendChild(tr);"\
+            "td = document.createElement('td'); tr.appendChild(td);"\
             "td.innerText = item['id'];"\
-            "td.align = 'right';"\
-            "tr.appendChild(td);"\
-            "td = document.createElement('td');"\
+            "td = document.createElement('td'); tr.appendChild(td);"\
             "td.innerText = task_name;"\
-            "tr.appendChild(td);"\
-            "td = document.createElement('td');"\
+            "td = document.createElement('td'); tr.appendChild(td);"\
+            "td.align = 'right';"\
             "td.innerText = item['size'];"\
+            "td = document.createElement('td'); tr.appendChild(td);"\
             "td.align = 'right';"\
-            "tr.appendChild(td);"\
-            "td = document.createElement('td');"\
             "td.innerText = item['prog'] + '%';"\
+            "td = document.createElement('td'); tr.appendChild(td);"\
             "td.align = 'right';"\
-            "tr.appendChild(td);"\
-            "td = document.createElement('td');"\
             "td.innerText = item['speed'];"\
-            "td.align = 'right';"\
-            "tr.appendChild(td);"\
-            "bt = document.createElement('button');"\
-            "tr.appendChild(bt);"\
-            "bt.outerHTML = '<button onclick=\"http_get(\\'/task?del=\\',\\''+item['id']+'\\', task_list)\">删除</button>';"\
-            "if (/\\.torrent$/.test(task_name)) {"\
-                "bt = document.createElement('button');"\
-                "tr.appendChild(bt);"\
-                "bt.outerHTML='<button onclick=\"http_get(\\'/file?torrent=\\',\\''+btoa(task_name)+'\\',torrent_file)\">打开</button>';"\
-            "}"\
-            "tbd.appendChild(tr);"\
+            "td = document.createElement('td'); tr.appendChild(td);"\
+            "td.outerHTML = '<td><button onclick=\"http_get(\\'/task?del=\\',\\''+item['id']+'\\', task_list)\">删除</button></td>';"\
         "}"\
     "}"\
     "function torrent_list(rsp, data){"\
         "document.getElementById('addr_input').value = '';"\
-        "tbd = get_tbody('task', rsp.length);"\
+        "tb = get_tbody('task', rsp.length);"\
         "for (var i in rsp) {"\
             "item = rsp[i];"\
             "task_name = decodeURIComponent(atob(item['filename']));"\
-            "tr = document.createElement('tr');"\
-            "td = document.createElement('td');"\
+            "tr = document.createElement('tr'); tb.appendChild(tr);"\
+            "td = document.createElement('td'); tr.appendChild(td);"\
             "td.innerText = i;"\
-            "tr.appendChild(td);"\
-            "td = document.createElement('td');"\
+            "td = document.createElement('td'); tr.appendChild(td);"\
             "td.innerText = task_name;"\
-            "tr.appendChild(td);"\
-            "td = document.createElement('td');"\
-            "tr.appendChild(td);"\
-            "td = document.createElement('td');"\
-            "tr.appendChild(td);"\
-            "td = document.createElement('td');"\
-            "tr.appendChild(td);"\
-            "bt = document.createElement('button');"\
-            "tr.appendChild(bt);"\
-            "bt.outerHTML='<button onclick=\"http_get(\\'/file?torrent=\\',\\''+btoa(task_name)+'\\',torrent_file)\">打开</button>';"\
-            "tbd.appendChild(tr);"\
+            "td = document.createElement('td'); tr.appendChild(td);"\
+            "td = document.createElement('td'); tr.appendChild(td);"\
+            "td = document.createElement('td'); tr.appendChild(td);"\
+            "td = document.createElement('td'); tr.appendChild(td);"\
+            "td.outerHTML='<td><button onclick=\"http_get(\\'/file?torrent=\\',\\''+btoa(task_name)+'\\',torrent_file)\">打开</button></td>';"\
         "}"\
     "}"\
     "function torrent_file(rsp, data){"\
         "document.getElementById('addr_input').value = atob(data);"\
-        "tbd = get_tbody('task', rsp.length);"\
+        "tb = get_tbody('task', rsp.length);"\
         "for (var i in rsp) {"\
             "item = rsp[i];"\
-            "tr = document.createElement('tr');"\
-            "cb = document.createElement('input');"\
-            "cb.type = 'checkbox';"\
-            "tr.appendChild(cb);"\
-            "td = document.createElement('td');"\
+            "tr = document.createElement('tr'); tb.appendChild(tr);"\
+            "td = document.createElement('td'); tr.appendChild(td);"\
+            "td.outerHTML = '<td><input type=\"checkbox\"></td>';"\
+            "td = document.createElement('td'); tr.appendChild(td);"\
             "td.innerText = decodeURIComponent(atob(item['file']));"\
-            "tr.appendChild(td);"\
-            "td = document.createElement('td');"\
+            "td = document.createElement('td'); tr.appendChild(td);"\
             "td.innerText = item['size'];"\
-            "tr.appendChild(td);"\
-            "tbd.appendChild(tr);"\
         "}"\
     "}"\
     "function task_add(){"\
-        "data = '';"\
+        "data = btoa(document.getElementById('addr_input').value);"\
         "tr = document.getElementById('task').childNodes[0].childNodes[1];"\
-        "if (tr != undefined && tr.childNodes[0].type == 'checkbox') {"\
-            "for (mask = ''; tr != null; tr = tr.nextSibling) {mask += tr.childNodes[0].checked * 1;}"\
-            "if (/1+/.test(mask)) {data = btoa(document.getElementById('addr_input').value) + '&msk=' + mask;} "\
+        "if (tr && tr.childNodes[0].childNodes[0].type == 'checkbox') {"\
+            "for (mask = '&msk='; tr; tr = tr.nextSibling) {mask += tr.childNodes[0].childNodes[0].checked * 1;}"\
+            "if (/1+/.test(mask)) {data += mask;} else {data = '';}"\
         "}"\
         "http_get('/task?add=', data, task_list);"\
     "}"\
