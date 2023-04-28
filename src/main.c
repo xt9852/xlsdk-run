@@ -48,14 +48,19 @@
             "else callback(JSON.parse(req.responseText), data);"\
         "}"\
     "}"\
-    "function tbody(count, input){"\
-        "document.getElementsByTagName('input')[0].value = input;"\
+    "function tbody(count, data){"\
+        "document.getElementsByTagName('input')[0].value = (data == 'task' || data == 'torrent') ? '' : data;"\
         "for (tbd = document.getElementsByTagName('tbody')[0]; tbd.childNodes.length > 1;){tbd.removeChild(tbd.childNodes[1]);}"\
-        "tbd.childNodes[0].childNodes[1].innerText = '任务(' + count + ')';"\
+        "show = (data == 'task') ? '' : 'none';"\
+        "title = tbd.childNodes[0].childNodes;"\
+        "title[1].innerText = '任务(' + count + ')';"\
+        "title[2].style.display = show;"\
+        "title[3].style.display = show;"\
+        "title[4].style.display = show;"\
         "return tbd;"\
     "}"\
     "function task_list(rsp, data){"\
-        "tb = tbody(rsp.length, '');"\
+        "tb = tbody(rsp.length, 'task');"\
         "for (i in rsp) {"\
             "tr = document.createElement('tr'); tb.appendChild(tr);"\
             "t1 = document.createElement('td'); tr.appendChild(t1);"\
@@ -76,19 +81,15 @@
         "}"\
     "}"\
     "function torrent_list(rsp, data){"\
-        "tb = tbody(rsp.length, '');"\
+        "tb = tbody(rsp.length, 'torrent');"\
         "for (i in rsp) {"\
-            "task_name = decodeURIComponent(atob(rsp[i].filename));"\
             "tr = document.createElement('tr'); tb.appendChild(tr);"\
             "t1 = document.createElement('td'); tr.appendChild(t1);"\
             "t2 = document.createElement('td'); tr.appendChild(t2);"\
             "t3 = document.createElement('td'); tr.appendChild(t3);"\
-            "t4 = document.createElement('td'); tr.appendChild(t4);"\
-            "t5 = document.createElement('td'); tr.appendChild(t5);"\
-            "t6 = document.createElement('td'); tr.appendChild(t6);"\
             "t1.innerText = i;"\
-            "t2.innerText = task_name;"\
-            "t6.outerHTML='<td><button onclick=\"http(\\'/file?torrent=\\',\\''+btoa(task_name)+'\\',torrent_file)\">打开</button></td>';"\
+            "t2.innerText = task_name = decodeURIComponent(atob(rsp[i].filename));"\
+            "t3.outerHTML='<td><button onclick=\"http(\\'/file?torrent=\\',\\''+btoa(task_name)+'\\',torrent_file)\">打开</button></td>';"\
         "}"\
     "}"\
     "function torrent_file(rsp, data){"\
