@@ -116,7 +116,7 @@
 "</script>"\
 "<div style='display:flex;margin-right:2'><input style='flex:1;margin-right:1'/><button onclick='download()'>下载</button></div>"\
 "<table width='100%' border='1' style='border-collapse:collapse'>"\
-    "<th width='30px'>ID</th><th>任务</th><th width='60px'>大小</th><th width='60px'>进度</th><th width='60px'>速度</th>"\
+    "<th width='30px'>ID</th><th>任务</th><th width='61px'>大小</th><th width='61px'>进度</th><th width='61px'>速度</th>"\
     "<th width='43px'><button onclick=\"http(\'/torrent\', \'\', torrent_list)\">种子</button></th>"\
 "</table>"
 
