@@ -36,89 +36,93 @@
 #define TITLE "DownloadSDKServerStart"
 
 /// 首页页面
-#define INDEX_PAGE "<meta charset='utf-8'>"\
-"<script>"\
-    "function http(url, data, callback){"\
-        "console.log(url + data);"\
-        "req = new XMLHttpRequest();"\
-        "req.open('GET', url + data);"\
-        "req.send(null);"\
-        "req.onload = function(){"\
-            "if (req.readyState != 4 || req.status != 200) alert('请求失败');"\
-            "else callback(JSON.parse(req.responseText), data);"\
-        "}"\
-    "}"\
-    "function tbody(count, data){"\
-        "document.getElementsByTagName('input')[0].value = (data == 'task' || data == 'torrent') ? '' : data;"\
-        "for (tbd = document.getElementsByTagName('tbody')[0]; tbd.childNodes.length > 1;){tbd.removeChild(tbd.childNodes[1]);}"\
-        "show = (data == 'task') ? '' : 'none';"\
-        "title = tbd.childNodes[0].childNodes;"\
-        "title[1].innerText = '任务(' + count + ')';"\
-        "title[2].style.display = show;"\
-        "title[3].style.display = show;"\
-        "title[4].style.display = show;"\
-        "return tbd;"\
-    "}"\
-    "function task_list(rsp, data){"\
-        "tb = tbody(rsp.length, 'task');"\
-        "for (i in rsp) {"\
-            "tr = document.createElement('tr'); tb.appendChild(tr);"\
-            "t1 = document.createElement('td'); tr.appendChild(t1);"\
-            "t2 = document.createElement('td'); tr.appendChild(t2);"\
-            "t3 = document.createElement('td'); tr.appendChild(t3);"\
-            "t4 = document.createElement('td'); tr.appendChild(t4);"\
-            "t5 = document.createElement('td'); tr.appendChild(t5);"\
-            "t6 = document.createElement('td'); tr.appendChild(t6);"\
-            "t3.align = 'right';"\
-            "t4.align = 'right';"\
-            "t5.align = 'right';"\
-            "t1.innerText = rsp[i].id;"\
-            "t2.innerText = decodeURIComponent(atob(rsp[i].task));"\
-            "t3.innerText = rsp[i].size;"\
-            "t4.innerText = rsp[i].prog + '%';"\
-            "t5.innerText = rsp[i].speed;"\
-            "t6.outerHTML = '<td><button onclick=\"http(\\'/task?del=\\',\\''+rsp[i].id+'\\', task_list)\">删除</button></td>';"\
-        "}"\
-    "}"\
-    "function torrent_list(rsp, data){"\
-        "tb = tbody(rsp.length, 'torrent');"\
-        "for (i in rsp) {"\
-            "tr = document.createElement('tr'); tb.appendChild(tr);"\
-            "t1 = document.createElement('td'); tr.appendChild(t1);"\
-            "t2 = document.createElement('td'); tr.appendChild(t2);"\
-            "t3 = document.createElement('td'); tr.appendChild(t3);"\
-            "t1.innerText = i;"\
-            "t2.innerText = task_name = decodeURIComponent(atob(rsp[i].filename));"\
-            "t3.outerHTML='<td><button onclick=\"http(\\'/file?torrent=\\',\\''+btoa(task_name)+'\\',torrent_file)\">打开</button></td>';"\
-        "}"\
-    "}"\
-    "function torrent_file(rsp, data){"\
-        "tb = tbody(rsp.length, atob(data));"\
-        "for (i in rsp) {"\
-            "tr = document.createElement('tr'); tb.appendChild(tr);"\
-            "t1 = document.createElement('td'); tr.appendChild(t1);"\
-            "t2 = document.createElement('td'); tr.appendChild(t2);"\
-            "t3 = document.createElement('td'); tr.appendChild(t3);"\
-            "t1.outerHTML = '<td><input type=\"checkbox\"></td>';"\
-            "t2.innerText = decodeURIComponent(atob(rsp[i].file));"\
-            "t3.innerText = rsp[i].size;"\
-        "}"\
-    "}"\
-    "function download(){"\
-        "data = btoa(document.getElementsByTagName('input')[0].value);"\
-        "tr = document.getElementsByTagName('tr')[1];"\
-        "if (tr && tr.childNodes[0].childNodes[0].type == 'checkbox') {"\
-            "for (mask = '&msk='; tr; tr = tr.nextSibling) {mask += tr.childNodes[0].childNodes[0].checked * 1;}"\
-            "if (/1+/.test(mask)) {data += mask;} else {data = '';}"\
-        "}"\
-        "http('/task?add=', data, task_list);"\
-    "}"\
-"</script>"\
-"<div style='display:flex;margin-right:2'><input style='flex:1;margin-right:1'/><button onclick='download()'>下载</button></div>"\
-"<table width='100%' border='1' style='border-collapse:collapse'>"\
-    "<th width='30px'>ID</th><th>任务</th><th width='61px'>大小</th><th width='61px'>进度</th><th width='61px'>速度</th>"\
-    "<th width='43px'><button onclick=\"http(\'/torrent\', \'\', torrent_list)\">种子</button></th>"\
-"</table>"
+#define INDEX_PAGE "<meta charset='utf-8'>\n\
+<script>\n\
+    function http(url, data, callback){\n\
+        console.log(url + data);\n\
+        req = new XMLHttpRequest();\n\
+        req.open('GET', url + data);\n\
+        req.send(null);\n\
+        req.onload = function(){\n\
+            if (req.readyState != 4 || req.status != 200) alert('请求失败');\n\
+            else callback(JSON.parse(req.responseText), data);\n\
+        }\n\
+    }\n\
+    function tbody(count, data){\n\
+        document.getElementsByTagName('input')[0].value = (data == 'task' || data == 'torrent') ? '' : data;\n\
+        for (tbd = document.getElementsByTagName('tbody')[0]; tbd.childNodes.length > 1;){tbd.removeChild(tbd.childNodes[1]);}\n\
+        title = tbd.childNodes[0].childNodes;\n\
+        title[5].innerText = '任务(' + count + ')';\n\
+        if (data == 'task') {\n\
+            title[2].style.display = '';\n\
+            title[3].style.display = '';\n\
+            title[4].style.display = '';\n\
+        } else if (data == 'torrent') {\n\
+            title[2].style.display = 'none';\n\
+            title[3].style.display = 'none';\n\
+            title[4].style.display = 'none';\n\
+        } else {\n\
+            title[2].style.display = '';\n\
+        }\n\
+        return tbd;\n\
+    }\n\
+    function task_list(rsp, data){\n\
+        tb = tbody(rsp.length, 'task');\n\
+        for (i in rsp) {\n\
+            tr = document.createElement('tr'); tb.appendChild(tr);\n\
+            t1 = document.createElement('td'); tr.appendChild(t1);\n\
+            t2 = document.createElement('td'); tr.appendChild(t2);\n\
+            t3 = document.createElement('td'); tr.appendChild(t3);\n\
+            t4 = document.createElement('td'); tr.appendChild(t4);\n\
+            t5 = document.createElement('td'); tr.appendChild(t5);\n\
+            t2.align = 'right';\n\
+            t3.align = 'right';\n\
+            t4.align = 'right';\n\
+            t1.outerHTML = '<td><button onclick=\"http(\\'/task?del=\\',\\''+rsp[i].id+'\\', task_list)\">删除</button></td>';\n\
+            t2.innerText = rsp[i].size;\n\
+            t3.innerText = rsp[i].prog + '%';\n\
+            t4.innerText = rsp[i].speed;\n\
+            t5.innerText = decodeURIComponent(atob(rsp[i].task));\n\
+        }\n\
+    }\n\
+    function torrent_list(rsp, data){\n\
+        tb = tbody(rsp.length, 'torrent');\n\
+        for (i in rsp) {\n\
+            task_name = decodeURIComponent(atob(rsp[i].filename));\n\
+            tr = document.createElement('tr'); tb.appendChild(tr);\n\
+            t1 = document.createElement('td'); tr.appendChild(t1);\n\
+            t2 = document.createElement('td'); tr.appendChild(t2);\n\
+            t1.outerHTML='<td><button onclick=\"http(\\'/file?torrent=\\',\\''+btoa(task_name)+'\\',torrent_file)\">打开</button></td>';\n\
+            t2.innerText = task_name;\n\
+        }\n\
+    }\n\
+    function torrent_file(rsp, data){\n\
+        tb = tbody(rsp.length, atob(data));\n\
+        for (i in rsp) {\n\
+            tr = document.createElement('tr'); tb.appendChild(tr);\n\
+            t1 = document.createElement('td'); tr.appendChild(t1);\n\
+            t2 = document.createElement('td'); tr.appendChild(t2);\n\
+            t3 = document.createElement('td'); tr.appendChild(t3);\n\
+            t1.outerHTML = '<td><input type=\"checkbox\"></td>';\n\
+            t2.innerText = rsp[i].size;\n\
+            t3.innerText = decodeURIComponent(atob(rsp[i].file));\n\
+        }\n\
+    }\n\
+    function download(){\n\
+        data = btoa(document.getElementsByTagName('input')[0].value);\n\
+        tr = document.getElementsByTagName('tr')[1];\n\
+        if (tr && tr.childNodes[0].childNodes[0].type == 'checkbox') {\n\
+                for (mask = '&msk='; tr; tr = tr.nextSibling) {mask += tr.childNodes[0].childNodes[0].checked * 1;}\n\
+                if (/1+/.test(mask)) {data += mask;} else {data = '';}\n\
+        }\n\
+        http('/task?add=', data, task_list);\n\
+    }\n\
+</script>\n\
+<div style='display:flex;margin-left:2'><button onclick='download()'>下载</button><input style='flex:1;margin-left:1'/></div>\n\
+<table width='100%' border='1' style='border-collapse:collapse;font-family:宋体'>\n\
+    <td width='43px'><button onclick=\"http(\'/torrent\', \'\', torrent_list)\">种子</button></td>\n\
+    <th width='60px'>大小</th><th width='60px'>进度</th><th width='60px'>速度</th><th>任务</th>\n\
+</table>"
 
 config              g_cfg                   = {0};  ///< 配置数据
 
