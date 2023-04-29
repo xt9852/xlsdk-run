@@ -80,7 +80,7 @@
             t4.align = 'right';\n\
             t1.outerHTML = '<td><button onclick=\"http(\\'/task?del=\\',\\''+rsp[i].id+'\\', task_list)\">删除</button></td>';\n\
             t2.innerText = rsp[i].size;\n\
-            t3.innerText = rsp[i].prog + '%';\n\
+            t3.innerText = rsp[i].prog;\n\
             t4.innerText = rsp[i].speed;\n\
             t5.innerText = decodeURIComponent(atob(rsp[i].task));\n\
         }\n\
@@ -299,7 +299,7 @@ int http_proc_task(const p_xt_http_data data)
         format_data(g_task[i].speed, speed, sizeof(speed));
 
         pos += snprintf(content + pos, data->len - pos,
-                       "{\"id\":%d,\"size\":\"%s\",\"prog\":\"%.2f\",\"speed\":\"%s\",\"task\":\"",
+                       "{\"id\":%d,\"size\":\"%s\",\"prog\":\"%.2f%%\",\"speed\":\"%s\",\"task\":\"",
                        g_task[i].id, size, g_task[i].prog, speed);
 
         len = sizeof(buf);
