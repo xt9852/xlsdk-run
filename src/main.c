@@ -78,7 +78,7 @@
             t2.align = 'right';\n\
             t3.align = 'right';\n\
             t4.align = 'right';\n\
-            t1.outerHTML = '<td><button onclick=\"http(\\'/task?del=\\',\\''+rsp[i].id+'\\', task_list)\">删除</button></td>';\n\
+            t1.outerHTML = '<td><button onclick=\"http(\\'/task?del=\\',\\''+rsp[i].id+'\\',task_list)\">删除</button></td>';\n\
             t2.innerText = rsp[i].size;\n\
             t3.innerText = rsp[i].prog;\n\
             t4.innerText = rsp[i].speed;\n\
@@ -112,15 +112,15 @@
         data = btoa(document.getElementsByTagName('input')[0].value);\n\
         tr = document.getElementsByTagName('tr')[1];\n\
         if (tr && tr.childNodes[0].childNodes[0].type == 'checkbox') {\n\
-                for (mask = '&msk='; tr; tr = tr.nextSibling) {mask += tr.childNodes[0].childNodes[0].checked * 1;}\n\
-                if (/1+/.test(mask)) {data += mask;} else {data = '';}\n\
+            for (mask = '&msk='; tr; tr = tr.nextSibling) {mask += tr.childNodes[0].childNodes[0].checked * 1;}\n\
+            if (/1+/.test(mask)) {data += mask;} else {data = '';}\n\
         }\n\
         http('/task?add=', data, task_list);\n\
     }\n\
 </script>\n\
 <div style='display:flex;margin-left:2'><button onclick='download()'>下载</button><input style='flex:1;margin-left:1'/></div>\n\
 <table width='100%' border='1' style='border-collapse:collapse;font-family:宋体'>\n\
-    <td width='43px'><button onclick=\"http(\'/torrent\', \'\', torrent_list)\">种子</button></td>\n\
+    <td width='43px'><button onclick=\"http(\'/torrent\',\'\',torrent_list)\">种子</button></td>\n\
     <th width='60px'>大小</th><th width='60px'>进度</th><th width='60px'>速度</th><th>任务</th>\n\
 </table>"
 
