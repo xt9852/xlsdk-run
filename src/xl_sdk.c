@@ -1458,17 +1458,16 @@ int xl_sdk_init()
     pthread_mutex_init(&g_task_mutex, NULL);
 
     pthread_t tid;
-    pthread_attr_t attr;
-    pthread_attr_init(&attr);
-    pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);    // 退出时自行释放所占用的资源
 
-    ret = pthread_create(&tid, &attr, xl_sdk_thread, NULL);
+    ret = pthread_create(&tid, NULL, xl_sdk_thread, NULL);
 
     if (ret != 0)
     {
         E("create thread fail, error:%d", ret);
         return -9;
     }
+
+    pthread_detach(tid);    // 使线程处于分离状态,线程资源由系统回收
 
     D("ok");
     return 0;

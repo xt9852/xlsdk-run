@@ -9,7 +9,7 @@
 #ifndef _CONFIG_H_
 #define _CONFIG_H_
 
-/// 配置数据
+/// 配置数据,配置文件应为utf8
 typedef struct _config
 {
     char    log_filename[512];  ///< 日志文件名
@@ -18,10 +18,11 @@ typedef struct _config
     int     log_backup;         ///< 日志文件保留数量
     int     log_clean;          ///< 首次打开日志文件时是否清空文件内容
 
-    char    http_ip[512];       ///< HTTP地址s
+    char    http_ip[512];       ///< HTTP地址
     int     http_port;          ///< HTTP端口
 
-    char    download_path[512]; ///< 下载路径
+    char    path_download[512]; ///< 下载路径
+    char    path_move[512];     ///< 完成路径
 
 } config, *p_config;            ///< 配置数据指针
 

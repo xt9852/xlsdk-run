@@ -255,11 +255,57 @@ int http_proc_task(const p_xt_http_data data)
 
     if (NULL != del)
     {
-        D("del:%s", del);
-
         unsigned int task_id = atoi(del);
+
+        for (unsigned int i = 0; i < g_task_count; i++)
+        {
+            if (g_task[i].type == TASK_BT && g_task[i].id == task_id && g_task[i].prog == 100)
+            {
+                D("prog:%f", g_task[i].prog);
+
+                int len;
+                int src_len;
+                int dst_len;
+                char path[MAX_PATH];
+                short src[MAX_PATH];
+                short dst[MAX_PATH];
+                char *temp = &(g_task[i].name[5]);
+                char *name = strtok_s(temp, "|", &temp);
+
+                for (i = 0; NULL != name; i++)
+                {
+                    src_len = MAX_PATH - 1;
+                    len = snprintf(path, sizeof(path), "%s\\%s", g_cfg.path_download, name);
+
+                    if (0 != utf8_unicode(path, len, src, &src_len))
+                    {
+                        E("utf8_unicode error %s", path);
+                        break;
+                    }
+
+                    dst_len = MAX_PATH - 1;
+                    len = snprintf(path, sizeof(path), "%s\\%s", g_cfg.path_move, name);
+
+                    if (0 != utf8_unicode(path, len, dst, &dst_len))
+                    {
+                        E("utf8_unicode error %s", path);
+                        break;
+                    }
+
+                    MoveFileW(src, dst);
+
+                    D("move:%s", path);
+
+                    name = strtok_s(NULL, "|", &temp);
+                }
+
+                break;
+            }
+        }
+
         xl_sdk_stop_task(task_id);
         xl_sdk_del_task(task_id);
+        D("del task:%s", del);
     }
 
     int  len;
@@ -277,7 +323,7 @@ int http_proc_task(const p_xt_http_data data)
             return -1;
         }
 
-        if (0 != xl_sdk_download(g_cfg.download_path, buf, msk, &g_torrent))
+        if (0 != xl_sdk_download(g_cfg.path_download, buf, msk, &g_torrent))
         {
             E("xl_sdk_download fail");
             return -2;
@@ -353,7 +399,7 @@ int http_proc_torrent(const p_xt_http_data data)
     char *content = data->content;
 
     content[0] = '[';
-    sprintf_s(filename, MAX_PATH, "%s\\*.torrent", g_cfg.download_path);
+    sprintf_s(filename, MAX_PATH, "%s\\*.torrent", g_cfg.path_download);
 
     WIN32_FIND_DATAA wfd;
 
@@ -371,7 +417,7 @@ int http_proc_torrent(const p_xt_http_data data)
 
         filename_len = sizeof(filename);
 
-        sprintf_s(buf, MAX_PATH, "%s\\%s", g_cfg.download_path, wfd.cFileName);
+        sprintf_s(buf, MAX_PATH, "%s\\%s", g_cfg.path_download, wfd.cFileName);
 
         if (0 != ansi_utf8(buf, strlen(buf), filename, &filename_len))
         {
@@ -533,6 +579,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         return -1;
     }
 
+    // 38是当前代码的根目录长度,日志中只保留代码的相对路径
     ret = log_init_ex(TITLE, g_cfg.log_level, g_cfg.log_cycle, g_cfg.log_backup, g_cfg.log_clean, 38, &g_log);
 
     if (ret != 0)
