@@ -255,7 +255,7 @@ int xl_sdk_call_sdk_func()
 
     if (0 != head[2])                                       // 返回值:0-成功
     {
-        E("recv %s len:%d ret:%d", XL_SDK_FUNC_NAME[p->func_id], head[2]);
+        E("recv %s len:%d ret:%d", XL_SDK_FUNC_NAME[p->func_id], p->len, head[2]);
         return head[2];
     }
 
@@ -1017,51 +1017,7 @@ int xl_sdk_start_task(unsigned int taskid, int task_type)
     {
         return -3;
     }
-/*
-    // 发送tracker服务器列表
-    if (!bt)// || 0 == g_data.announce_len
-    {
-        return 0;
-    }
 
-    //TCHAR info[MAX_PATH];
-
-    short *head = g_data.announce;
-
-    for (int i = 0; head < g_data.announce_tail; i++)
-    {
-        int len = ((DWORD*)head)[0];
-
-        SP(_T("announce_list[%d] len:%d"), i, len);
-        MessageBox(NULL, info, _T("announce_list"), MB_OK);
-
-        memcpy(info, head + 2, len * 2);
-
-        info[len] = L'\0';
-
-        MessageBox(NULL, info, _T("announce_list"), MB_OK);
-
-        head += 2 + len;
-    }
-
-    MessageBox(NULL, _T("XL_BatchAddBTTracker begin"), _T("XL_BatchAddBTTracker"), MB_OK);
-
-    int len = ((DWORD*)head)[0];
-
-    p->func_id = XL_BatchAddBTTracker;
-    p->data[0] = taskid;
-    p->data[1] = 0x65;
-    memcpy(p->data + 2, head, 4 + len * 2);
-    p->len = 0x0c + 4 + len * 2;
-    ret = call_sdk_func();
-
-    MessageBox(NULL, _T("XL_BatchAddBTTracker end"), _T("XL_BatchAddBTTracker"), MB_OK);
-
-    if (0 != ret)
-    {
-        return -4;
-    }
-*/
     return 0;
 }
 
@@ -1461,7 +1417,7 @@ int xl_sdk_init()
 
     ret = pthread_create(&tid, NULL, xl_sdk_thread, NULL);
 
-    if (ret != 0)
+    if (0 != ret)
     {
         E("create thread fail, error:%d", ret);
         return -9;

@@ -28,9 +28,6 @@
 #include "xt_character_set.h"
 #include "xl_sdk.h"
 #include "torrent.h"
-#define  PCRE2_STATIC
-#define  PCRE2_CODE_UNIT_WIDTH 8
-#include "pcre2.h"
 
 /// 程序标题
 #define TITLE "DownloadSDKServerStart"
@@ -119,7 +116,7 @@
     }\n\
 </script>\n\
 <div style='display:flex;margin-left:2'><button onclick='download()'>下载</button><input style='flex:1;margin-left:1'/></div>\n\
-<table width='100%' border='1' style='border-collapse:collapse;font-family:宋体'>\n\
+<table width='100%' border='1' style='margin-top:10;border-collapse:collapse;font-family:宋体'>\n\
     <td width='43px'><button onclick=\"http(\'/torrent\',\'\',torrent_list)\">种子</button></td>\n\
     <th width='60px'>大小</th><th width='60px'>进度</th><th width='60px'>速度</th><th>任务</th>\n\
 </table>"
@@ -584,7 +581,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     if (ret != 0)
     {
-        sprintf_s(m, sizeof(m), "init log test fail %d", ret);
+        sprintf_s(m, sizeof(m), "init log fail %d", ret);
         MessageBoxA(NULL, m, TITLE, MB_OK);
         return -2;
     }
