@@ -49,15 +49,15 @@
         document.getElementsByTagName('input')[0].value = (data == 'task' || data == 'torrent') ? '' : data;\n\
         for (tbd = document.getElementsByTagName('tbody')[0]; tbd.childNodes.length > 1;){tbd.removeChild(tbd.childNodes[1]);}\n\
         title = tbd.childNodes[0].childNodes;\n\
-        title[5].innerText = '任务(' + count + ')';\n\
+        title[8].innerText = '任务(' + count + ')';\n\
         if (data == 'task') {\n\
             title[2].style.display = '';\n\
-            title[3].style.display = '';\n\
             title[4].style.display = '';\n\
+            title[6].style.display = '';\n\
         } else if (data == 'torrent') {\n\
             title[2].style.display = 'none';\n\
-            title[3].style.display = 'none';\n\
             title[4].style.display = 'none';\n\
+            title[6].style.display = 'none';\n\
         } else {\n\
             title[2].style.display = '';\n\
         }\n\
@@ -115,10 +115,16 @@
         http('/task?add=', data, task_list);\n\
     }\n\
 </script>\n\
-<div style='display:flex;margin-left:2'><button onclick='download()'>下载</button><input style='flex:1;margin-left:1'/></div>\n\
-<table width='100%' border='1' style='margin-top:10;border-collapse:collapse;font-family:宋体'>\n\
+<div style='display:flex;margin:0 0 10 2'>\n\
+    <button onclick='download()'>下载</button>\n\
+    <input style='flex:1;margin-left:1'/>\n\
+</div>\n\
+<table border='1' style='width:100%;border-collapse:collapse;font-family:宋体'>\n\
     <td width='43px'><button onclick=\"http(\'/torrent\',\'\',torrent_list)\">种子</button></td>\n\
-    <th width='60px'>大小</th><th width='60px'>进度</th><th width='60px'>速度</th><th>任务</th>\n\
+    <th width='60px'>大小</th>\n\
+    <th width='60px'>进度</th>\n\
+    <th width='60px'>速度</th>\n\
+    <th>任务</th>\n\
 </table>"
 
 config              g_cfg                   = {0};  ///< 配置数据
