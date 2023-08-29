@@ -204,15 +204,26 @@ int config_log(cJSON *root, p_config config)
 
     config->log_backup = backup->valueint;
 
-    cJSON *clean = cJSON_GetObjectItem(log, "clean");
+    cJSON *clean_log = cJSON_GetObjectItem(log, "clean_log");
 
-    if (NULL == clean)
+    if (NULL == clean_log)
     {
-        printf("%s|config no log.clean value error\n", __FUNCTION__);
+        printf("%s|config no log.clean_log value error\n", __FUNCTION__);
         return -9;
     }
 
-    config->log_clean = clean->valueint;
+    config->log_clean_log = clean_log->valueint;
+
+
+    cJSON *clean_file = cJSON_GetObjectItem(log, "clean_file");
+
+    if (NULL == clean_file)
+    {
+        printf("%s|config no log.clean_file value error\n", __FUNCTION__);
+        return -9;
+    }
+
+    config->log_clean_file = clean_file->valueint;
 
     return 0;
 }

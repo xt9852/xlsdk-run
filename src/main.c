@@ -30,7 +30,7 @@
 #include "torrent.h"
 
 /// 程序标题
-#define TITLE "DownloadSDKServerStart"
+#define TITLE "DownloadSDKServerRun"
 
 /// 首页页面
 #define INDEX_PAGE "<meta charset='utf-8'>\n\
@@ -126,6 +126,8 @@
     <th width='60px'>速度</th>\n\
     <th>任务</th>\n\
 </table>"
+
+char                g_path[MAX_PATH]        = "";   ///< 文件路径
 
 config              g_cfg                   = {0};  ///< 配置数据
 
@@ -571,24 +573,36 @@ void on_menu_exit(HWND wnd, void *param)
  */
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
-    char m[MAX_PATH];
+    char message[MAX_PATH];
 
-    int ret = config_init(TITLE".json", &g_cfg);
+    GetModuleFileNameA(hInstance, g_path, MAX_PATH);
+
+    char *title = strrchr(g_path, '\\');
+    *title++ = '\0';
+
+    char *end = strrchr(title, '.');
+    *end = '\0';
+
+    char filename[MAX_PATH];
+
+    snprintf(filename, MAX_PATH, "%s.json", title);
+
+    int ret = config_init(filename, &g_cfg);
 
     if (ret != 0)
     {
-        sprintf_s(m, sizeof(m), "init config fail %d", ret);
-        MessageBoxA(NULL, m, TITLE, MB_OK);
+        sprintf_s(message, sizeof(message), "init config fail %d", ret);
+        MessageBoxA(NULL, message, title, MB_OK);
         return -1;
     }
 
-    // 38是当前代码的根目录长度,日志中只保留代码的相对路径
-    ret = log_init_ex(TITLE, g_cfg.log_level, g_cfg.log_cycle, g_cfg.log_backup, g_cfg.log_clean, 38, &g_log);
+    // 22是当前代码的根目录长度,日志中只保留代码的相对路径
+    ret = log_init_ex(g_path, title, g_cfg.log_level, g_cfg.log_cycle, g_cfg.log_backup, g_cfg.log_clean_log, g_cfg.log_clean_file, 22, &g_log);
 
     if (ret != 0)
     {
-        sprintf_s(m, sizeof(m), "init log fail %d", ret);
-        MessageBoxA(NULL, m, TITLE, MB_OK);
+        sprintf_s(message, sizeof(message), "init log fail %d", ret);
+        MessageBoxA(NULL, message, title, MB_OK);
         return -2;
     }
 
@@ -610,7 +624,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     notify_menu_info menu[] = { {0, L"退出(&E)", NULL, on_menu_exit} };
 
-    ret = notify_init(hInstance, IDI_GREEN, TITLE, SIZEOF(menu), menu);
+    ret = notify_init(hInstance, IDI_GREEN, "DownloadSDKServerRun", SIZEOF(menu), menu);
 
     if (0 != ret)
     {

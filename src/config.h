@@ -16,7 +16,8 @@ typedef struct _config
     int     log_level;          ///< 日志级别(调试,信息,警告,错误)
     int     log_cycle;          ///< 日志文件保留周期(时,天,周)
     int     log_backup;         ///< 日志文件保留数量
-    int     log_clean;          ///< 首次打开日志文件时是否清空文件内容
+    int     log_clean_log;      ///< 首次打开日志文件时是否清空文件内容
+    int     log_clean_file;     ///< 首次打开日志文件时是否删除过期文件
 
     char    http_ip[512];       ///< HTTP地址
     int     http_port;          ///< HTTP端口
