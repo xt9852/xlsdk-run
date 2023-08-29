@@ -106,25 +106,25 @@ int config_get_json(const char *filename, cJSON **root)
 /**
  *\brief        解析log节点数据
  *\param[in]    root        JSON根节点
- *\param[out]   config      配置数据
+ *\param[out]   log         日志数据
  *\return       0           成功
  */
-int config_log(cJSON *root, p_config config)
+int config_log(cJSON *root, p_xt_log log)
 {
-    if (NULL == root || NULL == config)
+    if (NULL == root || NULL == log)
     {
         return -1;
     }
 
-    cJSON *log = cJSON_GetObjectItem(root, "log");
+    cJSON *item = cJSON_GetObjectItem(root, "log");
 
-    if (NULL == log)
+    if (NULL == item)
     {
         printf("%s|config json no log node\n", __FUNCTION__);
         return -2;
     }
 
-    cJSON *name = cJSON_GetObjectItem(log, "name");
+    cJSON *name = cJSON_GetObjectItem(item, "name");
 
     if (NULL == name)
     {
@@ -132,9 +132,9 @@ int config_log(cJSON *root, p_config config)
         return -3;
     }
 
-    strncpy_s(config->log_filename, sizeof(config->log_filename), name->valuestring, sizeof(config->log_filename) - 1);
+    strncpy_s(log->filename, sizeof(log->filename), name->valuestring, sizeof(log->filename) - 1);
 
-    cJSON *level = cJSON_GetObjectItem(log, "level");
+    cJSON *level = cJSON_GetObjectItem(item, "level");
 
     if (NULL == level)
     {
@@ -144,19 +144,19 @@ int config_log(cJSON *root, p_config config)
 
     if (0 == strcmp(level->valuestring, "debug"))
     {
-        config->log_level = LOG_LEVEL_DEBUG;
+        log->level = LOG_LEVEL_DEBUG;
     }
     else if (0 == strcmp(level->valuestring, "info"))
     {
-        config->log_level = LOG_LEVEL_INFO;
+        log->level = LOG_LEVEL_INFO;
     }
     else if (0 == strcmp(level->valuestring, "warn"))
     {
-        config->log_level = LOG_LEVEL_WARN;
+        log->level = LOG_LEVEL_WARN;
     }
     else if (0 == strcmp(level->valuestring, "error"))
     {
-        config->log_level = LOG_LEVEL_ERROR;
+        log->level = LOG_LEVEL_ERROR;
     }
     else
     {
@@ -164,7 +164,7 @@ int config_log(cJSON *root, p_config config)
         return -5;
     }
 
-    cJSON *cycle = cJSON_GetObjectItem(log, "cycle");
+    cJSON *cycle = cJSON_GetObjectItem(item, "cycle");
 
     if (NULL == cycle)
     {
@@ -174,19 +174,19 @@ int config_log(cJSON *root, p_config config)
 
     if (0 == strcmp(cycle->valuestring, "minute"))
     {
-        config->log_cycle = LOG_CYCLE_MINUTE;
+        log->cycle = LOG_CYCLE_MINUTE;
     }
     else if (0 == strcmp(cycle->valuestring, "hour"))
     {
-        config->log_cycle = LOG_CYCLE_HOUR;
+        log->cycle = LOG_CYCLE_HOUR;
     }
     else if (0 == strcmp(cycle->valuestring, "day"))
     {
-        config->log_cycle = LOG_CYCLE_DAY;
+        log->cycle = LOG_CYCLE_DAY;
     }
     else if (0 == strcmp(cycle->valuestring, "week"))
     {
-        config->log_cycle = LOG_CYCLE_WEEK;
+        log->cycle = LOG_CYCLE_WEEK;
     }
     else
     {
@@ -194,7 +194,7 @@ int config_log(cJSON *root, p_config config)
         return -7;
     }
 
-    cJSON *backup = cJSON_GetObjectItem(log, "backup");
+    cJSON *backup = cJSON_GetObjectItem(item, "backup");
 
     if (NULL == backup)
     {
@@ -202,9 +202,9 @@ int config_log(cJSON *root, p_config config)
         return -8;
     }
 
-    config->log_backup = backup->valueint;
+    log->backup = backup->valueint;
 
-    cJSON *clean_log = cJSON_GetObjectItem(log, "clean_log");
+    cJSON *clean_log = cJSON_GetObjectItem(item, "clean_log");
 
     if (NULL == clean_log)
     {
@@ -212,10 +212,10 @@ int config_log(cJSON *root, p_config config)
         return -9;
     }
 
-    config->log_clean_log = clean_log->valueint;
+    log->clean_log = clean_log->valueint;
 
 
-    cJSON *clean_file = cJSON_GetObjectItem(log, "clean_file");
+    cJSON *clean_file = cJSON_GetObjectItem(item, "clean_file");
 
     if (NULL == clean_file)
     {
@@ -223,7 +223,7 @@ int config_log(cJSON *root, p_config config)
         return -9;
     }
 
-    config->log_clean_file = clean_file->valueint;
+    log->clean_file = clean_file->valueint;
 
     return 0;
 }
@@ -340,7 +340,7 @@ int config_init(const char *filename, p_config config)
         return -2;
     }
 
-    if (0 != config_log(root, config))
+    if (0 != config_log(root, config->log))
     {
         printf("%s|config json log node error\n", __FUNCTION__);
         return -3;

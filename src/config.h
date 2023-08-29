@@ -8,16 +8,12 @@
  */
 #ifndef _CONFIG_H_
 #define _CONFIG_H_
+#include "xt_log.h"
 
 /// 配置数据,配置文件应为utf8
 typedef struct _config
 {
-    char    log_filename[512];  ///< 日志文件名
-    int     log_level;          ///< 日志级别(调试,信息,警告,错误)
-    int     log_cycle;          ///< 日志文件保留周期(时,天,周)
-    int     log_backup;         ///< 日志文件保留数量
-    int     log_clean_log;      ///< 首次打开日志文件时是否清空文件内容
-    int     log_clean_file;     ///< 首次打开日志文件时是否删除过期文件
+    p_xt_log  log;              ///< 日志
 
     char    http_ip[512];       ///< HTTP地址
     int     http_port;          ///< HTTP端口

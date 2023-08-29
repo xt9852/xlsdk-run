@@ -131,7 +131,7 @@ char                g_path[MAX_PATH]        = "";   ///< 文件路径
 
 config              g_cfg                   = {0};  ///< 配置数据
 
-xt_log              g_log                   = {0};  ///< 日志数据
+xt_log              g_log                   = {0};  ///< 日志文件
 
 xt_http             g_http                  = {0};  ///< HTTP服务
 
@@ -575,9 +575,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 {
     char message[MAX_PATH];
 
-    GetModuleFileNameA(hInstance, g_path, MAX_PATH);
+    GetModuleFileNameA(hInstance, g_log.path, MAX_PATH);
 
-    char *title = strrchr(g_path, '\\');
+    char *title = strrchr(g_log.path, '\\');
     *title++ = '\0';
 
     char *end = strrchr(title, '.');
@@ -586,6 +586,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     char filename[MAX_PATH];
 
     snprintf(filename, MAX_PATH, "%s.json", title);
+
+    g_cfg.log = &g_log;
 
     int ret = config_init(filename, &g_cfg);
 
@@ -597,7 +599,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     }
 
     // 22是当前代码的根目录长度,日志中只保留代码的相对路径
-    ret = log_init_ex(g_path, title, g_cfg.log_level, g_cfg.log_cycle, g_cfg.log_backup, g_cfg.log_clean_log, g_cfg.log_clean_file, 22, &g_log);
+    ret = log_init(g_cfg.log);
 
     if (ret != 0)
     {
