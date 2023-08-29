@@ -29,9 +29,6 @@
 #include "xl_sdk.h"
 #include "torrent.h"
 
-/// 程序标题
-#define TITLE "DownloadSDKServerRun"
-
 /// 首页页面
 #define INDEX_PAGE "<meta charset='utf-8'>\n\
 <script>\n\
