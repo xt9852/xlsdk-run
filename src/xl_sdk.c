@@ -1,10 +1,10 @@
 /**
- *\copyright    XT Tech. Co., Ltd.
- *\file         xl_sdk.c
- *\author       xt
- *\version      1.0.0
- *\date         2022.02.08
- *\brief        迅雷SDK实现,UTF-8(No BOM)
+ *\file     xl_sdk.c
+ *\note     UTF-8
+ *\author   xt
+ *\version  1.0.0
+ *\date     2022.02.08
+ *\brief    迅雷SDK实现
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -15,35 +15,33 @@
 #include "xt_log.h"
 #include "xt_character_set.h"
 
+#define FLAG "BDAF7A63-568C-43ab-9406-D145CF03B08C" ///< XL下载器ID
 
-/// XL下载器ID
-#define FLAG "BDAF7A63-568C-43ab-9406-D145CF03B08C"
 
-/// 参数头
-typedef struct _xl_arg_head
+typedef struct _xl_arg_head                         ///  参数头
 {
-    DWORD               len;                ///< 参数长度
+    DWORD               len;                        ///< 参数长度
 
-    char                data[1];            ///< 参数
+    char                data[1];                    ///< 参数
 
-}xl_arg_head, *p_xl_arg_head;               ///< 参数头节点
+} xl_arg_head, *p_xl_arg_head;                      ///< 参数头节点
 
-/// 数据头
-typedef struct _xl_data_head
+
+typedef struct _xl_data_head                        ///  数据头
 {
-    DWORD               len;                ///< 数据长度(不包含本身4字节)
+    DWORD               len;                        ///< 数据长度(不包含本身4字节)
 
-    DWORD               func_id;            ///< 函数ID
+    DWORD               func_id;                    ///< 函数ID
 
     union {
 
-    xl_arg_head         arg1;               ///< 参数1头节点
+    xl_arg_head         arg1;                       ///< 参数1头节点
 
-    DWORD               data[1];            ///< 参数1整数
+    DWORD               data[1];                    ///< 参数1整数
 
     };
 
-}xl_data_head, *p_xl_data_head;             ///< 数据包头节点
+} xl_data_head, *p_xl_data_head;                    ///< 数据包头节点
 
 int             g_cur_process_id        = 0;        ///< 本进程ID
 int             g_sdk_process_id        = 0;        ///< SDK进程ID
@@ -228,7 +226,7 @@ const char *XL_SDK_FUNC_NAME[] =
 };
 
 /**
- *\brief    调用SDK的函数
+ *\brief        调用SDK的函数
  *\return   0   成功
  */
 int xl_sdk_call_sdk_func()
@@ -264,7 +262,7 @@ int xl_sdk_call_sdk_func()
 }
 
 /**
- *\brief    打开共享内存和内存操作信号,RecvShareMemory,SendShareMemory
+ *\brief        打开共享内存和内存操作信号,RecvShareMemory,SendShareMemory
  *\return   0   成功
  */
 int xl_sdk_open_share_memory_event(bool reopen)
@@ -404,7 +402,7 @@ int xl_sdk_open_share_memory_event(bool reopen)
 }
 
 /**
- *\brief    创建SDK的进程,"C:\***\DownloadSDKServer.exe" BDAF7A63-568C-43ab-9406-D145CF03B08C:2824(父进程ID)
+ *\brief        创建SDK的进程,"C:\***\DownloadSDKServer.exe" BDAF7A63-568C-43ab-9406-D145CF03B08C:2824(父进程ID)
  *\return   0   成功
  */
 int xl_sdk_create_download_process()
@@ -431,7 +429,7 @@ int xl_sdk_create_download_process()
 }
 
 /**
- *\brief    创建互斥和信号,ProxyAliveMutex,ServerStartUpEvent
+ *\brief        创建互斥和信号,ProxyAliveMutex,ServerStartUpEvent
  *\return   0   成功
  */
 int xl_sdk_create_ServerStartUpEvent()
@@ -465,7 +463,7 @@ int xl_sdk_create_ServerStartUpEvent()
 }
 
 /**
- *\brief    创建信号,发送数据1,接收数据2,发送数据3
+ *\brief        创建信号,发送数据1,接收数据2,发送数据3
  *\return   0   成功
  */
 int xl_sdk_open_AccetpReturnEvent()
@@ -492,7 +490,7 @@ int xl_sdk_open_AccetpReturnEvent()
 }
 
 /**
- *\brief    打开互斥,ClientAliveMutex
+ *\brief        打开互斥,ClientAliveMutex
  *\return   0   成功
  */
 int xl_sdk_open_ClientAliveMutex()
@@ -517,7 +515,7 @@ int xl_sdk_open_ClientAliveMutex()
 }
 
 /**
- *\brief    得到共享内存ID,发送数据1,接收数据2,发送数据3
+ *\brief        得到共享内存ID,发送数据1,接收数据2,发送数据3
  *\return   0   成功
  */
 int xl_sdk_call_get_share_memory_id()
@@ -565,7 +563,7 @@ int xl_sdk_call_get_share_memory_id()
 }
 
 /**
- *\brief    初始化SDK,调用XL_Init,XL_GetPeerId,XL_SetUserInfo,XL_SetGlobalExtInfo,XL_SetDownloadSpeedLimit,XL_SetUploadSpeedLimit
+ *\brief        初始化SDK,调用XL_Init,XL_GetPeerId,XL_SetUserInfo,XL_SetGlobalExtInfo,XL_SetDownloadSpeedLimit,XL_SetUploadSpeedLimit
  *\return   0   成功
  */
 int xl_sdk_call_sdk_init()
@@ -682,12 +680,12 @@ int xl_sdk_call_sdk_init()
 }
 
 /**
- *\brief        添加服务器
- *\param[in]    taskid      任务ID
- *\param[in]    count       服务器数量
- *\param[in]    data        服务器数据
- *\param[in]    data_len    数据长度
- *\return       0           成功
+ *\brief                        添加服务器
+ *\param[in]    taskid          任务ID
+ *\param[in]    count           服务器数量
+ *\param[in]    data            服务器数据
+ *\param[in]    data_len        数据长度
+ *\return       0               成功
  */
 int xl_sdk_add_bt_tracker(int taskid, int count, const short *data, int data_len)
 {
@@ -710,7 +708,7 @@ int xl_sdk_add_bt_tracker(int taskid, int count, const short *data, int data_len
 }
 
 /**
- *\brief        创建下载BT文件任务
+ *\brief                        创建下载BT文件任务
  *\param[in]    torrent         种子数据
  *\param[in]    path            本地下载目录
  *\param[in]    mask            文件下载列表,例:"001",0-不下载,1-下载,文件按拼音顺序排列
@@ -811,7 +809,7 @@ int xl_sdk_create_bt_task(p_bt_torrent torrent, const char *path, const char *ma
 }
 
 /**
- *\brief        创建下载URL文件任务
+ *\brief                        创建下载URL文件任务
  *\param[in]    url             URL地址
  *\param[in]    path            本地下载目录
  *\param[out]   task            任务
@@ -900,7 +898,7 @@ int xl_sdk_create_url_task(const char *url, const char *path, p_xl_task task)
 }
 
 /**
- *\brief        创建下载磁力文件任务
+ *\brief                        创建下载磁力文件任务
  *\param[in]    magnet          磁力URL
  *\param[in]    path            本地存储路径
  *\param[out]   task            任务
@@ -978,7 +976,7 @@ int xl_sdk_create_magnet_task(const char *magnet, const char *path, p_xl_task ta
 }
 
 /**
- *\brief        开始下载文件
+ *\brief                        开始下载文件
  *\param[in]    taskid          任务ID
  *\param[in]    task_type       任务类型
  *\return       0               成功
@@ -1022,7 +1020,7 @@ int xl_sdk_start_task(unsigned int taskid, int task_type)
 }
 
 /**
- *\brief        停止下载文件
+ *\brief                        停止下载文件
  *\param[in]    taskid          任务ID
  *\return       0               成功
  */
@@ -1053,9 +1051,9 @@ int xl_sdk_stop_task(unsigned int taskid)
 }
 
 /**
- *\brief        删除任务数据
- *\param[in]    taskid      任务ID
- *\return       0           成功
+ *\brief                        删除任务数据
+ *\param[in]    taskid          任务ID
+ *\return       0               成功
  */
 int xl_sdk_del_task(unsigned int taskid)
 {
@@ -1118,7 +1116,7 @@ int xl_sdk_del_task(unsigned int taskid)
 }
 
 /**
- *\brief        得到下载任务信息
+ *\brief                        得到下载任务信息
  *\param[in]    taskid          任务ID
  *\param[out]   size            下载的数据总大小
  *\param[out]   down            已经下载的数据总大小
@@ -1152,7 +1150,7 @@ int xl_sdk_get_task_info(unsigned int taskid, unsigned __int64 *size, unsigned _
 }
 
 /**
- *\brief        下载文件
+ *\brief                        下载文件
  *\param[in]    path            本地地址
  *\param[in]    addr            文件地址
  *\param[in]    mask            下载BT文件时选中的要下载的文件,如:"10100",1-选中,0-末选
@@ -1270,9 +1268,9 @@ int xl_sdk_download(const char *path, const char *addr, const char *mask, p_bt_t
 }
 
 /**
- *\brief        SSH主线函数
- *\param[in]    param   参数数据
- *\return               无
+ *\brief                        SSH主线函数
+ *\param[in]    param           参数数据
+ *\return                       无
  */
 void* xl_sdk_thread(void *param)
 {
@@ -1337,8 +1335,8 @@ void* xl_sdk_thread(void *param)
 }
 
 /**
- *\brief    初始化SDK
- *\return   0   成功
+ *\brief                        初始化SDK
+ *\return       0               成功
  */
 int xl_sdk_init()
 {

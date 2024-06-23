@@ -1,23 +1,20 @@
 /**
- *\copyright    XT Tech. Co., Ltd.
- *\file         xl_sdk.h
- *\author       xt
- *\version      1.0.0
- *\date         2022.02.08
- *\brief        迅雷SDK定义,UTF-8(No BOM)
+ *\file     xl_sdk.h
+ *\note     UTF-8
+ *\author   xt
+ *\version  1.0.0
+ *\date     2022.02.08
+ *\brief    迅雷SDK定义
  */
 #ifndef _XL_SDK_H_
 #define _XL_SDK_H_
 #include "torrent.h"
 
-/// 任务数量
-#define TASK_SIZE       128
+#define TASK_SIZE       128                                 ///< 任务数量
 
-/// 任务名长度
-#define TASK_NAME_SIZE  1024
+#define TASK_NAME_SIZE  1024                                ///< 任务名长度
 
-/// 任务类型
-enum
+enum                                                        /// 任务类型
 {
     TASK_NULL,                                              ///< 无任务
     TASK_MAGNET,                                            ///< 磁力
@@ -25,8 +22,8 @@ enum
     TASK_URL                                                ///< 普通文件
 };
 
-/// 任务信息
-typedef struct _xl_task
+
+typedef struct _xl_task                                     ///  任务信息
 {
     unsigned int        id;                                 ///< 任务ID
 
@@ -54,16 +51,16 @@ typedef struct _xl_task
 
     double              prog;                               ///< 下载进度
 
-} xl_task, *p_xl_task;                                      ///< 任务信息指针
+} xl_task, *p_xl_task;
 
 /**
- *\brief   初始化SDK
- *\return  0-成功
+ *\brief    初始化SDK
+ *\return   0-成功
  */
 int xl_sdk_init();
 
 /**
- *\brief        开始下载文件
+ *\brief                    开始下载文件
  *\param[in]    taskid      任务ID
  *\param[in]    task_type   任务类型
  *\return       0           成功
@@ -71,26 +68,26 @@ int xl_sdk_init();
 int xl_sdk_start_task(unsigned int taskid, int task_type);
 
 /**
- *\brief        停止下载文件
+ *\brief                    停止下载文件
  *\param[in]    taskid      任务ID
  *\return       0           成功
  */
 int xl_sdk_stop_task(unsigned int taskid);
 
 /**
- *\brief        删除任务数据
+ *\brief                    删除任务数据
  *\param[in]    taskid      任务ID
  *\return       0           成功
  */
 int xl_sdk_del_task(unsigned int taskid);
 
 /**
- *\brief        下载文件
- *\param[in]    path            本地地址
- *\param[in]    addr            文件地址
- *\param[in]    mask            下载BT文件时选中的要下载的文件,如:"10100",1-选中,0-末选
- *\param[in]    torrent         种子数据
- *\return       0               成功
+ *\brief                    下载文件
+ *\param[in]    path        本地地址
+ *\param[in]    addr        文件地址
+ *\param[in]    mask        下载BT文件时选中的要下载的文件,如:"10100",1-选中,0-末选
+ *\param[in]    torrent     种子数据
+ *\return       0           成功
  */
 int xl_sdk_download(const char *path, const char *addr, const char *mask, p_bt_torrent torrent);
 

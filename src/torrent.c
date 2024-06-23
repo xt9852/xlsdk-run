@@ -1,10 +1,10 @@
 /**
- *\copyright    XT Tech. Co., Ltd.
- *\file         torrent.c
- *\author       xt
- *\version      1.0.0
- *\date         2022.02.08
- *\brief        bencode编码的种子文件解析实现,UTF-8(No BOM)
+ *\file     torrent.c
+ *\note     UTF-8
+ *\author   xt
+ *\version  1.0.0
+ *\date     2022.02.08
+ *\brief    bencode编码的种子文件解析实现
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -33,11 +33,11 @@ enum
 int bencode_dict(const char *s, unsigned int len, p_bt_torrent torrent);
 
 /**
- *\brief        解析bencode编码的字符串,格式:{字符串长度}字符串,utf8
+ *\brief                    解析bencode编码的字符串,格式:{字符串长度}字符串,utf8
  *\param[in]    s           数据
  *\param[in]    len         数据长
  *\param[out]   torrent     种子数据
- *\return       文本长度,小于0错误
+ *\return                   文本长度,小于0错误
  */
 int bencode_str(const char *s, unsigned int len, p_bt_torrent torrent)
 {
@@ -130,11 +130,11 @@ int bencode_str(const char *s, unsigned int len, p_bt_torrent torrent)
 }
 
 /**
- *\brief        解析bencode编码的整数,格式:i{整数}e
+ *\brief                    解析bencode编码的整数,格式:i{整数}e
  *\param[in]    s           数据
  *\param[in]    len         数据长
  *\param[out]   torrent     种子数据
- *\return       文本长度,小于0错误
+ *\return                   文本长度,小于0错误
  */
 int bencode_int(const char *s, unsigned int len, p_bt_torrent torrent)
 {
@@ -175,11 +175,11 @@ int bencode_int(const char *s, unsigned int len, p_bt_torrent torrent)
 }
 
 /**
- *\brief        解析bencode编码的列表,格式:l{bencoding编码类型}e
+ *\brief                    解析bencode编码的列表,格式:l{bencoding编码类型}e
  *\param[in]    s           数据
  *\param[in]    len         数据长
  *\param[out]   torrent     种子数据
- *\return       文本长度,小于0错误
+ *\return                   文本长度,小于0错误
  */
 int bencode_list(const char *s, unsigned int len, p_bt_torrent torrent)
 {
@@ -259,11 +259,11 @@ int bencode_list(const char *s, unsigned int len, p_bt_torrent torrent)
 }
 
 /**
- *\brief        解析bencode编码的字典,格式:d{bencoding字符串}{bencoding编码类型}e
+ *\brief                    解析bencode编码的字典,格式:d{bencoding字符串}{bencoding编码类型}e
  *\param[in]    s           数据
  *\param[in]    len         数据长
  *\param[out]   torrent     种子数据
- *\return       文本长度,小于0错误
+ *\return                   文本长度,小于0错误
  */
 int bencode_dict(const char *s, unsigned int len, p_bt_torrent torrent)
 {
@@ -318,7 +318,7 @@ int bencode_dict(const char *s, unsigned int len, p_bt_torrent torrent)
 }
 
 /**
- *\brief        打开文件取得文件数据
+ *\brief                    打开文件取得文件数据
  *\param[in]    filename    文件名
  *\param[out]   data        数据
  *\param[out]   len         数据长
@@ -348,7 +348,7 @@ int load_file_data(const char *filename, char **data, unsigned int *len)
 }
 
 /**
- *\brief        解析种子文件
+ *\brief                    解析种子文件
  *\param[in]    filename    种子文件名
  *\param[out]   torrent     种子数据
  *\return       0           成功

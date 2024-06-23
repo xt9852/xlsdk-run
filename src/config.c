@@ -1,10 +1,10 @@
 ﻿/**
- *\copyright    XT Tech. Co., Ltd.
- *\file         config.c
- *\author       xt
- *\version      1.0.0
- *\date         2022.02.08
- *\brief        配置模块实现,UTF-8(No BOM)
+ *\file     config.c
+ *\note     UTF-8
+ *\author   xt
+ *\version  1.0.0
+ *\date     2022.02.08
+ *\brief    配置模块实现
  */
 #include <stdio.h>
 #include <stdlib.h>

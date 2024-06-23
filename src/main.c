@@ -1,11 +1,10 @@
 /**
- *\copyright    XT Tech. Co., Ltd.
- *\file         main.c
- *\author       xt
- *\version      1.0.0
- *\date         2022-02-08
- *\note         Encode:UTF-8
- *\brief        主模块
+ *\file     main.c
+ *\note     UTF-8
+ *\author   xt
+ *\version  1.0.0
+ *\date     2022.02.08
+ *\brief    主模块
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -139,7 +138,7 @@ extern xl_task      g_task[TASK_SIZE];              ///< 当前正在下载的�
 extern unsigned int g_task_count;                   ///< 当前正在下载的任务数量
 
 /**
- *\brief        http回调函数,得到种子中文件信息
+ *\brief                        http回调函数,得到种子中文件信息
  *\param[out]   data            HTTP的数据
  *\return       0               成功
  */
@@ -224,7 +223,7 @@ int http_proc_file(const p_xt_http_data data)
 }
 
 /**
- *\brief        http回调函数,任务信息
+ *\brief                        http回调函数,任务信息
  *\param[out]   data            HTTP的数据
  *\return       0               成功
  */
@@ -385,7 +384,7 @@ int http_proc_task(const p_xt_http_data data)
 }
 
 /**
- *\brief        http回调函数,种子文件列表
+ *\brief                        http回调函数,种子文件列表
  *\param[out]   data            HTTP的数据
  *\return       0               成功
  */
@@ -484,7 +483,7 @@ int http_proc_torrent(const p_xt_http_data data)
 }
 
 /**
- *\brief        HTTP回调函数,默认图标
+ *\brief                        HTTP回调函数,默认图标
  *\param[out]   data            HTTP的数据
  *\return       0               成功
  */
@@ -496,7 +495,7 @@ int http_proc_icon(const p_xt_http_data data)
 }
 
 /**
- *\brief        HTTP回调函数,首页
+ *\brief                        HTTP回调函数,首页
  *\param[out]   data            HTTP的数据
  *\return       0               成功
  */
@@ -509,7 +508,7 @@ int http_proc_index(const p_xt_http_data data)
 }
 
 /**
- *\brief        HTTP回调函数
+ *\brief                        HTTP回调函数
  *\param[out]   data            HTTP的数据
  *\return       0               成功
  */
@@ -540,7 +539,7 @@ int http_proc_callback(const p_xt_http_data data)
 }
 
 /**
- *\brief        窗体关闭处理函数
+ *\brief                        窗体关闭处理函数
  *\param[in]    wnd             窗体句柄
  *\param[in]    param           自定义参数
  *\return                       无
@@ -561,7 +560,7 @@ void on_menu_exit(HWND wnd, void *param)
 }
 
 /**
- *\brief        窗体类程序主函数
+ *\brief                        窗体类程序主函数
  *\param[in]    hInstance       当前实例句柄
  *\param[in]    hPrevInstance   先前实例句柄
  *\param[in]    lpCmdLine       命令行参数
