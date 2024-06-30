@@ -5,7 +5,7 @@
         "cycle": "day",
         "backup": 7,
         "clean_log": true,
-        "clean_file": true
+        "del_old_file": true
     },
     "http": {
         "ip": "0.0.0.0",

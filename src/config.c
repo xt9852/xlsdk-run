@@ -8,6 +8,7 @@
  */
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sys/stat.h>
 #include "config.h"
 #include "cJSON.h"
@@ -204,7 +205,7 @@ int config_log(cJSON *root, p_xt_log log)
 
     log->backup = backup->valueint;
 
-    cJSON *clean_log = cJSON_GetObjectItem(item, "clean_log");
+    cJSON *clean_log = cJSON_GetObjectItem(item, "clr_log");
 
     if (NULL == clean_log)
     {
@@ -212,10 +213,10 @@ int config_log(cJSON *root, p_xt_log log)
         return -9;
     }
 
-    log->clean_log = clean_log->valueint;
+    log->clr_log = clean_log->valueint;
 
 
-    cJSON *clean_file = cJSON_GetObjectItem(item, "clean_file");
+    cJSON *clean_file = cJSON_GetObjectItem(item, "del_old_file");
 
     if (NULL == clean_file)
     {
@@ -223,7 +224,7 @@ int config_log(cJSON *root, p_xt_log log)
         return -9;
     }
 
-    log->clean_file = clean_file->valueint;
+    log->del_old = clean_file->valueint;
 
     return 0;
 }

@@ -13,6 +13,7 @@
 #include <pthread.h>
 #include "xl_sdk.h"
 #include "xt_log.h"
+#include "xt_utitly.h"
 #include "xt_character_set.h"
 
 #define FLAG "BDAF7A63-568C-43ab-9406-D145CF03B08C" ///< XL下载器ID

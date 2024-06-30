@@ -25,6 +25,8 @@
 #include "xt_http.h"
 #include "xt_exe_ico.h"
 #include "xt_character_set.h"
+#include "xt_uri.h"
+#include "xt_utitly.h"
 #include "xl_sdk.h"
 #include "torrent.h"
 
@@ -420,7 +422,7 @@ int http_proc_torrent(const p_xt_http_data data)
 
         sprintf_s(buf, MAX_PATH, "%s\\%s", g_cfg.path_download, wfd.cFileName);
 
-        if (0 != ansi_utf8(buf, strlen(buf), filename, &filename_len))
+        if (0 != gbk_utf8(buf, strlen(buf), filename, &filename_len))
         {
             E("ansi_utf8 fail %s", wfd.cFileName);
             return -2;
