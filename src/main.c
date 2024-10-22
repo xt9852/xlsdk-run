@@ -571,8 +571,6 @@ void on_menu_exit(HWND wnd, void *param)
  */
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
-    char message[MAX_PATH];
-
     GetModuleFileNameA(hInstance, g_log.path, MAX_PATH);
 
     char *title = strrchr(g_log.path, '\\');
@@ -591,18 +589,15 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     if (ret != 0)
     {
-        sprintf_s(message, sizeof(message), "init config fail %d", ret);
-        MessageBoxA(NULL, message, title, MB_OK);
         return -1;
     }
 
-    // 22是当前代码的根目录长度,日志中只保留代码的相对路径
+    // 26是当前代码的根目录长度,日志中只保留代码的相对路径
+    g_cfg.log->root_len = 26;
     ret = log_init(g_cfg.log);
 
     if (ret != 0)
     {
-        sprintf_s(message, sizeof(message), "init log fail %d", ret);
-        MessageBoxA(NULL, message, title, MB_OK);
         return -2;
     }
 

@@ -37,7 +37,7 @@ int config_get_data(const char *filename, char *buf, int len)
 {
     if (NULL == filename || NULL == buf)
     {
-        printf("%s|filename, buf is null", __FUNCTION__);
+        P("filename, buf is null");
         return -1;
     }
 
@@ -45,13 +45,13 @@ int config_get_data(const char *filename, char *buf, int len)
 
     if (0 != fopen_s(&fp, filename, "rb"))
     {
-        printf("%s|open %s fail", __FUNCTION__, filename);
+        P("open config file fail");
         return -2;
     }
 
     if (len != fread(buf, 1, len, fp))
     {
-        printf("%s|read %s fail", __FUNCTION__, filename);
+        P("read config file fail");
         fclose(fp);
         return -3;
     }
@@ -77,27 +77,27 @@ int config_get_json(const char *filename, cJSON **root)
 
     if (size <= 0)
     {
-        printf("%s|get file %s size error\n", __FUNCTION__, filename);
+        P("get file size fail");
         return -2;
     }
 
-    char *buff = (char*)malloc(size + 16);
+    char *buf = (char*)malloc(size + 16);
 
-    if (NULL == buff)
+    if (NULL == buf)
     {
-        printf("%s|malloc %d fail\n", __FUNCTION__, size + 16);
+        P("malloc buf fail");
         return -3;
     }
 
-    int ret = config_get_data(filename, buff, size);
+    int ret = config_get_data(filename, buf, size);
 
-    *root = (0 == ret) ? cJSON_Parse(buff) : NULL;
+    *root = (0 == ret) ? cJSON_Parse(buf) : NULL;
 
-    free(buff);
+    free(buf);
 
     if (NULL == *root)
     {
-        printf("%s|parse json fail\n", __FUNCTION__);
+        P("parse json string fail");
         return -5;
     }
 
@@ -121,7 +121,7 @@ int config_log(cJSON *root, p_xt_log log)
 
     if (NULL == item)
     {
-        printf("%s|config json no log node\n", __FUNCTION__);
+        P("config json no log node");
         return -2;
     }
 
@@ -129,7 +129,7 @@ int config_log(cJSON *root, p_xt_log log)
 
     if (NULL == name)
     {
-        printf("%s|config json no log.name node\n", __FUNCTION__);
+        P("config json no log.name node");
         return -3;
     }
 
@@ -139,7 +139,7 @@ int config_log(cJSON *root, p_xt_log log)
 
     if (NULL == level)
     {
-        printf("%s|config json no log.level node\n", __FUNCTION__);
+        P("config json no log.level node");
         return -4;
     }
 
@@ -161,7 +161,7 @@ int config_log(cJSON *root, p_xt_log log)
     }
     else
     {
-        printf("%s|config json no log.level value error\n", __FUNCTION__);
+        P("config json no log.level value error");
         return -5;
     }
 
@@ -169,7 +169,7 @@ int config_log(cJSON *root, p_xt_log log)
 
     if (NULL == cycle)
     {
-        printf("%s|config json no log.cycle node\n", __FUNCTION__);
+        P("config json no log.cycle node");
         return -6;
     }
 
@@ -191,7 +191,7 @@ int config_log(cJSON *root, p_xt_log log)
     }
     else
     {
-        printf("%s|config no log.cycle value error\n", __FUNCTION__);
+        P("config no log.cycle value error");
         return -7;
     }
 
@@ -199,32 +199,11 @@ int config_log(cJSON *root, p_xt_log log)
 
     if (NULL == backup)
     {
-        printf("%s|config no log.backup value error\n", __FUNCTION__);
+        P("config no log.backup value error");
         return -8;
     }
 
     log->backup = backup->valueint;
-
-    cJSON *clean_log = cJSON_GetObjectItem(item, "clr_log");
-
-    if (NULL == clean_log)
-    {
-        printf("%s|config no log.clean_log value error\n", __FUNCTION__);
-        return -9;
-    }
-
-    log->clr_log = clean_log->valueint;
-
-
-    cJSON *clean_file = cJSON_GetObjectItem(item, "del_old_file");
-
-    if (NULL == clean_file)
-    {
-        printf("%s|config no log.clean_file value error\n", __FUNCTION__);
-        return -9;
-    }
-
-    log->del_old = clean_file->valueint;
 
     return 0;
 }
@@ -246,7 +225,7 @@ int config_http(cJSON *root, p_config config)
 
     if (NULL == http)
     {
-        printf("%s|config json no http node\n", __FUNCTION__);
+        P("config json no http node");
         return -2;
     }
 
@@ -254,7 +233,7 @@ int config_http(cJSON *root, p_config config)
 
     if (NULL == ip)
     {
-        printf("%s|config json no http.ip node\n", __FUNCTION__);
+        P("config json no http.ip node");
         return -3;
     }
 
@@ -264,7 +243,7 @@ int config_http(cJSON *root, p_config config)
 
     if (NULL == port)
     {
-        printf("%s|config json no http.port node\n", __FUNCTION__);
+        P("config json no http.port node");
         return -4;
     }
 
@@ -290,7 +269,7 @@ int config_path(cJSON *root, p_config config)
 
     if (NULL == path)
     {
-        printf("%s|config json no path node\n", __FUNCTION__);
+        P("config json no path node");
         return -2;
     }
 
@@ -298,7 +277,7 @@ int config_path(cJSON *root, p_config config)
 
     if (NULL == download)
     {
-        printf("%s|config json no path.download node\n", __FUNCTION__);
+        P("config json no path.download node");
         return -3;
     }
 
@@ -308,7 +287,7 @@ int config_path(cJSON *root, p_config config)
 
     if (NULL == move)
     {
-        printf("%s|config json no path.move node\n", __FUNCTION__);
+        P("config json no path.move node");
         return -4;
     }
 
@@ -327,7 +306,7 @@ int config_init(const char *filename, p_config config)
 {
     if (NULL == filename || NULL == config)
     {
-        printf("%s|filename is null\n", __FUNCTION__);
+        P("filename is null");
         return -1;
     }
 
@@ -337,28 +316,23 @@ int config_init(const char *filename, p_config config)
 
     if (0 != ret)
     {
-        printf("%s|get config %s data fail\n", __FUNCTION__, filename);
         return -2;
     }
 
     if (0 != config_log(root, config->log))
     {
-        printf("%s|config json log node error\n", __FUNCTION__);
         return -3;
     }
 
     if (0 != config_http(root, config))
     {
-        printf("%s|config json http node error\n", __FUNCTION__);
         return -4;
     }
 
     if (0 != config_path(root, config))
     {
-        printf("%s|config json path node Eor\n", __FUNCTION__);
         return -5;
     }
 
-    printf("%s|config ok\n", __FUNCTION__);
     return 0;
 }
