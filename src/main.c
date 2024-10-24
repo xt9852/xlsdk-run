@@ -146,6 +146,8 @@ extern unsigned int g_task_count;                   ///< 当前正在下载的�
  */
 int http_proc_file(const p_xt_http_data data)
 {
+    D("file");
+    
     if (data->arg_count <= 0 || NULL == data->arg[0].key || 0 != strcmp(data->arg[0].key, "torrent"))
     {
         D("torrent:null or \"\"");
@@ -231,6 +233,8 @@ int http_proc_file(const p_xt_http_data data)
  */
 int http_proc_task(const p_xt_http_data data)
 {
+    D("add");
+    
     const char *del = NULL;    // 可以为空
     const char *add = NULL;    // 可以为空
     const char *msk = NULL;    // 可以为空
@@ -272,7 +276,7 @@ int http_proc_task(const p_xt_http_data data)
                 char path[MAX_PATH];
                 short src[MAX_PATH];
                 short dst[MAX_PATH];
-                char *temp = &(g_task[i].name[5]);
+                char *temp = &(g_task[i].name[41]);
                 char *name = strtok_s(temp, "|", &temp);
 
                 for (i = 0; NULL != name; i++)
@@ -392,6 +396,8 @@ int http_proc_task(const p_xt_http_data data)
  */
 int http_proc_torrent(const p_xt_http_data data)
 {
+    D("torrent");
+    
     char  buf[20480];
     char  filename[MAX_PATH];
     int   filename_len;
@@ -491,6 +497,7 @@ int http_proc_torrent(const p_xt_http_data data)
  */
 int http_proc_icon(const p_xt_http_data data)
 {
+    D("icon");
     data->type = HTTP_TYPE_ICO;
     exe_ico_get_data(IDI_GREEN, data->content, &(data->len));
     return 0;
@@ -503,6 +510,7 @@ int http_proc_icon(const p_xt_http_data data)
  */
 int http_proc_index(const p_xt_http_data data)
 {
+    D("index");
     data->type = HTTP_TYPE_HTML;
     data->len = sizeof(INDEX_PAGE) - 1;
     strcpy_s(data->content, sizeof(INDEX_PAGE), INDEX_PAGE);
@@ -516,6 +524,8 @@ int http_proc_index(const p_xt_http_data data)
  */
 int http_proc_callback(const p_xt_http_data data)
 {
+    D("uri:%s", data->uri);
+    
     if (0 == strcmp(data->uri, "/"))
     {
         return http_proc_index(data);
