@@ -32,36 +32,40 @@
 
 /// 首页页面
 #define INDEX_PAGE "<meta charset='utf-8'>\n\
+<style>\n\
+    .tr_hover tr:hover {\n\
+        background: #F0F0F0;\n\
+    }\n\
+</style>\n\
 <script>\n\
-    function http(url, data, callback){\n\
+    function http(url, data, callback) {\n\
         console.log(url + data);\n\
         req = new XMLHttpRequest();\n\
         req.open('GET', url + data);\n\
         req.send(null);\n\
-        req.onload = function(){\n\
+        req.onload = function() {\n\
             if (req.readyState != 4 || req.status != 200) alert('请求失败');\n\
             else callback(JSON.parse(req.responseText), data);\n\
         }\n\
     }\n\
-    function tbody(count, data){\n\
+    function tbody(count, data) {\n\
         document.getElementsByTagName('input')[0].value = (data == 'task' || data == 'torrent') ? '' : data;\n\
-        for (tbd = document.getElementsByTagName('tbody')[0]; tbd.childNodes.length > 1;){tbd.removeChild(tbd.childNodes[1]);}\n\
+        for (tbd = document.getElementsByTagName('tbody')[0]; tbd.childNodes.length > 1;)tbd.removeChild(tbd.childNodes[1]);\n\
         title = tbd.childNodes[0].childNodes;\n\
-        title[8].innerText = '任务(' + count + ')';\n\
         if (data == 'task') {\n\
+            title[0].style.display = '';\n\
             title[2].style.display = '';\n\
             title[4].style.display = '';\n\
-            title[6].style.display = '';\n\
         } else if (data == 'torrent') {\n\
+            title[0].style.display = 'none';\n\
             title[2].style.display = 'none';\n\
             title[4].style.display = 'none';\n\
-            title[6].style.display = 'none';\n\
         } else {\n\
-            title[2].style.display = '';\n\
+            title[0].style.display = '';\n\
         }\n\
         return tbd;\n\
     }\n\
-    function task_list(rsp, data){\n\
+    function task_list(rsp, data) {\n\
         tb = tbody(rsp.length, 'task');\n\
         for (i in rsp) {\n\
             tr = document.createElement('tr'); tb.appendChild(tr);\n\
@@ -70,59 +74,62 @@
             t3 = document.createElement('td'); tr.appendChild(t3);\n\
             t4 = document.createElement('td'); tr.appendChild(t4);\n\
             t5 = document.createElement('td'); tr.appendChild(t5);\n\
+            t1.align = 'right';\n\
             t2.align = 'right';\n\
             t3.align = 'right';\n\
-            t4.align = 'right';\n\
-            t1.outerHTML = '<td><button onclick=\"http(\\'/task?del=\\',\\''+rsp[i].id+'\\',task_list)\">删除</button></td>';\n\
-            t2.innerText = rsp[i].size;\n\
-            t3.innerText = rsp[i].prog;\n\
-            t4.innerText = rsp[i].speed;\n\
-            t5.innerText = decodeURIComponent(atob(rsp[i].task));\n\
+            t1.innerText = rsp[i].size;\n\
+            t2.innerText = rsp[i].prog;\n\
+            t3.innerText = rsp[i].speed;\n\
+            t4.innerText = decodeURIComponent(atob(rsp[i].task));\n\
+            t5.outerHTML = '<td><button onclick=\"http(\\'/task?del=\\',\\''+rsp[i].id+'\\',task_list)\">删除</button></td>';\n\
         }\n\
     }\n\
-    function torrent_list(rsp, data){\n\
+    function torrent_list(rsp, data) {\n\
         tb = tbody(rsp.length, 'torrent');\n\
         for (i in rsp) {\n\
             task_name = decodeURIComponent(atob(rsp[i].filename));\n\
             tr = document.createElement('tr'); tb.appendChild(tr);\n\
             t1 = document.createElement('td'); tr.appendChild(t1);\n\
             t2 = document.createElement('td'); tr.appendChild(t2);\n\
-            t1.outerHTML='<td><button onclick=\"http(\\'/file?torrent=\\',\\''+btoa(task_name)+'\\',torrent_file)\">打开</button></td>';\n\
-            t2.innerText = task_name;\n\
+            t1.innerText = task_name;\n\
+            t2.outerHTML='<td><button onclick=\"http(\\'/torrent_content?torrent=\\',\\''+btoa(task_name)+'\\',torrent_content)\">打开</button></td>';\n\
         }\n\
     }\n\
-    function torrent_file(rsp, data){\n\
+    function torrent_content(rsp, data) {\n\
         tb = tbody(rsp.length, atob(data));\n\
         for (i in rsp) {\n\
             tr = document.createElement('tr'); tb.appendChild(tr);\n\
             t1 = document.createElement('td'); tr.appendChild(t1);\n\
             t2 = document.createElement('td'); tr.appendChild(t2);\n\
             t3 = document.createElement('td'); tr.appendChild(t3);\n\
-            t1.outerHTML = '<td><input type=\"checkbox\"></td>';\n\
-            t2.innerText = rsp[i].size;\n\
-            t3.innerText = decodeURIComponent(atob(rsp[i].file));\n\
+            t1.innerText = rsp[i].size;\n\
+            t2.innerText = decodeURIComponent(atob(rsp[i].file));\n\
+            t3.outerHTML = '<td><input type=\"checkbox\"></td>';\n\
         }\n\
     }\n\
-    function download(){\n\
+    function download() {\n\
         data = btoa(document.getElementsByTagName('input')[0].value);\n\
         tr = document.getElementsByTagName('tr')[1];\n\
-        if (tr && tr.childNodes[0].childNodes[0].type == 'checkbox') {\n\
-            for (mask = '&msk='; tr; tr = tr.nextSibling) {mask += tr.childNodes[0].childNodes[0].checked * 1;}\n\
+        if (tr && tr.childNodes[2].childNodes && tr.childNodes[2].childNodes[0].type == 'checkbox') {\n\
+            for (mask = '&msk='; tr; tr = tr.nextSibling) {mask += tr.childNodes[2].childNodes[0].checked * 1;}\n\
             if (/1+/.test(mask)) {data += mask;} else {data = '';}\n\
         }\n\
         http('/task?add=', data, task_list);\n\
     }\n\
 </script>\n\
-<div style='display:flex;margin:0 0 10 2'>\n\
-    <button onclick='download()'>下载</button>\n\
-    <input style='flex:1;margin-left:1'/>\n\
-</div>\n\
-<table border='1' style='width:100%;border-collapse:collapse;font-family:宋体'>\n\
-    <td width='43px'><button onclick=\"http(\'/torrent\',\'\',torrent_list)\">种子</button></td>\n\
+<table border='1' style='width:100%;border-collapse:collapse;font-family:宋体' class='tr_hover'>\n\
     <th width='60px'>大小</th>\n\
     <th width='60px'>进度</th>\n\
     <th width='60px'>速度</th>\n\
-    <th>任务</th>\n\
+    <th>\n\
+        <div style='display:flex'>\n\
+            <input style='flex:1;margin-right:1'/>\n\
+            <button onclick=\"http(\'/torrent_list\',\'\',torrent_list)\">种子</button>\n\
+        </div>\n\
+    </th>\n\
+    <th width='43px'>\n\
+        <button onclick='download()'>下载</button>\n\
+    </th>\n\
 </table>"
 
 char                g_path[MAX_PATH]        = "";   ///< 文件路径
@@ -140,89 +147,29 @@ extern xl_task      g_task[TASK_SIZE];              ///< 当前正在下载的�
 extern unsigned int g_task_count;                   ///< 当前正在下载的任务数量
 
 /**
- *\brief                        http回调函数,得到种子中文件信息
+ *\brief                        HTTP回调函数,首页
  *\param[out]   data            HTTP的数据
  *\return       0               成功
  */
-int http_proc_file(const p_xt_http_data data)
+int http_proc_index(const p_xt_http_data data)
 {
-    D("file");
-    
-    if (data->arg_count <= 0 || NULL == data->arg[0].key || 0 != strcmp(data->arg[0].key, "torrent"))
-    {
-        D("torrent:null or \"\"");
-        return -1;
-    }
-
-    const char *torrent_filename = data->arg[0].value;
-
-    if (NULL == torrent_filename || 0 == strcmp(torrent_filename, ""))
-    {
-        D("torrent:null or \"\"");
-        return -2;
-    }
-
-    char buf[20480];
-    int  len = sizeof(buf);
-
-    if (0 != base64_decode(torrent_filename, data->arg[0].value_len, buf, &len))
-    {
-        E("base64_decode fail %s", torrent_filename);
-        return -3;
-    }
-
-    if (0 != get_torrent_info(buf, &g_torrent))
-    {
-        E("get torrent:%s info error", buf);
-        return -4;
-    }
-
-    int   pos;
-    int   base64_len;
-    char  size[16];
-    char *content;
-
-    pos = 1;
-    content = data->content;
-    content[0] = '[';
-
-    for (int i = 0; i < g_torrent.count; i++)
-    {
-        format_data(g_torrent.file[i].size, size, sizeof(size));
-
-        pos += snprintf(content + pos, data->len - pos, "{\"size\":\"%s\",\"file\":\"", size);
-
-        len = sizeof(buf);
-
-        if (0 != uri_encode(g_torrent.file[i].name, g_torrent.file[i].name_len, buf, &len)) // js的atob不能解码unicode
-        {
-            E("uri_encode fail %s", g_torrent.file[i].name);
-            return -5;
-        }
-
-        base64_len = data->len - pos;
-
-        if (0 != base64_encode(buf, len, content + pos, &base64_len)) // 文件名中可能有json需要转码的字符
-        {
-            E("base64_encode fail %s", buf);
-            return -6;
-        }
-
-        pos += base64_len;
-        pos += snprintf(content + pos, data->len - pos, "\"},");
-    }
-
-    if (g_torrent.count > 0)
-    {
-        content[pos - 1] = ']';
-    }
-    else
-    {
-        content[pos++] = ']';
-    }
-
+    D("index");
     data->type = HTTP_TYPE_HTML;
-    data->len = pos;
+    data->len = sizeof(INDEX_PAGE) - 1;
+    strcpy_s(data->content, sizeof(INDEX_PAGE), INDEX_PAGE);
+    return 0;
+}
+
+/**
+ *\brief                        HTTP回调函数,默认图标
+ *\param[out]   data            HTTP的数据
+ *\return       0               成功
+ */
+int http_proc_icon(const p_xt_http_data data)
+{
+    D("icon");
+    data->type = HTTP_TYPE_ICO;
+    exe_ico_get_data(IDI_GREEN, data->content, &(data->len));
     return 0;
 }
 
@@ -234,7 +181,7 @@ int http_proc_file(const p_xt_http_data data)
 int http_proc_task(const p_xt_http_data data)
 {
     D("add");
-    
+
     const char *del = NULL;    // 可以为空
     const char *add = NULL;    // 可以为空
     const char *msk = NULL;    // 可以为空
@@ -394,10 +341,10 @@ int http_proc_task(const p_xt_http_data data)
  *\param[out]   data            HTTP的数据
  *\return       0               成功
  */
-int http_proc_torrent(const p_xt_http_data data)
+int http_proc_torrent_list(const p_xt_http_data data)
 {
-    D("torrent");
-    
+    D("torrent_list");
+
     char  buf[20480];
     char  filename[MAX_PATH];
     int   filename_len;
@@ -491,29 +438,89 @@ int http_proc_torrent(const p_xt_http_data data)
 }
 
 /**
- *\brief                        HTTP回调函数,默认图标
+ *\brief                        http回调函数,种子中文件信息
  *\param[out]   data            HTTP的数据
  *\return       0               成功
  */
-int http_proc_icon(const p_xt_http_data data)
+int http_proc_torrent_content(const p_xt_http_data data)
 {
-    D("icon");
-    data->type = HTTP_TYPE_ICO;
-    exe_ico_get_data(IDI_GREEN, data->content, &(data->len));
-    return 0;
-}
+    D("torrent_content");
 
-/**
- *\brief                        HTTP回调函数,首页
- *\param[out]   data            HTTP的数据
- *\return       0               成功
- */
-int http_proc_index(const p_xt_http_data data)
-{
-    D("index");
+    if (data->arg_count <= 0 || NULL == data->arg[0].key || 0 != strcmp(data->arg[0].key, "torrent"))
+    {
+        D("torrent:null or \"\"");
+        return -1;
+    }
+
+    const char *torrent_filename = data->arg[0].value;
+
+    if (NULL == torrent_filename || 0 == strcmp(torrent_filename, ""))
+    {
+        D("torrent:null or \"\"");
+        return -2;
+    }
+
+    char buf[20480];
+    int  len = sizeof(buf);
+
+    if (0 != base64_decode(torrent_filename, data->arg[0].value_len, buf, &len))
+    {
+        E("base64_decode fail %s", torrent_filename);
+        return -3;
+    }
+
+    if (0 != get_torrent_info(buf, &g_torrent))
+    {
+        E("get torrent:%s info error", buf);
+        return -4;
+    }
+
+    int   pos;
+    int   base64_len;
+    char  size[16];
+    char *content;
+
+    pos = 1;
+    content = data->content;
+    content[0] = '[';
+
+    for (int i = 0; i < g_torrent.count; i++)
+    {
+        format_data(g_torrent.file[i].size, size, sizeof(size));
+
+        pos += snprintf(content + pos, data->len - pos, "{\"size\":\"%s\",\"file\":\"", size);
+
+        len = sizeof(buf);
+
+        if (0 != uri_encode(g_torrent.file[i].name, g_torrent.file[i].name_len, buf, &len)) // js的atob不能解码unicode
+        {
+            E("uri_encode fail %s", g_torrent.file[i].name);
+            return -5;
+        }
+
+        base64_len = data->len - pos;
+
+        if (0 != base64_encode(buf, len, content + pos, &base64_len)) // 文件名中可能有json需要转码的字符
+        {
+            E("base64_encode fail %s", buf);
+            return -6;
+        }
+
+        pos += base64_len;
+        pos += snprintf(content + pos, data->len - pos, "\"},");
+    }
+
+    if (g_torrent.count > 0)
+    {
+        content[pos - 1] = ']';
+    }
+    else
+    {
+        content[pos++] = ']';
+    }
+
     data->type = HTTP_TYPE_HTML;
-    data->len = sizeof(INDEX_PAGE) - 1;
-    strcpy_s(data->content, sizeof(INDEX_PAGE), INDEX_PAGE);
+    data->len = pos;
     return 0;
 }
 
@@ -525,26 +532,26 @@ int http_proc_index(const p_xt_http_data data)
 int http_proc_callback(const p_xt_http_data data)
 {
     D("uri:%s", data->uri);
-    
+
     if (0 == strcmp(data->uri, "/"))
     {
         return http_proc_index(data);
     }
-    else if (0 == strcmp(data->uri, "/file"))
+    else if (0 == strcmp(data->uri, "/favicon.ico"))
     {
-        return http_proc_file(data);
+        return http_proc_icon(data);
     }
     else if (0 == strcmp(data->uri, "/task"))
     {
         return http_proc_task(data);
     }
-    else if (0 == strcmp(data->uri, "/torrent"))
+    else if (0 == strcmp(data->uri, "/torrent_list"))
     {
-        return http_proc_torrent(data);
+        return http_proc_torrent_list(data);
     }
-    else if (0 == strcmp(data->uri, "/favicon.ico"))
+    else if (0 == strcmp(data->uri, "/torrent_content"))
     {
-        return http_proc_icon(data);
+        return http_proc_torrent_content(data);
     }
 
     return 404;
