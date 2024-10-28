@@ -40,7 +40,7 @@
 <script>\n\
     function http(url, data, callback) {\n\
         console.log(url + data);\n\
-        req = new XMLHttpRequest();\n\
+        let req = new XMLHttpRequest();\n\
         req.open('GET', url + data);\n\
         req.send(null);\n\
         req.onload = function() {\n\
@@ -51,7 +51,7 @@
     function tbody(count, data) {\n\
         document.getElementsByTagName('input')[0].value = (data == 'task' || data == 'torrent') ? '' : data;\n\
         for (tbd = document.getElementsByTagName('tbody')[0]; tbd.childNodes.length > 1;)tbd.removeChild(tbd.childNodes[1]);\n\
-        title = tbd.childNodes[0].childNodes;\n\
+        let title = tbd.childNodes[0].childNodes;\n\
         if (data == 'task') {\n\
             title[0].style.display = '';\n\
             title[2].style.display = '';\n\
@@ -66,8 +66,8 @@
         return tbd;\n\
     }\n\
     function task_list(rsp, data) {\n\
-        tb = tbody(rsp.length, 'task');\n\
-        for (i in rsp) {\n\
+        let tb = tbody(rsp.length, 'task');\n\
+        for (let i in rsp) {\n\
             tr = document.createElement('tr'); tb.appendChild(tr);\n\
             t1 = document.createElement('td'); tr.appendChild(t1);\n\
             t2 = document.createElement('td'); tr.appendChild(t2);\n\
@@ -85,8 +85,8 @@
         }\n\
     }\n\
     function torrent_list(rsp, data) {\n\
-        tb = tbody(rsp.length, 'torrent');\n\
-        for (i in rsp) {\n\
+        let tb = tbody(rsp.length, 'torrent');\n\
+        for (let i in rsp) {\n\
             task_name = decodeURIComponent(atob(rsp[i].filename));\n\
             tr = document.createElement('tr'); tb.appendChild(tr);\n\
             t1 = document.createElement('td'); tr.appendChild(t1);\n\
@@ -96,8 +96,8 @@
         }\n\
     }\n\
     function torrent_content(rsp, data) {\n\
-        tb = tbody(rsp.length, atob(data));\n\
-        for (i in rsp) {\n\
+        let tb = tbody(rsp.length, atob(data));\n\
+        for (let i in rsp) {\n\
             tr = document.createElement('tr'); tb.appendChild(tr);\n\
             t1 = document.createElement('td'); tr.appendChild(t1);\n\
             t2 = document.createElement('td'); tr.appendChild(t2);\n\
@@ -108,14 +108,21 @@
         }\n\
     }\n\
     function download() {\n\
-        data = btoa(document.getElementsByTagName('input')[0].value);\n\
-        tr = document.getElementsByTagName('tr')[1];\n\
-        if (tr && tr.childNodes[2].childNodes && tr.childNodes[2].childNodes[0].type == 'checkbox') {\n\
+        let data = btoa(document.getElementsByTagName('input')[0].value);\n\
+        let tr = document.getElementsByTagName('tr')[1];\n\
+        if (tr && tr.childNodes.length > 2 && tr.childNodes[2].childNodes[0].type == 'checkbox') {\n\
             for (mask = '&msk='; tr; tr = tr.nextSibling) {mask += tr.childNodes[2].childNodes[0].checked * 1;}\n\
             if (/1+/.test(mask)) {data += mask;} else {data = '';}\n\
         }\n\
         http('/task?add=', data, task_list);\n\
     }\n\
+    function refresh() {\n\
+        let trs = document.getElementsByTagName('tr');\n\
+        if (trs.length > 1 && trs[0].childNodes[2].style.display == '' && trs[0].childNodes[6].childNodes[1].childNodes[3].checked) {\n\
+            http('/task?add=', '', task_list);\n\
+        }\n\
+    }\n\
+    setInterval(refresh, 10000);\n\
 </script>\n\
 <table border='1' style='width:100%;border-collapse:collapse;font-family:宋体' class='tr_hover'>\n\
     <th width='60px'>大小</th>\n\
@@ -123,7 +130,8 @@
     <th width='60px'>速度</th>\n\
     <th>\n\
         <div style='display:flex'>\n\
-            <input style='flex:1;margin-right:1'/>\n\
+            <input style='flex:1;margin-right:1'>\n\
+            <input type='checkbox'>自动刷新\n\
             <button onclick=\"http(\'/torrent_list\',\'\',torrent_list)\">种子</button>\n\
         </div>\n\
     </th>\n\
