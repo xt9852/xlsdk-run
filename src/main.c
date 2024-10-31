@@ -74,9 +74,6 @@
             t3 = document.createElement('td'); tr.appendChild(t3);\n\
             t4 = document.createElement('td'); tr.appendChild(t4);\n\
             t5 = document.createElement('td'); tr.appendChild(t5);\n\
-            t1.align = 'right';\n\
-            t2.align = 'right';\n\
-            t3.align = 'right';\n\
             t1.innerText = rsp[i].size;\n\
             t2.innerText = rsp[i].prog;\n\
             t3.innerText = rsp[i].speed;\n\
@@ -125,19 +122,20 @@
     setInterval(refresh, 10000);\n\
 </script>\n\
 <table border='1' style='width:100%;border-collapse:collapse;font-family:宋体' class='tr_hover'>\n\
-    <th width='60px'>大小</th>\n\
-    <th width='60px'>进度</th>\n\
-    <th width='60px'>速度</th>\n\
-    <th>\n\
+    <td width='60px'>大小</td>\n\
+    <td width='60px'>进度</td>\n\
+    <td width='60px'>速度</td>\n\
+    <td>\n\
         <div style='display:flex'>\n\
             <input style='flex:1;margin-right:1'>\n\
-            <input type='checkbox'>自动刷新\n\
+            <input type='checkbox'>\n\
+            <div style='padding-top:2px'>自动刷新</div>\n\
             <button onclick=\"http(\'/torrent_list\',\'\',torrent_list)\">种子</button>\n\
         </div>\n\
-    </th>\n\
-    <th width='43px'>\n\
+    </td>\n\
+    <td width='43px'>\n\
         <button onclick='download()'>下载</button>\n\
-    </th>\n\
+    </td>\n\
 </table>"
 
 char                g_path[MAX_PATH]        = "";   ///< 文件路径
