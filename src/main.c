@@ -138,21 +138,21 @@
     </td>\n\
 </table>"
 
-char                g_path[MAX_PATH]        = "";   ///< 文件路径
+char                g_path[MAX_PATH]        = "";       ///< 文件路径
 
-char               *g_title                 = NULL; ///< 标题
+char               *g_title                 = NULL;     ///< 标题
 
-xt_log              g_log                   = {0};  ///< 日志文件
+xt_log              g_log                   = {0};      ///< 日志文件
 
-xt_http             g_http                  = {0};  ///< HTTP服务
+xt_http             g_http                  = {0};      ///< HTTP服务
 
-bt_torrent          g_torrent               = {0};  ///< 种子数据
+bt_torrent          g_torrent               = {0};      ///< 种子数据
 
-config              g_cfg                   = { &g_log };   ///< 配置数据
+config              g_cfg                   = {&g_log}; ///< 配置数据
 
-extern xl_task      g_task[TASK_SIZE];              ///< 当前正在下载的任务信息
+extern xl_task      g_task[TASK_SIZE];                  ///< 当前正在下载的任务信息
 
-extern unsigned int g_task_count;                   ///< 当前正在下载的任务数量
+extern unsigned int g_task_count;                       ///< 当前正在下载的任务数量
 
 /**
  *\brief                        HTTP回调函数,首页
