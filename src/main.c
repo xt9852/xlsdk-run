@@ -140,13 +140,15 @@
 
 char                g_path[MAX_PATH]        = "";   ///< 文件路径
 
-config              g_cfg                   = {0};  ///< 配置数据
+char               *g_title                 = NULL; ///< 标题
 
 xt_log              g_log                   = {0};  ///< 日志文件
 
 xt_http             g_http                  = {0};  ///< HTTP服务
 
 bt_torrent          g_torrent               = {0};  ///< 种子数据
+
+config              g_cfg                   = { &g_log };   ///< 配置数据
 
 extern xl_task      g_task[TASK_SIZE];              ///< 当前正在下载的任务信息
 
@@ -235,7 +237,7 @@ int http_proc_task(const p_xt_http_data data)
                 for (i = 0; NULL != name; i++)
                 {
                     src_len = MAX_PATH - 1;
-                    len = snprintf(path, sizeof(path), "%s\\%s", g_cfg.path_download, name);
+                    len = snprintf(path, sizeof(path), "%s\\%s", g_cfg.path_tmp, name);
 
                     if (0 != utf8_unicode(path, len, src, &src_len))
                     {
@@ -244,7 +246,7 @@ int http_proc_task(const p_xt_http_data data)
                     }
 
                     dst_len = MAX_PATH - 1;
-                    len = snprintf(path, sizeof(path), "%s\\%s", g_cfg.path_move, name);
+                    len = snprintf(path, sizeof(path), "%s\\%s", g_cfg.path_download, name);
 
                     if (0 != utf8_unicode(path, len, dst, &dst_len))
                     {
@@ -283,7 +285,7 @@ int http_proc_task(const p_xt_http_data data)
             return -1;
         }
 
-        if (0 != xl_sdk_download(g_cfg.path_download, buf, msk, &g_torrent))
+        if (0 != xl_sdk_download((0 != strncmp(add, "http", 4)) ? g_cfg.path_tmp : g_cfg.path_download, buf, msk, &g_torrent))
         {
             E("xl_sdk_download fail");
             return -2;
@@ -361,7 +363,7 @@ int http_proc_torrent_list(const p_xt_http_data data)
     char *content = data->content;
 
     content[0] = '[';
-    sprintf_s(filename, MAX_PATH, "%s\\*.torrent", g_cfg.path_download);
+    sprintf_s(filename, MAX_PATH, "%s\\*.torrent", g_cfg.path_tmp);
 
     WIN32_FIND_DATAA wfd;
 
@@ -379,7 +381,7 @@ int http_proc_torrent_list(const p_xt_http_data data)
 
         filename_len = sizeof(filename);
 
-        sprintf_s(buf, MAX_PATH, "%s\\%s", g_cfg.path_download, wfd.cFileName);
+        sprintf_s(buf, MAX_PATH, "%s\\%s", g_cfg.path_tmp, wfd.cFileName);
 
         if (0 != gbk_utf8(buf, strlen(buf), filename, &filename_len))
         {
@@ -564,6 +566,32 @@ int http_proc_callback(const p_xt_http_data data)
 }
 
 /**
+ *\brief                        打开页面处理函数
+ *\param[in]    wnd             窗体句柄
+ *\param[in]    param           自定义参数
+ *\return                       无
+ */
+void on_menu_page(HWND wnd, void *param)
+{
+    char tmp[MAX_PATH];
+    snprintf(tmp, sizeof(tmp), "http://%s:%d", g_cfg.http_ip, g_cfg.http_port);
+    ShellExecuteA(NULL, "open", tmp, NULL, NULL, SW_HIDE);
+}
+
+/**
+ *\brief                        打开配置处理函数
+ *\param[in]    wnd             窗体句柄
+ *\param[in]    param           自定义参数
+ *\return                       无
+ */
+void on_menu_config(HWND wnd, void *param)
+{
+    char tmp[MAX_PATH];
+    snprintf(tmp, sizeof(tmp), "%s\\%s.json", g_path, g_title);
+    ShellExecuteA(NULL, "open", tmp, NULL, NULL, SW_HIDE);
+}
+
+/**
  *\brief                        窗体关闭处理函数
  *\param[in]    wnd             窗体句柄
  *\param[in]    param           自定义参数
@@ -594,33 +622,30 @@ void on_menu_exit(HWND wnd, void *param)
  */
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
-    GetModuleFileNameA(hInstance, g_log.path, MAX_PATH);
+    GetModuleFileNameA(hInstance, g_path, sizeof(g_path));
 
-    char *title = strrchr(g_log.path, '\\');
-    *title++ = '\0';
+    g_title = strrchr(g_path, '\\');
+    *g_title++ = '\0';
 
-    char *end = strrchr(title, '.');
+    char *end = strrchr(g_title, '.');
     *end = '\0';
 
-    char filename[MAX_PATH];
+    char tmp[MAX_PATH];
+    snprintf(tmp, sizeof(tmp), "%s\\%s.json", g_path, g_title);
 
-    snprintf(filename, MAX_PATH, "%s.json", title);
-
-    g_cfg.log = &g_log;
-
-    int ret = config_init(filename, &g_cfg);
+    int ret = config_init(tmp, &g_cfg);
 
     if (ret != 0)
     {
+        MessageBoxW(NULL, L"配置错误", L"错误", MB_OK);
         return -1;
     }
 
-    // 26是当前代码的根目录长度,日志中只保留代码的相对路径
-    g_cfg.log->root_len = 26;
-    ret = log_init(g_cfg.log);
+    ret = log_init(g_path, 26, g_cfg.log);  // 26是当前代码的根目录长度,日志中只保留代码的相对路径
 
     if (ret != 0)
     {
+        MessageBoxW(NULL, L"日志错误", L"错误", MB_OK);
         return -2;
     }
 
@@ -629,6 +654,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     if (ret != 0)
     {
         E("http init fail %d", ret);
+        MessageBoxW(NULL, L"HTTP错误", L"错误", MB_OK);
         return -3;
     }
 
@@ -637,15 +663,20 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     if (0 != ret)
     {
         E("init error:%d", ret);
+        MessageBoxW(NULL, L"SDK错误", L"错误", MB_OK);
         return -4;
     }
 
-    notify_menu_info menu[] = { {0, L"退出(&E)", NULL, on_menu_exit} };
+    notify_menu_info menu[] = {
+        {L"页面(&O)", NULL, on_menu_page},
+        {L"配置(&C)", NULL, on_menu_config},
+        {L"退出(&E)", NULL, on_menu_exit} };
 
     ret = notify_init(hInstance, IDI_GREEN, "DownloadSDKServerRun", SIZEOF(menu), menu);
 
     if (0 != ret)
     {
+        MessageBoxW(NULL, L"菜单错误", L"错误", MB_OK);
         return -5;
     }
 

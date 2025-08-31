@@ -8,11 +8,11 @@
         "del_old_file": true
     },
     "http": {
-        "ip": "0.0.0.0",
+        "ip": "127.0.0.1",
         "port": 8080
     },
     "path": {
-        "download": "D:\\5.download\\bt",
-        "move": "D:\\5.download\\bt\\2"
+        "tmp": "D:\\5.download\\mp4",
+        "download": "D:\\5.download\\tmp"
     }
 }

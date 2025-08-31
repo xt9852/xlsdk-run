@@ -273,6 +273,16 @@ int config_path(cJSON *root, p_config config)
         return -2;
     }
 
+    cJSON *tmp = cJSON_GetObjectItem(path, "tmp");
+
+    if (NULL == tmp)
+    {
+        P("config json no path.tmp node");
+        return -4;
+    }
+
+    strcpy_s(config->path_tmp, sizeof(config->path_tmp), tmp->valuestring);
+
     cJSON *download = cJSON_GetObjectItem(path, "download");
 
     if (NULL == download)
@@ -282,16 +292,6 @@ int config_path(cJSON *root, p_config config)
     }
 
     strcpy_s(config->path_download, sizeof(config->path_download), download->valuestring);
-
-    cJSON *move = cJSON_GetObjectItem(path, "move");
-
-    if (NULL == move)
-    {
-        P("config json no path.move node");
-        return -4;
-    }
-
-    strcpy_s(config->path_move, sizeof(config->path_move), move->valuestring);
 
     return 0;
 }

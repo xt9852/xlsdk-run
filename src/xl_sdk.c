@@ -963,7 +963,7 @@ int xl_sdk_create_magnet_task(const char *magnet, const char *path, p_xl_task ta
     task->id = *(int*)(g_send_tmp + 12);
 
     int size = TASK_NAME_SIZE;
-    
+
     wcscat_s(id, sizeof(id), L".torrent");
 
     if (0 != unicode_utf8(id, arg2->len, task->name, &size))
@@ -1172,7 +1172,7 @@ int xl_sdk_download(const char *path, const char *addr, const char *mask, p_bt_t
 
     if (0 == strcmp(addr + strlen(addr) - 8, ".torrent"))   // BT下载
     {
-		task_type = TASK_BT;
+        task_type = TASK_BT;
     }
     else if (0 == strncmp(addr, "magnet:?", 8))             // 磁力下载
     {
@@ -1182,7 +1182,7 @@ int xl_sdk_download(const char *path, const char *addr, const char *mask, p_bt_t
     {
         task_type = TASK_URL;
     }
-    
+
     D("task_type:%d", task_type);
 
     pthread_mutex_lock(&g_task_mutex);
@@ -1218,7 +1218,7 @@ int xl_sdk_download(const char *path, const char *addr, const char *mask, p_bt_t
             break;
         }
     }
-    
+
     D("create task %d", ret);
 
     if (0 != ret)

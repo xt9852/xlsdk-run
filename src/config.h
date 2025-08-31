@@ -11,15 +11,15 @@
 #include "xt_log.h"
 
 
-typedef struct _config          ///  配置数据,配置文件应为utf8
+typedef struct _config                  ///  配置数据,配置文件应为utf8
 {
-    p_xt_log  log;              ///< 日志
+    p_xt_log  log;                      ///< 日志
 
-    char    http_ip[512];       ///< HTTP地址
-    int     http_port;          ///< HTTP端口
+    char    http_ip[MAX_PATH];          ///< HTTP地址
+    int     http_port;                  ///< HTTP端口
 
-    char    path_download[512]; ///< 下载路径
-    char    path_move[512];     ///< 完成路径
+    char    path_tmp[MAX_PATH];         ///< 临时路径
+    char    path_download[MAX_PATH];    ///< 下载路径
 
 } config, *p_config;
 
