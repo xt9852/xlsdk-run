@@ -566,6 +566,28 @@ int http_proc_callback(const p_xt_http_data data)
 }
 
 /**
+ *\brief                        打开临时目录处理函数
+ *\param[in]    wnd             窗体句柄
+ *\param[in]    param           自定义参数
+ *\return                       无
+ */
+void on_menu_tmp(HWND wnd, void *param)
+{
+    ShellExecuteA(NULL, "open", g_cfg.path_tmp, NULL, NULL, SW_SHOWNORMAL);
+}
+
+/**
+ *\brief                        打开下载目录处理函数
+ *\param[in]    wnd             窗体句柄
+ *\param[in]    param           自定义参数
+ *\return                       无
+ */
+void on_menu_down(HWND wnd, void *param)
+{
+    ShellExecuteA(NULL, "open", g_cfg.path_download, NULL, NULL, SW_SHOWNORMAL);
+}
+
+/**
  *\brief                        打开页面处理函数
  *\param[in]    wnd             窗体句柄
  *\param[in]    param           自定义参数
@@ -668,9 +690,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     }
 
     notify_menu_info menu[] = {
-        {L"页面(&O)", NULL, on_menu_page},
-        {L"配置(&C)", NULL, on_menu_config},
-        {L"退出(&E)", NULL, on_menu_exit} };
+        {L"打开页面(&I)", NULL, on_menu_page},
+        {L"打开配置(&C)", NULL, on_menu_config},
+        {L"临时目录(&T)", NULL, on_menu_tmp},
+        {L"下载目录(&D)", NULL, on_menu_down},
+        {L"退出程序(&Q)", NULL, on_menu_exit} };
 
     ret = notify_init(hInstance, IDI_GREEN, "DownloadSDKServerRun", SIZEOF(menu), menu);
 
