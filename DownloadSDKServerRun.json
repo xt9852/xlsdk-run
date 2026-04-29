@@ -2,17 +2,14 @@
     "log": {
         "name": "DownloadSDKServerRun",
         "level": "debug",
-        "cycle": "day",
-        "backup": 7,
-        "clean_log": true,
-        "del_old_file": true
+        "backup": 7
     },
     "http": {
         "ip": "127.0.0.1",
         "port": 8080
     },
     "path": {
-        "tmp": "D:\\5.download\\mp4",
-        "download": "D:\\5.download\\tmp"
+        "tmp": "E:\\1.play\\3.mp4\\tmp",
+        "download": "E:\\1.play\\3.mp4"
     }
 }
