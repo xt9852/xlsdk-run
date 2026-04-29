@@ -168,9 +168,11 @@
                     mask += tr[i].childNodes[4].childNodes[0].checked * 1;\n\
                 }\n\
             }\n\
-            if (mask != '') {\n\
-                arg = '?add=' + torrent + '&mask=' + mask;\n\
+            if (/^0+$/.test(mask)) {\n\
+                alert('请求选取要下载的文件');\n\
+                return;\n\
             }\n\
+            arg = '?add=' + torrent + '&mask=' + mask;\n\
         }\n\
         http('/task', arg, task_list);\n\
     }\n\
