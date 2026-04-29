@@ -165,42 +165,12 @@ int config_log(cJSON *root, p_xt_log log)
         return -5;
     }
 
-    cJSON *cycle = cJSON_GetObjectItem(item, "cycle");
-
-    if (NULL == cycle)
-    {
-        P("config json no log.cycle node");
-        return -6;
-    }
-
-    if (0 == strcmp(cycle->valuestring, "minute"))
-    {
-        log->cycle = LOG_CYCLE_MINUTE;
-    }
-    else if (0 == strcmp(cycle->valuestring, "hour"))
-    {
-        log->cycle = LOG_CYCLE_HOUR;
-    }
-    else if (0 == strcmp(cycle->valuestring, "day"))
-    {
-        log->cycle = LOG_CYCLE_DAY;
-    }
-    else if (0 == strcmp(cycle->valuestring, "week"))
-    {
-        log->cycle = LOG_CYCLE_WEEK;
-    }
-    else
-    {
-        P("config no log.cycle value error");
-        return -7;
-    }
-
     cJSON *backup = cJSON_GetObjectItem(item, "backup");
 
     if (NULL == backup)
     {
         P("config no log.backup value error");
-        return -8;
+        return -6;
     }
 
     log->backup = backup->valueint;

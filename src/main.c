@@ -37,106 +37,145 @@
         background: #F0F0F0;\n\
     }\n\
 </style>\n\
-<script>\n\
-    function http(url, data, callback) {\n\
-        console.log(url + data);\n\
-        let req = new XMLHttpRequest();\n\
-        req.open('GET', url + data);\n\
-        req.send(null);\n\
-        req.onload = function() {\n\
-            if (req.readyState != 4 || req.status != 200) alert('请求失败');\n\
-            else callback(JSON.parse(req.responseText), data);\n\
-        }\n\
-    }\n\
-    function tbody(count, data) {\n\
-        document.getElementsByTagName('input')[0].value = (data == 'task' || data == 'torrent') ? '' : data;\n\
-        for (tbd = document.getElementsByTagName('tbody')[0]; tbd.childNodes.length > 1;)tbd.removeChild(tbd.childNodes[1]);\n\
-        let title = tbd.childNodes[0].childNodes;\n\
-        if (data == 'task') {\n\
-            title[0].style.display = '';\n\
-            title[2].style.display = '';\n\
-            title[4].style.display = '';\n\
-        } else if (data == 'torrent') {\n\
-            title[0].style.display = 'none';\n\
-            title[2].style.display = 'none';\n\
-            title[4].style.display = 'none';\n\
-        } else {\n\
-            title[0].style.display = '';\n\
-        }\n\
-        return tbd;\n\
-    }\n\
-    function task_list(rsp, data) {\n\
-        let tb = tbody(rsp.length, 'task');\n\
-        for (let i in rsp) {\n\
-            tr = document.createElement('tr'); tb.appendChild(tr);\n\
-            t1 = document.createElement('td'); tr.appendChild(t1);\n\
-            t2 = document.createElement('td'); tr.appendChild(t2);\n\
-            t3 = document.createElement('td'); tr.appendChild(t3);\n\
-            t4 = document.createElement('td'); tr.appendChild(t4);\n\
-            t5 = document.createElement('td'); tr.appendChild(t5);\n\
-            t1.innerText = rsp[i].size;\n\
-            t2.innerText = rsp[i].prog;\n\
-            t3.innerText = rsp[i].speed;\n\
-            t4.innerText = decodeURIComponent(atob(rsp[i].task));\n\
-            t5.outerHTML = '<td><button onclick=\"http(\\'/task?del=\\',\\''+rsp[i].id+'\\',task_list)\">删除</button></td>';\n\
-        }\n\
-    }\n\
-    function torrent_list(rsp, data) {\n\
-        let tb = tbody(rsp.length, 'torrent');\n\
-        for (let i in rsp) {\n\
-            task_name = decodeURIComponent(atob(rsp[i].filename));\n\
-            tr = document.createElement('tr'); tb.appendChild(tr);\n\
-            t1 = document.createElement('td'); tr.appendChild(t1);\n\
-            t2 = document.createElement('td'); tr.appendChild(t2);\n\
-            t1.innerText = task_name;\n\
-            t2.outerHTML='<td><button onclick=\"http(\\'/torrent_content?torrent=\\',\\''+btoa(task_name)+'\\',torrent_content)\">打开</button></td>';\n\
-        }\n\
-    }\n\
-    function torrent_content(rsp, data) {\n\
-        let tb = tbody(rsp.length, atob(data));\n\
-        for (let i in rsp) {\n\
-            tr = document.createElement('tr'); tb.appendChild(tr);\n\
-            t1 = document.createElement('td'); tr.appendChild(t1);\n\
-            t2 = document.createElement('td'); tr.appendChild(t2);\n\
-            t3 = document.createElement('td'); tr.appendChild(t3);\n\
-            t1.innerText = rsp[i].size;\n\
-            t2.innerText = decodeURIComponent(atob(rsp[i].file));\n\
-            t3.outerHTML = '<td><input type=\"checkbox\"></td>';\n\
-        }\n\
-    }\n\
-    function download() {\n\
-        let data = btoa(document.getElementsByTagName('input')[0].value);\n\
-        let tr = document.getElementsByTagName('tr')[1];\n\
-        if (tr && tr.childNodes.length > 2 && tr.childNodes[2].childNodes[0].type == 'checkbox') {\n\
-            for (mask = '&msk='; tr; tr = tr.nextSibling) {mask += tr.childNodes[2].childNodes[0].checked * 1;}\n\
-            if (/1+/.test(mask)) {data += mask;} else {data = '';}\n\
-        }\n\
-        http('/task?add=', data, task_list);\n\
-    }\n\
-    function refresh() {\n\
-        let trs = document.getElementsByTagName('tr');\n\
-        if (trs.length > 1 && trs[0].childNodes[2].style.display == '' && trs[0].childNodes[6].childNodes[1].childNodes[3].checked) {\n\
-            http('/task?add=', '', task_list);\n\
-        }\n\
-    }\n\
-    setInterval(refresh, 10000);\n\
-</script>\n\
 <table border='1' style='width:100%;border-collapse:collapse;font-family:宋体' class='tr_hover'>\n\
     <td width='60px'>大小</td>\n\
     <td width='60px'>进度</td>\n\
     <td width='60px'>速度</td>\n\
     <td>\n\
         <div style='display:flex'>\n\
-            <input style='flex:1;margin-right:1'>\n\
-            <input type='checkbox'>\n\
-            <div style='padding-top:2px'>自动刷新</div>\n\
-            <button onclick=\"http(\'/torrent_list\',\'\',torrent_list)\">种子</button>\n\
+            <input id ='input' style='flex:1;margin-right:1'>\n\
         </div>\n\
     </td>\n\
     <td width='43px'>\n\
         <button onclick='download()'>下载</button>\n\
     </td>\n\
-</table>"
+</table>\n\
+<script>\n\
+    let data = [];\n\
+    let torrent = [];\n\
+    let input = document.getElementById('input');\n\
+    let tbody = document.getElementsByTagName('tbody')[0];\n\
+    function http(url, arg, callback) {\n\
+        let req = new XMLHttpRequest();\n\
+        req.open('GET', url + arg);\n\
+        req.send(null);\n\
+        req.onload = function() {\n\
+            if (req.readyState != 4 || req.status != 200) {\n\
+                alert('请求失败');\n\
+            } else {\n\
+                console.log('http ' + url + arg, JSON.parse(req.responseText));\n\
+                callback(JSON.parse(req.responseText), arg);\n\
+            }\n\
+        }\n\
+    }\n\
+    function tr5(id, name) {\n\
+        if (id != '') {\n\
+            return '<button onclick=\"http(\\'/task\\',\\'?del=' + id + '\\',task_list)\">删除</button>';\n\
+        } else if (name.slice(-8) == '.torrent') {\n\
+            return '<button onclick=\"http(\\'/torrent_content?torrent=\\',\\'' + btoa(name) + '\\',torrent_content)\">打开</button>';\n\
+        } else {\n\
+            return '<input type=\"checkbox\">';\n\
+        }\n\
+    }\n\
+    function insert(tb, id, size, prog, speed, name, t5) {\n\
+        html = tr5(id, name);\n\
+        tr = document.createElement('tr');\n\
+        t0 = document.createElement('td');\n\
+        t1 = document.createElement('td');\n\
+        t2 = document.createElement('td');\n\
+        t3 = document.createElement('td');\n\
+        t4 = document.createElement('td');\n\
+        t5 = document.createElement('dir');\n\
+        tb.insertAdjacentElement('afterend', tr);\n\
+        tr.appendChild(t0);\n\
+        tr.appendChild(t1);\n\
+        tr.appendChild(t2);\n\
+        tr.appendChild(t3);\n\
+        tr.appendChild(t4);\n\
+        t4.appendChild(t5);\n\
+        t0.innerText = size;\n\
+        t1.innerText = prog;\n\
+        t2.innerText = speed;\n\
+        t3.innerText = name;\n\
+        t5.outerHTML = html;\n\
+    }\n\
+    function update(tr, id, size, prog, speed, name) {\n\
+        html = tr5(id, name);\n\
+        tr.childNodes[0].innerText = size;\n\
+        tr.childNodes[1].innerText = prog;\n\
+        tr.childNodes[2].innerText = speed;\n\
+        tr.childNodes[3].innerText = name;\n\
+        tr.childNodes[4].childNodes[0].outerHTML = html;\n\
+    }\n\
+    function table(rsp) {\n\
+        console.log('table', JSON.parse(JSON.stringify(rsp)));\n\
+        tr = tbody.childNodes;\n\
+        min = Math.min(rsp.length, tr.length - 1);\n\
+        max = Math.max(rsp.length, tr.length - 1);\n\
+        length = tr.length - 1;\n\
+        for (let i = 0; i < min; i++) {\n\
+            update(tr[i + 1], rsp[i].id, rsp[i].size, rsp[i].prog, rsp[i].speed, rsp[i].task);\n\
+        }\n\
+        for (let i = min; i < max && rsp.length > length; i++) {\n\
+            insert(tbody.lastChild, rsp[i].id, rsp[i].size, rsp[i].prog, rsp[i].speed, rsp[i].task);\n\
+        }\n\
+        for (let i = min; i < max && rsp.length < length; i++) {\n\
+            tbody.removeChild(tr[min + 1]);\n\
+        }\n\
+    }\n\
+    function task_list(rsp, arg) {\n\
+        input.value = '';\n\
+        data = rsp;\n\
+        for (let i = 0; i < data.length; i++) {\n\
+            data[i].task = decodeURIComponent(atob(data[i].task));\n\
+        }\n\
+        table(data);\n\
+    }\n\
+    function torrent_content(rsp, arg) {\n\
+        torrent = arg;\n\
+        arg = decodeURIComponent(atob(arg));\n\
+        for (let i = data.length - 1; i >= 0; i--) {\n\
+            if (data[i].id == '' && data[i].prog == '') {\n\
+                data.splice(i, 1);\n\
+            }\n\
+        }\n\
+        if (data.length > 1) {\n\
+            for (let i = 0; i < data.length; i++) {\n\
+                if (data[i].task == arg) {\n\
+                    for (let j = 0; j < rsp.length; j++) {\n\
+                        data.splice(i + j + 1, 0, { id : '', size : rsp[j].size, prog : '', speed : '', task : decodeURIComponent(atob(rsp[j].filename)) });\n\
+                    }\n\
+                    break;\n\
+                }\n\
+            }\n\
+        } else {\n\
+            for (let i = 0; i < rsp.length; i++) {\n\
+                data.push({ id : '', size : rsp[i].size, prog : '', speed : '', task : decodeURIComponent(atob(rsp[i].filename)) });\n\
+            }\n\
+        }\n\
+        table(data);\n\
+    }\n\
+    function download() {\n\
+        console.log('download');\n\
+        let arg = btoa(input.value);\n\
+        if (arg != '') {\n\
+            arg = '?add=' + arg;\n\
+        } else {\n\
+            mask = '';\n\
+            tr = tbody.childNodes;\n\
+            for (let i = 1; i < tr.length; i++) {\n\
+                if (tr[i].childNodes[4].childNodes[0].type == 'checkbox') {\n\
+                    mask += tr[i].childNodes[4].childNodes[0].checked * 1;\n\
+                }\n\
+            }\n\
+            if (mask != '') {\n\
+                arg = '?add=' + torrent + '&mask=' + mask;\n\
+            }\n\
+        }\n\
+        http('/task', arg, task_list);\n\
+    }\n\
+</script>"
+
 
 char                g_path[MAX_PATH]        = "";       ///< 文件路径
 
@@ -156,7 +195,7 @@ extern unsigned int g_task_count;                       ///< 当前正在下载�
 
 /**
  *\brief                        HTTP回调函数,首页
- *\param[out]   data            HTTP的数据
+ *\param[out]   data            HTTP的数据,data->len输入时为缓冲区长度,输出时为数据长度
  *\return       0               成功
  */
 int http_proc_index(const p_xt_http_data data)
@@ -170,7 +209,7 @@ int http_proc_index(const p_xt_http_data data)
 
 /**
  *\brief                        HTTP回调函数,默认图标
- *\param[out]   data            HTTP的数据
+ *\param[out]   data            HTTP的数据,data->len输入时为缓冲区长度,输出时为数据长度
  *\return       0               成功
  */
 int http_proc_icon(const p_xt_http_data data)
@@ -182,14 +221,133 @@ int http_proc_icon(const p_xt_http_data data)
 }
 
 /**
+ *\brief                        将字符串转成uri编码再base64
+ *\param[in]    input           输入字符串
+ *\param[in]    input_len       输入字符串长度
+ *\param[out]   output          输入字符串
+ *\param[out]   output_len      输出字符串长度,输入时为缓冲区长度,输出时为数据长度
+ *\return       0               成功
+ */
+int to_uri_base64(const char *input, int input_len, char *output, int *output_len)
+{
+    char tmp[10240];
+    int  len = sizeof(tmp);
+
+    if (NULL == input || NULL == output || NULL == output_len)
+    {
+        E("arg null");
+    }
+
+    D("task name %s %d %d", input, input_len, *output_len);
+
+    if (0 != uri_encode(input, input_len, tmp, &len)) // js的atob不能解码unicode
+    {
+        E("uri_encode fail %s", input);
+        return -2;
+    }
+
+    D("uri_encode %s %d", tmp, len);
+
+    if (0 != base64_encode(tmp, len, output, output_len)) // 文件名中可能有json需要转码的字符
+    {
+        E("base64_encode fail %s", tmp);
+        return -3;
+    }
+
+    D("base64_encode %s %d", output, *output_len);
+    return 0;
+}
+
+/**
+ *\brief                        查找本地种子文件
+ *\param[out]   buf             输入字符串
+ *\param[out]   len             输出字符串长度,输入时为缓冲区长度,输出时为数据长度
+ *\param[in]    task            是否是任务数据
+ *\param[in]    count           初始数值
+ *\return       0               成功
+ */
+int get_local_torrent(char *buf, int *len, int task, int count)
+{
+    char  tmp[10240];
+    char  size[16];
+    char  filename[MAX_PATH];
+    int   filename_len;
+    int   buf_size = *len;
+    int   pos = 0;
+
+    sprintf_s(filename, MAX_PATH, "%s\\*.torrent", g_cfg.path_tmp);
+
+    WIN32_FIND_DATAA wfd;
+
+    HANDLE find = FindFirstFileA(filename, &wfd);
+
+    if (INVALID_HANDLE_VALUE == find)
+    {
+        E("FindFirstFileA path %s error %d", filename, GetLastError());
+        return -1;
+    }
+
+    while (true)
+    {
+        bool have = false;
+
+        filename_len = sizeof(filename);
+
+        sprintf_s(tmp, MAX_PATH, "%s\\%s", g_cfg.path_tmp, wfd.cFileName);
+
+        if (0 != gbk_utf8(tmp, strlen(tmp), filename, &filename_len))
+        {
+            E("ansi_utf8 fail %s", wfd.cFileName);
+            return -2;
+        }
+
+        // 排除正下载的任务
+        for (unsigned int i = 0; i < g_task_count; i++)
+        {
+            if (0 == strcmp(filename, g_task[i].torrent_filename))
+            {
+                have = true;
+                break;
+            }
+        }
+
+        if (!have)
+        {
+            *len = sizeof(tmp);
+
+            to_uri_base64(filename, filename_len, tmp, len);
+
+            format_data((unsigned __int64)(wfd.nFileSizeHigh) << 32 | wfd.nFileSizeLow, size, sizeof(size));
+
+            if (!task)
+            {
+                pos += snprintf(buf + pos, buf_size - pos, "%s{\"filename\":\"%s\",\"size\":\"%s\"}", (0 == count ? "" : ","), tmp, size);
+            }
+            else
+            {
+                pos += snprintf(buf + pos, buf_size - pos, "%s{\"id\":\"\",\"size\":\"%s\",\"prog\":\"100%%\",\"speed\":\"\",\"task\":\"%s\"}",
+                                (0 == count ? "" : ","), size, tmp);
+            }
+
+            count++;
+        }
+
+        if (!FindNextFileA(find, &wfd)) break;
+    }
+
+    FindClose(find);
+
+    *len = pos;
+    return 0;
+}
+
+/**
  *\brief                        http回调函数,任务信息
- *\param[out]   data            HTTP的数据
+ *\param[out]   data            HTTP的数据,data->len输入时为缓冲区长度,输出时为数据长度
  *\return       0               成功
  */
 int http_proc_task(const p_xt_http_data data)
 {
-    D("add");
-
     const char *del = NULL;    // 可以为空
     const char *add = NULL;    // 可以为空
     const char *msk = NULL;    // 可以为空
@@ -203,7 +361,7 @@ int http_proc_task(const p_xt_http_data data)
             add = data->arg[i].value;
             addr_len = data->arg[i].value_len;
         }
-        else if (data->arg[i].key   != NULL && 0 == strcmp(data->arg[i].key, "msk") &&
+        else if (data->arg[i].key   != NULL && 0 == strcmp(data->arg[i].key, "mask") &&
                  data->arg[i].value != NULL && 0 != strcmp(data->arg[i].value, ""))
         {
             msk = data->arg[i].value;
@@ -217,6 +375,8 @@ int http_proc_task(const p_xt_http_data data)
 
     if (NULL != del)
     {
+        D("del:%s", del);
+
         unsigned int task_id = atoi(del);
 
         for (unsigned int i = 0; i < g_task_count; i++)
@@ -271,74 +431,52 @@ int http_proc_task(const p_xt_http_data data)
     }
 
     int  len;
-    char buf[20480];
+    char tmp[10240];
 
     if (NULL != add)
     {
         D("add:%s", add);
 
-        len = sizeof(buf);
+        len = sizeof(tmp);
 
-        if (0 != base64_decode(add, addr_len, buf, &len))
+        if (0 != base64_decode(add, addr_len, tmp, &len))
         {
             E("base64_decode fail %s", add);
             return -1;
         }
 
-        if (0 != xl_sdk_download((0 != strncmp(add, "http", 4)) ? g_cfg.path_tmp : g_cfg.path_download, buf, msk, &g_torrent))
+        if (0 != xl_sdk_download((0 != strncmp(add, "http", 4)) ? g_cfg.path_tmp : g_cfg.path_download, tmp, msk, &g_torrent))
         {
             E("xl_sdk_download fail");
             return -2;
         }
     }
 
-    int    pos;
-    int    base64_len;
+    int    pos = 1;
     char   size[16];
     char   speed[16];
     char  *content = data->content;
 
-    pos = 1;
-    content[0] = '[';
-
     for (unsigned int i = 0; i < g_task_count; i++)
     {
+        len = sizeof(tmp);
+
+        to_uri_base64(g_task[i].name, g_task[i].name_len, tmp, &len);
+
         format_data(g_task[i].size, size, sizeof(size));
         format_data(g_task[i].speed, speed, sizeof(speed));
 
         pos += snprintf(content + pos, data->len - pos,
-                       "{\"id\":%d,\"size\":\"%s\",\"prog\":\"%.2f%%\",\"speed\":\"%s\",\"task\":\"",
-                       g_task[i].id, size, g_task[i].prog, speed);
-
-        len = sizeof(buf);
-
-        if (0 != uri_encode(g_task[i].name, g_task[i].name_len, buf, &len)) // js的atob不能解码unicode
-        {
-            E("uri_encode fail %s", g_task[i].name);
-            return -3;
-        }
-
-        base64_len = data->len - pos;
-
-        if (0 != base64_encode(buf, len, content + pos, &base64_len)) // 文件名中可能有json需要转码的字符
-        {
-            E("base64_encode fail %s", buf);
-            return -4;
-        }
-
-        pos += base64_len;
-        pos += snprintf(content + pos, data->len - pos, "\"},");
+                       "%s{\"id\":%d,\"size\":\"%s\",\"prog\":\"%.2f%%\",\"speed\":\"%s\",\"task\":\"%s\"}",
+                       (0 == i ? "": ","), g_task[i].id, size, g_task[i].prog, speed, tmp);
     }
 
-    if (g_task_count > 0)
-    {
-        content[pos - 1] = ']';
-    }
-    else
-    {
-        content[pos++] = ']';
-    }
+    len = data->len - pos;
+    get_local_torrent(content + pos, &len, 1, g_task_count);
+    pos += len;
 
+    content[0] = '[';
+    content[pos++] = ']';
     data->type = HTTP_TYPE_HTML;
     data->len = pos;
     return 0;
@@ -346,100 +484,20 @@ int http_proc_task(const p_xt_http_data data)
 
 /**
  *\brief                        http回调函数,种子文件列表
- *\param[out]   data            HTTP的数据
+ *\param[out]   data            HTTP的数据,data->len输入时为缓冲区长度,输出时为数据长度
  *\return       0               成功
  */
 int http_proc_torrent_list(const p_xt_http_data data)
 {
-    D("torrent_list");
-
-    char  buf[20480];
-    char  filename[MAX_PATH];
-    int   filename_len;
-    int   len;
-    int   pos = 1;
-    int   count = 0;
-    int   base64_len;
+    int pos = 1;
+    int len = data->len - pos;
     char *content = data->content;
 
+    get_local_torrent(content + pos, &len, 0, 0);
+    pos += len;
+
     content[0] = '[';
-    sprintf_s(filename, MAX_PATH, "%s\\*.torrent", g_cfg.path_tmp);
-
-    WIN32_FIND_DATAA wfd;
-
-    HANDLE find = FindFirstFileA(filename, &wfd);
-
-    if (INVALID_HANDLE_VALUE == find)
-    {
-        E("FindFirstFileA path %s error %d", filename, GetLastError());
-        return -1;
-    }
-
-    while (true)
-    {
-        bool have = false;
-
-        filename_len = sizeof(filename);
-
-        sprintf_s(buf, MAX_PATH, "%s\\%s", g_cfg.path_tmp, wfd.cFileName);
-
-        if (0 != gbk_utf8(buf, strlen(buf), filename, &filename_len))
-        {
-            E("ansi_utf8 fail %s", wfd.cFileName);
-            return -2;
-        }
-
-        D(filename);
-
-        for (unsigned int i = 0; i < g_task_count; i++)
-        {
-            if (0 == strcmp(filename, g_task[i].torrent_filename))
-            {
-                have = true;
-                break;
-            }
-        }
-
-        if (!have)
-        {
-            count++;
-
-            pos += snprintf(content + pos, data->len - pos, "{\"filename\":\"");
-
-            len = sizeof(buf);
-
-            if (0 != uri_encode(filename, filename_len, buf, &len)) // js的atob不能解码unicode
-            {
-                E("uri_encode fail %s", filename);
-                return -3;
-            }
-
-            base64_len = data->len - pos;
-
-            if (0 != base64_encode(buf, len, content + pos, &base64_len)) // 文件名中可能有json需要转码的字符
-            {
-                E("base64_encode fail %s", buf);
-                return -4;
-            }
-
-            pos += base64_len;
-            pos += snprintf(content + pos, data->len - pos, "\"},");
-        }
-
-        if (!FindNextFileA(find, &wfd)) break;
-    }
-
-    FindClose(find);
-
-    if (count > 0)
-    {
-        content[pos - 1] = ']';
-    }
-    else
-    {
-        content[pos++] = ']';
-    }
-
+    content[pos++] = ']';
     data->type = HTTP_TYPE_HTML;
     data->len = pos;
     return 0;
@@ -447,13 +505,11 @@ int http_proc_torrent_list(const p_xt_http_data data)
 
 /**
  *\brief                        http回调函数,种子中文件信息
- *\param[out]   data            HTTP的数据
+ *\param[out]   data            HTTP的数据,data->len输入时为缓冲区长度,输出时为数据长度
  *\return       0               成功
  */
 int http_proc_torrent_content(const p_xt_http_data data)
 {
-    D("torrent_content");
-
     if (data->arg_count <= 0 || NULL == data->arg[0].key || 0 != strcmp(data->arg[0].key, "torrent"))
     {
         D("torrent:null or \"\"");
@@ -468,65 +524,40 @@ int http_proc_torrent_content(const p_xt_http_data data)
         return -2;
     }
 
-    char buf[20480];
-    int  len = sizeof(buf);
+    char tmp[10240];
+    int  len = sizeof(tmp);
 
-    if (0 != base64_decode(torrent_filename, data->arg[0].value_len, buf, &len))
+    if (0 != base64_decode(torrent_filename, data->arg[0].value_len, tmp, &len))
     {
         E("base64_decode fail %s", torrent_filename);
         return -3;
     }
 
-    if (0 != get_torrent_info(buf, &g_torrent))
+    if (0 != get_torrent_info(tmp, &g_torrent))
     {
-        E("get torrent:%s info error", buf);
+        E("get torrent:%s info error", tmp);
         return -4;
     }
 
-    int   pos;
-    int   base64_len;
+    int   pos = 1;
     char  size[16];
-    char *content;
-
-    pos = 1;
-    content = data->content;
-    content[0] = '[';
+    char *content = data->content;
 
     for (int i = 0; i < g_torrent.count; i++)
     {
+        len = sizeof(tmp);
+
+        to_uri_base64(g_torrent.file[i].name, g_torrent.file[i].name_len, tmp, &len);
+
         format_data(g_torrent.file[i].size, size, sizeof(size));
 
-        pos += snprintf(content + pos, data->len - pos, "{\"size\":\"%s\",\"file\":\"", size);
-
-        len = sizeof(buf);
-
-        if (0 != uri_encode(g_torrent.file[i].name, g_torrent.file[i].name_len, buf, &len)) // js的atob不能解码unicode
-        {
-            E("uri_encode fail %s", g_torrent.file[i].name);
-            return -5;
-        }
-
-        base64_len = data->len - pos;
-
-        if (0 != base64_encode(buf, len, content + pos, &base64_len)) // 文件名中可能有json需要转码的字符
-        {
-            E("base64_encode fail %s", buf);
-            return -6;
-        }
-
-        pos += base64_len;
-        pos += snprintf(content + pos, data->len - pos, "\"},");
+        pos += snprintf(content + pos, data->len - pos,
+                       "%s{\"filename\":\"%s\",\"size\":\"%s\"}",
+                       (0 == i ? "" : ","), tmp, size);
     }
 
-    if (g_torrent.count > 0)
-    {
-        content[pos - 1] = ']';
-    }
-    else
-    {
-        content[pos++] = ']';
-    }
-
+    content[0] = '[';
+    content[pos++] = ']';
     data->type = HTTP_TYPE_HTML;
     data->len = pos;
     return 0;

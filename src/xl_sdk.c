@@ -965,13 +965,14 @@ int xl_sdk_create_magnet_task(const char *magnet, const char *path, p_xl_task ta
     int size = TASK_NAME_SIZE;
 
     wcscat_s(id, sizeof(id), L".torrent");
+    
 
-    if (0 != unicode_utf8(id, arg2->len, task->name, &size))
+    if (0 != unicode_utf8(id, wcsnlen_s(id, arg2->len), task->name, &size))
     {
         E("unicode to ansi error");
         return 0;
     }
-
+    
     task->name_len = size;
 
     D("ok");
