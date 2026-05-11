@@ -51,10 +51,9 @@
     </td>\n\
 </table>\n\
 <script>\n\
-    let data = [];\n\
-    let torrent = [];\n\
-    let input = document.getElementById('input');\n\
-    let tbody = document.getElementsByTagName('tbody')[0];\n\
+    let g_task = [];\n\
+    let g_dom_input = document.getElementById('input');\n\
+    let g_dom_tbody = document.getElementsByTagName('tbody')[0];\n\
     function http(url, arg, callback) {\n\
         let req = new XMLHttpRequest();\n\
         req.open('GET', url + arg);\n\
@@ -63,7 +62,8 @@
             if (req.readyState != 4 || req.status != 200) {\n\
                 alert('请求失败');\n\
             } else {\n\
-                console.log('http ' + url + arg, JSON.parse(req.responseText));\n\
+                console.log('http ' + url + arg);\n\
+                console.log(JSON.parse(req.responseText));\n\
                 callback(JSON.parse(req.responseText), arg);\n\
             }\n\
         }\n\
@@ -77,15 +77,14 @@
             return '<input type=\"checkbox\">';\n\
         }\n\
     }\n\
-    function insert(tb, id, size, prog, speed, name, t5) {\n\
-        html = tr5(id, name);\n\
-        tr = document.createElement('tr');\n\
-        t0 = document.createElement('td');\n\
-        t1 = document.createElement('td');\n\
-        t2 = document.createElement('td');\n\
-        t3 = document.createElement('td');\n\
-        t4 = document.createElement('td');\n\
-        t5 = document.createElement('dir');\n\
+    function insert(tb, id, size, prog, speed, name) {\n\
+        let tr = document.createElement('tr');\n\
+        let t0 = document.createElement('td');\n\
+        let t1 = document.createElement('td');\n\
+        let t2 = document.createElement('td');\n\
+        let t3 = document.createElement('td');\n\
+        let t4 = document.createElement('td');\n\
+        let t5 = document.createElement('dir');\n\
         tb.insertAdjacentElement('afterend', tr);\n\
         tr.appendChild(t0);\n\
         tr.appendChild(t1);\n\
@@ -97,82 +96,75 @@
         t1.innerText = prog;\n\
         t2.innerText = speed;\n\
         t3.innerText = name;\n\
-        t5.outerHTML = html;\n\
+        t5.outerHTML = tr5(id, name);\n\
     }\n\
     function update(tr, id, size, prog, speed, name) {\n\
-        html = tr5(id, name);\n\
         tr.childNodes[0].innerText = size;\n\
         tr.childNodes[1].innerText = prog;\n\
         tr.childNodes[2].innerText = speed;\n\
         tr.childNodes[3].innerText = name;\n\
-        tr.childNodes[4].childNodes[0].outerHTML = html;\n\
+        tr.childNodes[4].childNodes[0].outerHTML = tr5(id, name);\n\
     }\n\
-    function table(rsp) {\n\
-        console.log('table', JSON.parse(JSON.stringify(rsp)));\n\
-        tr = tbody.childNodes;\n\
-        min = Math.min(rsp.length, tr.length - 1);\n\
-        max = Math.max(rsp.length, tr.length - 1);\n\
-        length = tr.length - 1;\n\
+    function table(data) {\n\
+        console.log('table', JSON.parse(JSON.stringify(data)));\n\
+        let tr = g_dom_tbody.childNodes;\n\
+        let min = Math.min(data.length, tr.length - 1);\n\
+        let max = Math.max(data.length, tr.length - 1);\n\
+        let length = tr.length - 1;\n\
         for (let i = 0; i < min; i++) {\n\
-            update(tr[i + 1], rsp[i].id, rsp[i].size, rsp[i].prog, rsp[i].speed, rsp[i].task);\n\
+            update(tr[i + 1], data[i].id, data[i].size, data[i].prog, data[i].speed, data[i].task);\n\
         }\n\
-        for (let i = min; i < max && rsp.length > length; i++) {\n\
-            insert(tbody.lastChild, rsp[i].id, rsp[i].size, rsp[i].prog, rsp[i].speed, rsp[i].task);\n\
+        for (let i = min; i < max && data.length > length; i++) {\n\
+            insert(g_dom_tbody.lastChild, data[i].id, data[i].size, data[i].prog, data[i].speed, data[i].task);\n\
         }\n\
-        for (let i = min; i < max && rsp.length < length; i++) {\n\
-            tbody.removeChild(tr[min + 1]);\n\
+        for (let i = min; i < max && data.length < length; i++) {\n\
+            g_dom_tbody.removeChild(tr[min + 1]);\n\
         }\n\
     }\n\
     function task_list(rsp, arg) {\n\
-        input.value = '';\n\
-        data = rsp;\n\
-        for (let i = 0; i < data.length; i++) {\n\
-            data[i].task = decodeURIComponent(atob(data[i].task));\n\
+        g_dom_input.value = '';\n\
+        g_task = rsp;\n\
+        for (let i = 0; i < g_task.length; i++) {\n\
+            g_task[i].task = decodeURIComponent(atob(g_task[i].task));\n\
         }\n\
-        table(data);\n\
+        table(g_task);\n\
     }\n\
     function torrent_content(rsp, arg) {\n\
-        torrent = arg;\n\
-        arg = decodeURIComponent(atob(arg));\n\
-        for (let i = data.length - 1; i >= 0; i--) {\n\
-            if (data[i].id == '' && data[i].prog == '') {\n\
-                data.splice(i, 1);\n\
+        g_dom_input.value = decodeURIComponent(atob(arg));\n\
+        for (let i = g_task.length - 1; i >= 0; i--) {\n\
+            if (g_task[i].id == '' && g_task[i].prog == '') {\n\
+                g_task.splice(i, 1);\n\
             }\n\
         }\n\
-        if (data.length > 1) {\n\
-            for (let i = 0; i < data.length; i++) {\n\
-                if (data[i].task == arg) {\n\
+        if (g_task.length > 1) {\n\
+            for (let i = 0; i < g_task.length; i++) {\n\
+                if (g_task[i].task == g_dom_input.value) {\n\
                     for (let j = 0; j < rsp.length; j++) {\n\
-                        data.splice(i + j + 1, 0, { id : '', size : rsp[j].size, prog : '', speed : '', task : decodeURIComponent(atob(rsp[j].filename)) });\n\
+                        g_task.splice(i + j + 1, 0, { id : '', size : rsp[j].size, prog : '', speed : '', task : decodeURIComponent(atob(rsp[j].filename)) });\n\
                     }\n\
                     break;\n\
                 }\n\
             }\n\
         } else {\n\
             for (let i = 0; i < rsp.length; i++) {\n\
-                data.push({ id : '', size : rsp[i].size, prog : '', speed : '', task : decodeURIComponent(atob(rsp[i].filename)) });\n\
+                g_task.push({ id : '', size : rsp[i].size, prog : '', speed : '', task : decodeURIComponent(atob(rsp[i].filename)) });\n\
             }\n\
         }\n\
-        table(data);\n\
+        table(g_task);\n\
     }\n\
     function download() {\n\
         console.log('download');\n\
         let arg = btoa(input.value);\n\
         if (arg != '') {\n\
             arg = '?add=' + arg;\n\
-        } else {\n\
-            mask = '';\n\
-            tr = tbody.childNodes;\n\
-            for (let i = 1; i < tr.length; i++) {\n\
+            for (var tr = g_dom_tbody.childNodes, mask = '', i = 1; i < tr.length; i++) {\n\
                 if (tr[i].childNodes[4].childNodes[0].type == 'checkbox') {\n\
                     mask += tr[i].childNodes[4].childNodes[0].checked * 1;\n\
                 }\n\
             }\n\
-            if (/^0+$/.test(mask)) {\n\
-                alert('请求选取要下载的文件');\n\
-                return;\n\
+            if (mask != 0) {\n\
+                arg += '&mask=' + mask;\n\
             }\n\
-            arg = '?add=' + torrent + '&mask=' + mask;\n\
         }\n\
         http('/task', arg, task_list);\n\
     }\n\
@@ -489,7 +481,7 @@ int http_proc_task(const p_xt_http_data data)
  *\param[out]   data            HTTP的数据,data->len输入时为缓冲区长度,输出时为数据长度
  *\return       0               成功
  */
-int http_proc_torrent_list(const p_xt_http_data data)
+int http_proc_torrent(const p_xt_http_data data)
 {
     int pos = 1;
     int len = data->len - pos;
@@ -586,9 +578,9 @@ int http_proc_callback(const p_xt_http_data data)
     {
         return http_proc_task(data);
     }
-    else if (0 == strcmp(data->uri, "/torrent_list"))
+    else if (0 == strcmp(data->uri, "/torrent"))
     {
-        return http_proc_torrent_list(data);
+        return http_proc_torrent(data);
     }
     else if (0 == strcmp(data->uri, "/torrent_content"))
     {
