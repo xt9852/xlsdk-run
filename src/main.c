@@ -34,21 +34,16 @@
 #define INDEX_PAGE "<meta charset='utf-8'>\n\
 <style>\n\
     .tr_hover tr:hover {\n\
-        background: #F0F0F0;\n\
+        background:#F0F0F0;\n\
     }\n\
 </style>\n\
 <table border='1' style='width:100%;border-collapse:collapse;font-family:宋体' class='tr_hover'>\n\
-    <td width='43px'>\n\
-        <button onclick='download()'>下载</button>\n\
-    </td>\n\
+    <tr style='background:#F0F0F0'>\n\
+    <td width='43px'><button onclick='download()'>下载</button></td>\n\
     <td width='60px'>大小</td>\n\
     <td width='60px'>进度</td>\n\
     <td width='60px'>速度</td>\n\
-    <td>\n\
-        <div style='display:flex'>\n\
-            <input id ='input' style='flex:1;margin-right:1'>\n\
-        </div>\n\
-    </td>\n\
+    <td style='display:flex'><input id ='input' style='flex:1;margin-right:1'></td>\n\
 </table>\n\
 <script>\n\
     let g_task = [];\n\
