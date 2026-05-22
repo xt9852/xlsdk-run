@@ -656,14 +656,15 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     char *end = strrchr(g_title, '.');
     *end = '\0';
 
-    char tmp[MAX_PATH];
-    snprintf(tmp, sizeof(tmp), "%s\\%s.json", g_path, g_title);
+    char info[MAX_PATH];
+    snprintf(info, sizeof(info), "%s\\%s.json", g_path, g_title);
 
-    int ret = config_init(tmp, &g_cfg);
+    int ret = config_init(info, &g_cfg);
 
     if (ret != 0)
     {
-        MessageBoxW(NULL, L"配置错误", L"错误", MB_OK);
+        snprintf(info, sizeof(info), "config error %d", ret);
+        MessageBoxA(NULL, info, "error", MB_OK);
         return -1;
     }
 
@@ -671,7 +672,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     if (ret != 0)
     {
-        MessageBoxW(NULL, L"日志错误", L"错误", MB_OK);
+        snprintf(info, sizeof(info), "log error %d", ret);
+        MessageBoxA(NULL, info, "error", MB_OK);
         return -2;
     }
 
@@ -679,8 +681,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     if (ret != 0)
     {
-        E("http init fail %d", ret);
-        MessageBoxW(NULL, L"HTTP错误", L"错误", MB_OK);
+        snprintf(info, sizeof(info), "http error %d", ret);
+        MessageBoxA(NULL, info, "error", MB_OK);
+        E(info);
         return -3;
     }
 
@@ -688,23 +691,26 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     if (0 != ret)
     {
-        E("init error:%d", ret);
-        MessageBoxW(NULL, L"SDK错误", L"错误", MB_OK);
+        snprintf(info, sizeof(info), "sdk error %d", ret);
+        MessageBoxA(NULL, info, "error", MB_OK);
+        E(info);
         return -4;
     }
 
     notify_menu_info menu[] = {
-        {L"打开页面(&I)", NULL, on_menu_page},
-        {L"打开配置(&C)", NULL, on_menu_config},
-        {L"临时目录(&T)", NULL, on_menu_tmp},
-        {L"下载目录(&D)", NULL, on_menu_down},
-        {L"退出程序(&Q)", NULL, on_menu_exit} };
+        { L"打开页面(&I)", NULL, on_menu_page },
+        { L"打开配置(&C)", NULL, on_menu_config },
+        { L"临时目录(&T)", NULL, on_menu_tmp },
+        { L"下载目录(&D)", NULL, on_menu_down },
+        { L"退出程序(&Q)", NULL, on_menu_exit } };
 
     ret = notify_init(hInstance, IDI_GREEN, "DownloadSDKServerRun", SIZEOF(menu), menu);
 
     if (0 != ret)
     {
-        MessageBoxW(NULL, L"菜单错误", L"错误", MB_OK);
+        snprintf(info, sizeof(info), "menu error %d", ret);
+        MessageBoxA(NULL, info, "error", MB_OK);
+        E(info);
         return -5;
     }
 
