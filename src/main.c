@@ -33,17 +33,16 @@
 /// 首页页面
 #define INDEX_PAGE "<meta charset='utf-8'>\n\
 <style>\n\
-    .tr_hover tr:hover {\n\
-        background:#F0F0F0;\n\
-    }\n\
+    .tr_hover tr:hover { background:#F0F0F0; }\n\
 </style>\n\
 <table border='1' style='width:100%;border-collapse:collapse;font-family:宋体' class='tr_hover'>\n\
     <tr style='background:#F0F0F0'>\n\
-    <td width='43px'><button onclick='download()'>下载</button></td>\n\
-    <td width='60px'>大小</td>\n\
-    <td width='60px'>进度</td>\n\
-    <td width='60px'>速度</td>\n\
-    <td style='display:flex'><input id ='input' style='flex:1;margin-right:1'></td>\n\
+        <td width='43px'><button onclick='download()'>下载</button></td>\n\
+        <td width='60px'>大小</td>\n\
+        <td width='60px'>进度</td>\n\
+        <td width='60px'>速度</td>\n\
+        <td style='display:flex'><input id ='input' style='flex:1;margin-right:1'></td>\n\
+    </tr>\n\
 </table>\n\
 <script>\n\
     let g_task = [];\n\
