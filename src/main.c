@@ -42,7 +42,7 @@
         <td width='60px'>进度</td>\n\
         <td width='60px'>速度</td>\n\
         <td style='display:flex'><input id ='input' style='width:100%'></td>\n\
-    </tr>\n\
+    </tr>\
 </table>\n\
 <script>\n\
     let g_task = [];\n\
