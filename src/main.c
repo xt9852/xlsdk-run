@@ -612,6 +612,20 @@ void on_menu_config(HWND wnd, void *param)
 }
 
 /**
+ *\brief                        打开日志函数
+ *\param[in]    wnd             窗体句柄
+ *\param[in]    param           自定义参数
+ *\return                       无
+ */
+void on_menu_log(HWND wnd, void *param)
+{
+    char tmp[MAX_PATH];
+    snprintf(tmp, sizeof(tmp), "%s\\%s.%d.log", g_log.path, g_log.filename, g_log.date);
+    D(tmp);
+    ShellExecuteA(NULL, "open", tmp, NULL, NULL, SW_HIDE);
+}
+
+/**
  *\brief                        窗体关闭处理函数
  *\param[in]    wnd             窗体句柄
  *\param[in]    param           自定义参数
@@ -694,6 +708,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     notify_menu_info menu[] = {
         { L"打开页面(&I)", NULL, on_menu_page },
         { L"打开配置(&C)", NULL, on_menu_config },
+        { L"打开日志(&C)", NULL, on_menu_log },
         { L"临时目录(&T)", NULL, on_menu_tmp },
         { L"下载目录(&D)", NULL, on_menu_down },
         { L"退出程序(&Q)", NULL, on_menu_exit } };
